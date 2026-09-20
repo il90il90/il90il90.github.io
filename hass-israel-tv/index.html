@@ -19,6 +19,7 @@
       const end = session && (session.licenseExp || session.exp);
       if (session?.role && end && end > Date.now() / 1000) {
         document.documentElement.dataset.session = "1";
+        document.documentElement.dataset.admin = session.role === "admin" ? "1" : "0";
       }
     } catch {}
   </script>
@@ -323,6 +324,9 @@
       color: inherit;
       cursor: pointer;
     }
+    .icon-btn[hidden] { display: none !important; }
+    #licenseBtn { display: none !important; }
+    html[data-admin="1"] #licenseBtn:not([hidden]) { display: grid !important; }
     dialog.sheet {
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -803,6 +807,7 @@
     function unlockApp(session) {
       writeSession(session);
       document.documentElement.dataset.session = "1";
+      document.documentElement.dataset.admin = session.role === "admin" ? "1" : "0";
       document.getElementById("gate").hidden = true;
       document.getElementById("app").hidden = false;
       document.getElementById("licenseBtn").hidden = session.role !== "admin";
@@ -824,6 +829,7 @@
 
     function lockApp() {
       document.documentElement.dataset.session = "0";
+      document.documentElement.dataset.admin = "0";
       clearSession();
       if (hls) {
         hls.destroy();
@@ -1219,6 +1225,7 @@
 
     document.getElementById("logoutBtn").addEventListener("click", lockApp);
     document.getElementById("licenseBtn").addEventListener("click", () => {
+      if (readSession()?.role !== "admin") return;
       document.getElementById("licenseDlg").showModal();
     });
     document.getElementById("licClose").addEventListener("click", () => {
