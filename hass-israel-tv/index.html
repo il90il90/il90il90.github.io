@@ -548,7 +548,7 @@
       <p>הזינו אימייל והעתיקו את הרישיון מהלוח, בלי להקליד אותו מחדש</p>
       <p class="err" id="loginErr"></p>
       <input id="emailInput" type="email" autocomplete="email" spellcheck="false" placeholder="אימייל" />
-      <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון או סיסמת מנהל" />
+      <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון" inputmode="text" />
       <button type="submit">כניסה</button>
     </form>
   </div>
@@ -931,6 +931,7 @@
     function pwfErrorMessage(data) {
       const code = data?.error_code || "";
       if (code === "INVALID_KEY") return "הרישיון לא נמצא. העתיקו אותו מהלוח, בלי להקליד מחדש.";
+      if (code === "TOO_MANY_ATTEMPTS") return "יותר מדי ניסיונות כושלים. המתינו כ־15 דקות ונסו שוב.";
       if (code === "EXPIRED") return "פג תוקף הרישיון";
       if (code === "BANNED") return "הרישיון נחסם";
       if (code === "PAUSED") return "הרישיון מושהה";
@@ -944,8 +945,21 @@
     }
 
     function normalizeLicenseInput(value) {
-      return String(value || "").trim().toUpperCase().replace(/[\s\u200e\u200f\u202a-\u202e]+/g, "");
+      return String(value || "").toUpperCase().replace(/[\s\u00a0\u2000-\u200f\u202a-\u202e\u2060]+/g, "");
     }
+
+    const licenseInput = document.getElementById("licenseInput");
+    function lockLicenseInput() {
+      const cleaned = normalizeLicenseInput(licenseInput.value);
+      if (licenseInput.value !== cleaned) licenseInput.value = cleaned;
+    }
+    licenseInput.addEventListener("input", lockLicenseInput);
+    licenseInput.addEventListener("blur", lockLicenseInput);
+    licenseInput.addEventListener("paste", (event) => {
+      event.preventDefault();
+      const pasted = normalizeLicenseInput(event.clipboardData?.getData("text") || "");
+      licenseInput.value = pasted;
+    });
 
     function isEmail(value) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
