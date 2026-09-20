@@ -416,7 +416,16 @@
       background: var(--card);
       color: inherit;
       width: min(460px, calc(100% - 24px));
+      max-height: min(90vh, 720px);
+      overflow: auto;
       padding: 18px;
+    }
+    dialog.sheet .lic-label {
+      display: block;
+      margin: 2px 0 6px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
     }
     dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
     dialog.sheet h3 { margin: 0 0 10px; }
@@ -735,6 +744,7 @@
       <button type="button" data-sec="2592000">חודש</button>
       <button type="button" data-sec="31536000">שנה</button>
     </div>
+    <label class="lic-label" for="licAmount">משך הרישיון</label>
     <div class="row">
       <input id="licAmount" type="number" min="1" max="3650" value="30" />
       <select id="licUnit">
@@ -743,12 +753,8 @@
         <option value="2592000">חודשים</option>
       </select>
     </div>
-    <div class="row">
-      <input id="licDevices" type="number" min="1" max="100" value="1" />
-      <select id="licDevicesLabel" disabled>
-        <option selected>מכשירים</option>
-      </select>
-    </div>
+    <label class="lic-label" for="licDevices">מכשירים</label>
+    <input id="licDevices" type="number" min="1" max="100" value="1" />
     <p class="err" id="licUntil" style="color:var(--muted)"></p>
     <div class="key-box" id="licOutWrap" hidden>
       <input id="licOut" type="text" readonly dir="ltr" spellcheck="false" autocomplete="off" />
@@ -1833,7 +1839,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=45").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=46").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
