@@ -69,53 +69,18 @@
     .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
     .expiry.danger { background: rgba(255, 77, 77, 0.12); color: #ff8a8a; border-color: #6d2a2a; }
     .expiry[hidden] { display: none !important; }
-    .account {
+    .header-actions {
       display: flex;
-      flex-wrap: wrap;
       align-items: center;
       gap: 8px;
     }
-    .account[hidden] { display: none !important; }
-    .license-view, .email-view {
-      border: 1px solid #2d4f80;
-      background: rgba(61, 139, 255, 0.14);
-      color: #cfe2ff;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 12px;
-      font-weight: 700;
-      max-width: min(280px, 46vw);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .license-view { cursor: pointer; font-family: ui-monospace, Consolas, monospace; }
-    .logout {
-      border: 0;
-      border-radius: 999px;
-      background: #243044;
-      color: inherit;
-      padding: 8px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
+    .header-actions .icon-btn svg { width: 20px; height: 20px; display: block; }
+    .install { display: none !important; }
     .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
     .presets button {
       background: #243044 !important;
       padding: 8px 10px !important;
       font-size: 13px;
-    }
-    .install {
-      border: 0;
-      border-radius: 999px;
-      background: var(--accent);
-      color: #fff;
-      padding: 8px 12px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
     }
     .install[hidden] { display: none !important; }
     .ios-hint {
@@ -335,6 +300,8 @@
       border-radius: 12px;
       width: 40px;
       height: 40px;
+      display: grid;
+      place-items: center;
       background: #243044;
       color: inherit;
       cursor: pointer;
@@ -379,11 +346,9 @@
       }
       .brand h1 { font-size: 16px; }
       .expiry { order: 3; flex: 1 1 100%; text-align: center; white-space: normal; }
-      .account { order: 4; flex: 1 1 100%; justify-content: center; }
-      .license-view, .email-view { max-width: 100%; }
+      .header-actions { margin-inline-start: auto; }
       .search { width: 100%; flex-basis: 100%; }
       .count { display: none; }
-      .install { margin-inline-start: auto; }
       main { padding: 12px 12px 0; }
       .theater {
         position: sticky;
@@ -408,6 +373,9 @@
       .card .title { font-size: 13px; }
       .idle strong { font-size: 16px; }
     }
+    @media (max-width: 1024px) {
+      .install:not([hidden]) { display: grid !important; }
+    }
   </style>
 </head>
 <body>
@@ -431,13 +399,18 @@
       </div>
     </div>
     <div class="expiry" id="expiry" hidden></div>
-    <div class="account" id="account" hidden>
-      <button type="button" class="license-view" id="licenseView" hidden title="העתק רישיון"></button>
-      <span class="email-view" id="emailView" hidden></span>
+    <div class="header-actions">
+      <button type="button" class="icon-btn" id="licenseView" hidden title="הרישיון" aria-label="הרישיון">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="8" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M12 15h5"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
+      <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="logoutBtn" title="יציאה" aria-label="יציאה">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"/><path d="m14 8 4 4-4 4"/><path d="M18 12H9"/></svg>
+      </button>
     </div>
-    <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
-    <button type="button" class="logout" id="logoutBtn">יציאה</button>
-    <button type="button" class="install" id="installBtn">התקן אפליקציה</button>
     <input class="search" id="q" type="search" placeholder="חיפוש: ספורט 4, קשת, 12, 14..." enterkeyhint="search" />
     <div class="count" id="count"></div>
   </header>
@@ -499,6 +472,16 @@
     Made with ♥️ From&nbsp;<a href="https://t.me/israelCohen" target="_blank" rel="noopener">Israel</a>
   </footer>
   </div>
+  <dialog class="sheet" id="licenseViewDlg">
+    <h3>הרישיון שלכם</h3>
+    <p id="viewEmail" style="color:var(--muted);margin:0 0 8px"></p>
+    <p id="viewUntil" style="color:var(--muted);margin:0 0 10px"></p>
+    <textarea id="viewLicense" rows="3" readonly></textarea>
+    <div class="row">
+      <button type="button" id="viewLicCopy">העתק</button>
+      <button type="button" class="ghost" id="viewLicClose">סגור</button>
+    </div>
+  </dialog>
   <dialog class="sheet" id="licenseDlg">
     <h3>יצירת רישיון</h3>
     <input id="licNote" type="text" placeholder="שם / הערה (לא חובה)" />
@@ -778,16 +761,22 @@
     }
 
     function refreshAccount(session) {
-      const box = document.getElementById("account");
       const licenseEl = document.getElementById("licenseView");
-      const emailEl = document.getElementById("emailView");
       const license = session.license || session.note || "";
-      const email = session.email || "";
-      licenseEl.hidden = !license || session.role === "admin";
-      licenseEl.textContent = license ? `רישיון: ${license}` : "";
-      emailEl.hidden = !email;
-      emailEl.textContent = email;
-      box.hidden = licenseEl.hidden && emailEl.hidden;
+      licenseEl.hidden = session.role === "admin" || !license;
+    }
+
+    function openLicenseView() {
+      const session = readSession();
+      if (!session) return;
+      const license = session.license || session.note || "";
+      document.getElementById("viewEmail").textContent = session.email || "";
+      const exp = session.licenseExp || session.exp;
+      document.getElementById("viewUntil").textContent = session.role === "admin"
+        ? "מנהל · ללא הגבלת זמן"
+        : `${formatRemaining(exp)} · עד ${formatUntil(exp)}`;
+      document.getElementById("viewLicense").value = license;
+      document.getElementById("licenseViewDlg").showModal();
     }
 
     function unlockApp(session) {
@@ -1196,9 +1185,12 @@
       }
       unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: value, email, note: license.n });
     });
-    document.getElementById("licenseView").addEventListener("click", async () => {
-      const session = readSession();
-      const value = session?.license || session?.note || "";
+    document.getElementById("licenseView").addEventListener("click", openLicenseView);
+    document.getElementById("viewLicClose").addEventListener("click", () => {
+      document.getElementById("licenseViewDlg").close();
+    });
+    document.getElementById("viewLicCopy").addEventListener("click", async () => {
+      const value = document.getElementById("viewLicense").value;
       if (value) await navigator.clipboard.writeText(value);
     });
 
