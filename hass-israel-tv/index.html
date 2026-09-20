@@ -13,6 +13,15 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="favicon.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <script>
+    try {
+      const session = JSON.parse(localStorage.getItem("israel-tv-auth") || "null");
+      const end = session && (session.licenseExp || session.exp);
+      if (session?.role && end && end > Date.now() / 1000) {
+        document.documentElement.dataset.session = "1";
+      }
+    } catch {}
+  </script>
   <style>
     :root {
       color-scheme: dark;
@@ -254,6 +263,8 @@
     }
     footer.credit a { color: inherit; font-weight: 700; }
 
+    html[data-session="1"] #gate { display: none !important; }
+    html[data-session="1"] #app[hidden] { display: block !important; }
     #app[hidden] { display: none !important; }
     #gate {
       min-height: 100dvh;
@@ -781,6 +792,7 @@
 
     function unlockApp(session) {
       writeSession(session);
+      document.documentElement.dataset.session = "1";
       document.getElementById("gate").hidden = true;
       document.getElementById("app").hidden = false;
       document.getElementById("licenseBtn").hidden = session.role !== "admin";
@@ -801,6 +813,7 @@
     }
 
     function lockApp() {
+      document.documentElement.dataset.session = "0";
       clearSession();
       if (hls) {
         hls.destroy();
@@ -1252,7 +1265,12 @@
 
     const existing = readSession();
     if (existing) {
-      repairSession(existing).then((session) => unlockApp(session));
+      unlockApp(existing);
+      repairSession(existing).then((session) => {
+        writeSession(session);
+        refreshExpiry(session);
+        refreshAccount(session);
+      });
     }
 
     const installBtn = document.getElementById("installBtn");
