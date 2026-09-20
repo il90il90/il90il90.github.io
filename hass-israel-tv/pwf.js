@@ -1,2 +1,2 @@
-export const PWF_CHECK_URL = "https://israel-tv-pwf.candy-mile-b03.workers.dev";
+export const PWF_CHECK_URL = "https://israel-tv-pwf.luminous-brow.workers.dev";
 export const PWF_APP_ID = "6a4fb9f6-ef2a-47a9-96bd-0adddfb630bd";

@@ -706,7 +706,7 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
     import { CHANNELS, CATEGORY_LABELS } from "./channels.js";
-    import { PWF_CHECK_URL } from "./pwf.js?v=7";
+    import { PWF_CHECK_URL } from "./pwf.js?v=8";
 
     const AUTH_KEY = "israel-tv-auth";
     const LICENSE_SECRET = "israel-tv-license-hs256";
@@ -1616,7 +1616,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=31").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=32").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
