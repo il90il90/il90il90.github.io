@@ -1,4 +1,4 @@
-const CACHE = "israel-tv-v26";
+const CACHE = "israel-tv-v27";
 const SHELL = [
   "./",
   "./index.html",
@@ -18,11 +18,13 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
-    ).then(() => self.clients.claim())
-  );
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
+    await self.clients.claim();
+    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    await Promise.all(windows.map((client) => client.navigate(client.url)));
+  })());
 });
 
 self.addEventListener("fetch", (event) => {
@@ -31,8 +33,13 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  const fresh = request.mode === "navigate"
+    || url.pathname.endsWith("/")
+    || url.pathname.endsWith(".html")
+    || url.pathname.endsWith(".js");
+
   event.respondWith(
-    fetch(request)
+    fetch(request, fresh ? { cache: "no-store" } : undefined)
       .then((response) => {
         const copy = response.clone();
         caches.open(CACHE).then((cache) => cache.put(request, copy));

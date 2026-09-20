@@ -119,6 +119,7 @@
       font-size: 13px;
     }
     .install[hidden] { display: none !important; }
+    #iosHint, .ios-hint { display: none !important; }
 
     .search {
       flex: 1;
@@ -1614,8 +1615,16 @@
       if (choice?.outcome === "accepted") hideInstall();
     });
 
+    document.getElementById("iosHint")?.remove();
+
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=27").then((reg) => reg.update()).catch(() => {});
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (refreshing) return;
+        refreshing = true;
+        location.reload();
+      });
     }
   </script>
 </body>
