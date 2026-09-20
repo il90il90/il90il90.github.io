@@ -314,8 +314,8 @@
       padding: 8px 12px;
       cursor: pointer;
       font-size: 13px;
+      touch-action: manipulation;
     }
-    .chip:hover, .cat:hover, .card:hover { background: var(--card-hover); }
     .chip.active, .cat.active { background: var(--accent); border-color: transparent; color: #fff; }
 
     .grid {
@@ -333,6 +333,10 @@
       cursor: pointer;
       text-align: center;
       min-width: 0;
+      touch-action: manipulation;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .chip:hover, .cat:hover, .card:hover { background: var(--card-hover); }
     }
     .card.active { outline: 2px solid var(--accent); }
     .logo {
@@ -1188,6 +1192,34 @@
       });
     }
 
+    function bindTap(el, onTap) {
+      let startX = 0;
+      let startY = 0;
+      let armed = false;
+      let lastTap = 0;
+      el.addEventListener("pointerdown", (event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        startX = event.clientX;
+        startY = event.clientY;
+        armed = true;
+        primePlayback();
+      });
+      el.addEventListener("pointercancel", () => { armed = false; });
+      el.addEventListener("pointerup", (event) => {
+        if (!armed) return;
+        armed = false;
+        if (Math.hypot(event.clientX - startX, event.clientY - startY) > 12) return;
+        event.preventDefault();
+        lastTap = Date.now();
+        onTap();
+      });
+      el.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (Date.now() - lastTap < 400) return;
+        onTap();
+      });
+    }
+
     function render() {
       const query = document.getElementById("q").value.trim().toLowerCase();
       recentEl.innerHTML = "";
@@ -1198,9 +1230,10 @@
       for (const channel of recent) {
         const btn = document.createElement("button");
         btn.type = "button";
+        btn.dataset.id = channel.id;
         btn.className = `chip${current?.id === channel.id ? " active" : ""}`;
         btn.textContent = channel.name;
-        btn.addEventListener("click", () => playChannel(channel));
+        bindTap(btn, () => playChannel(channel));
         recentEl.append(btn);
       }
 
@@ -1209,7 +1242,7 @@
       allBtn.type = "button";
       allBtn.className = `cat${category === "all" ? " active" : ""}`;
       allBtn.textContent = "הכל";
-      allBtn.addEventListener("click", () => { category = "all"; render(); });
+      bindTap(allBtn, () => { category = "all"; render(); });
       catsEl.append(allBtn);
       for (const [id, label] of Object.entries(CATEGORY_LABELS)) {
         if (!CHANNELS.some((channel) => channel.category === id)) continue;
@@ -1217,7 +1250,7 @@
         btn.type = "button";
         btn.className = `cat${category === id ? " active" : ""}`;
         btn.textContent = label;
-        btn.addEventListener("click", () => { category = id; render(); });
+        bindTap(btn, () => { category = id; render(); });
         catsEl.append(btn);
       }
 
@@ -1226,6 +1259,7 @@
       for (const channel of list) {
         const card = document.createElement("button");
         card.type = "button";
+        card.dataset.id = channel.id;
         card.className = `card${current?.id === channel.id ? " active" : ""}`;
         card.innerHTML = `
           <div class="logo">${channel.logo ? `<img src="${channel.logo}" alt="">` : channel.name.slice(0, 2)}</div>
@@ -1234,7 +1268,7 @@
         `;
         card.querySelector(".title").textContent = channel.name;
         card.querySelector(".sub").textContent = channel.nameEn;
-        card.addEventListener("click", () => playChannel(channel));
+        bindTap(card, () => playChannel(channel));
         gridEl.append(card);
       }
 
@@ -1259,6 +1293,15 @@
     video.addEventListener("resize", syncVideoFrame);
     video.addEventListener("playing", () => setStatus(""));
 
+    function primePlayback() {
+      video.autoplay = true;
+      video.playsInline = true;
+      if (video.paused) {
+        video.muted = true;
+        video.play().catch(() => {});
+      }
+    }
+
     function startPlayback() {
       video.autoplay = true;
       video.playsInline = true;
@@ -1272,7 +1315,24 @@
       return tryPlay(false).catch(() => tryPlay(true)).catch(() => {});
     }
 
-    function attachHls(url) {
+    function waitForHls(timeoutMs = 6000) {
+      if (window.Hls || video.canPlayType("application/vnd.apple.mpegurl")) {
+        return Promise.resolve();
+      }
+      return new Promise((resolve) => {
+        const started = Date.now();
+        const timer = setInterval(() => {
+          if (window.Hls || Date.now() - started >= timeoutMs) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 40);
+      });
+    }
+
+    async function attachHls(url, requestId = playSeq) {
+      await waitForHls();
+      if (requestId !== playSeq) return;
       if (hls) {
         hls.destroy();
         hls = undefined;
@@ -1294,7 +1354,7 @@
         });
         return;
       }
-      setStatus("הדפדפן לא תומך ב-HLS. העתיקו את הקישור ל-VLC.");
+      setStatus("השידור לא נטען. נסו שוב עוד רגע.");
     }
 
     function setNowLogo(channel) {
@@ -1511,7 +1571,33 @@
       await enterPip();
     }
 
+    function syncActive() {
+      document.querySelectorAll("#recent .chip, #grid .card").forEach((el) => {
+        el.classList.toggle("active", el.dataset.id === current?.id);
+      });
+    }
+
+    function refreshRecent() {
+      const query = document.getElementById("q").value.trim().toLowerCase();
+      recentEl.innerHTML = "";
+      const recent = loadRecent()
+        .map((id) => CHANNELS.find((item) => item.id === id))
+        .filter((channel) => channel && matches(channel, query));
+      recentSection.hidden = recent.length === 0;
+      for (const channel of recent) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.id = channel.id;
+        btn.className = `chip${current?.id === channel.id ? " active" : ""}`;
+        btn.textContent = channel.name;
+        bindTap(btn, () => playChannel(channel));
+        recentEl.append(btn);
+      }
+    }
+
+    let playSeq = 0;
     async function playChannel(channel) {
+      const requestId = ++playSeq;
       current = channel;
       saveRecent(channel.id);
       showStage(true);
@@ -1519,19 +1605,23 @@
       setMediaSession(channel);
       setStatus("");
       history.replaceState(null, "", `#${channel.id}`);
-      render();
+      syncActive();
+      refreshRecent();
       try {
         currentUrl = await buildCatUrl(channel.path);
+        if (requestId !== playSeq) return;
         setOpenButton(currentUrl);
         if (getCastSession()) {
           stopLocalPlayback();
           await loadCastMedia(currentUrl, channel);
+          if (requestId !== playSeq) return;
           setStatus("");
           syncCastUi();
           return;
         }
-        attachHls(currentUrl);
+        await attachHls(currentUrl, requestId);
       } catch (error) {
+        if (requestId !== playSeq) return;
         setStatus("לא ניתן לחתום את הקישור בדפדפן הזה.");
       }
     }
@@ -1847,7 +1937,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=49").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=50").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
