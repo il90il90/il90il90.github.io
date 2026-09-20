@@ -684,10 +684,33 @@
       return `ITV1.${body}.${await hmacSha256(LICENSE_SECRET, body)}`;
     }
 
+    function durationSeconds(key) {
+      const type = String(key?.key_type || key?.type || "").toLowerCase();
+      const amount = Number(key?.duration ?? key?.days_remaining);
+      if (type === "lifetime") return 3650 * 86400;
+      if (!Number.isFinite(amount) || amount <= 0) return 0;
+      if (type === "hours" || type === "hour") return amount * 3600;
+      if (type === "weeks" || type === "week") return amount * 7 * 86400;
+      if (type === "months" || type === "month") return amount * 30 * 86400;
+      if (type === "years" || type === "year") return amount * 365 * 86400;
+      return amount * 86400;
+    }
+
     function parsePwfExp(key) {
-      if (!key?.expires_at) return nowSec() + 3650 * 86400;
-      const stamp = Date.parse(key.expires_at);
-      return Number.isFinite(stamp) ? Math.floor(stamp / 1000) : nowSec() + 86400;
+      if (key?.expires_at) {
+        const stamp = Date.parse(key.expires_at);
+        if (Number.isFinite(stamp)) return Math.floor(stamp / 1000);
+      }
+      const daysLeft = Number(key?.days_remaining);
+      if (Number.isFinite(daysLeft) && daysLeft > 0) {
+        return nowSec() + Math.round(daysLeft * 86400);
+      }
+      const fromType = durationSeconds(key);
+      if (fromType > 0) return nowSec() + fromType;
+      if (String(key?.key_type || "").toLowerCase() === "lifetime") {
+        return nowSec() + 3650 * 86400;
+      }
+      return nowSec() + 30 * 86400;
     }
 
     function pwfErrorMessage(data) {
@@ -1221,8 +1244,24 @@
       if (value) await navigator.clipboard.writeText(value);
     });
 
+    async function repairSession(session) {
+      if (session.role !== "user" || !session.license) return session;
+      const left = (session.licenseExp || session.exp) - nowSec();
+      if (left <= 400 * 86400) return session;
+      try {
+        const pwf = await verifyPwfLicense(session.license, session.email || "");
+        if (!pwf.ok) return session;
+        const exp = parsePwfExp(pwf.key);
+        return { ...session, exp, licenseExp: exp };
+      } catch {
+        return session;
+      }
+    }
+
     const existing = readSession();
-    if (existing) unlockApp(existing);
+    if (existing) {
+      repairSession(existing).then((session) => unlockApp(session));
+    }
 
     const installBtn = document.getElementById("installBtn");
     const iosHint = document.getElementById("iosHint");
