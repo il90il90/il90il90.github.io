@@ -55,6 +55,26 @@
     .brand img { width: 36px; height: 36px; border-radius: 10px; }
     .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; }
     .brand span { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
+    .expiry {
+      margin-inline-start: auto;
+      background: rgba(61, 139, 255, 0.14);
+      color: #cfe2ff;
+      border: 1px solid #2d4f80;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
+    .expiry.danger { background: rgba(255, 77, 77, 0.12); color: #ff8a8a; border-color: #6d2a2a; }
+    .expiry[hidden] { display: none !important; }
+    .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .presets button {
+      background: #243044 !important;
+      padding: 8px 10px !important;
+      font-size: 13px;
+    }
     .install {
       border: 0;
       border-radius: 999px;
@@ -282,7 +302,7 @@
     }
     dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
     dialog.sheet h3 { margin: 0 0 10px; }
-    dialog.sheet input, dialog.sheet textarea {
+    dialog.sheet input, dialog.sheet textarea, dialog.sheet select {
       width: 100%;
       box-sizing: border-box;
       margin: 0 0 10px;
@@ -311,6 +331,7 @@
         padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px;
       }
       .brand h1 { font-size: 16px; }
+      .expiry { order: 3; flex: 1 1 100%; text-align: center; white-space: normal; }
       .search { width: 100%; flex-basis: 100%; }
       .count { display: none; }
       .install { margin-inline-start: auto; }
@@ -359,6 +380,7 @@
         <span>צפייה ישירה</span>
       </div>
     </div>
+    <div class="expiry" id="expiry" hidden></div>
     <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
     <button type="button" class="icon-btn" id="logoutBtn" title="יציאה" aria-label="יציאה">⎋</button>
     <button type="button" class="install" id="installBtn">התקן אפליקציה</button>
@@ -418,7 +440,22 @@
   <dialog class="sheet" id="licenseDlg">
     <h3>יצירת רישיון</h3>
     <input id="licNote" type="text" placeholder="שם / הערה (לא חובה)" />
-    <input id="licDays" type="number" min="1" max="3650" value="365" />
+    <div class="presets">
+      <button type="button" data-sec="3600">שעה</button>
+      <button type="button" data-sec="86400">יום</button>
+      <button type="button" data-sec="604800">שבוע</button>
+      <button type="button" data-sec="2592000">חודש</button>
+      <button type="button" data-sec="31536000">שנה</button>
+    </div>
+    <div class="row">
+      <input id="licAmount" type="number" min="1" max="3650" value="30" />
+      <select id="licUnit">
+        <option value="3600">שעות</option>
+        <option value="86400" selected>ימים</option>
+        <option value="2592000">חודשים</option>
+      </select>
+    </div>
+    <p class="err" id="licUntil" style="color:var(--muted)"></p>
     <textarea id="licOut" rows="3" readonly placeholder="הרישיון יופיע כאן"></textarea>
     <div class="row">
       <button type="button" id="licMake">צור</button>
@@ -506,10 +543,49 @@
       return b64url(sig);
     }
 
+    function nowSec() {
+      return Math.floor(Date.now() / 1000);
+    }
+
+    function hebrewCount(value, one, many) {
+      return `${value} ${value === 1 ? one : many}`;
+    }
+
+    function formatRemaining(exp) {
+      const sec = Math.max(0, exp - nowSec());
+      if (sec <= 0) return "פג תוקף";
+      const days = Math.floor(sec / 86400);
+      const hours = Math.floor((sec % 86400) / 3600);
+      const minutes = Math.floor((sec % 3600) / 60);
+      if (days > 0) {
+        return hours
+          ? `נותרו ${hebrewCount(days, "יום", "ימים")} ו־${hebrewCount(hours, "שעה", "שעות")}`
+          : `נותרו ${hebrewCount(days, "יום", "ימים")}`;
+      }
+      if (hours > 0) {
+        return minutes
+          ? `נותרו ${hebrewCount(hours, "שעה", "שעות")} ו־${hebrewCount(minutes, "דקה", "דקות")}`
+          : `נותרו ${hebrewCount(hours, "שעה", "שעות")}`;
+      }
+      return `נותרו ${hebrewCount(Math.max(1, minutes), "דקה", "דקות")}`;
+    }
+
+    function formatUntil(exp) {
+      return new Date(exp * 1000).toLocaleString("he-IL", {
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
     function readSession() {
       try {
         const session = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
-        if (!session?.role || !session.exp || session.exp < Date.now() / 1000) return null;
+        if (!session?.role) return null;
+        const end = session.licenseExp || session.exp;
+        if (!end || end < nowSec()) return null;
         return session;
       } catch {
         return null;
@@ -524,12 +600,12 @@
       localStorage.removeItem(AUTH_KEY);
     }
 
-    async function createLicense(note, days) {
+    async function createLicense(note, seconds) {
       const payload = {
         v: 1,
         n: note || "license",
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + Math.max(1, days) * 86400,
+        iat: nowSec(),
+        exp: nowSec() + Math.max(60, seconds),
       };
       const body = b64urlJson(payload);
       return `ITV1.${body}.${await hmacSha256(LICENSE_SECRET, body)}`;
@@ -550,11 +626,41 @@
       return payload;
     }
 
+    function refreshExpiry(session) {
+      const el = document.getElementById("expiry");
+      if (session.role === "admin") {
+        el.hidden = false;
+        el.className = "expiry";
+        el.textContent = "מנהל · ללא הגבלת זמן";
+        return;
+      }
+      const exp = session.licenseExp || session.exp;
+      const left = exp - nowSec();
+      if (left <= 0) {
+        lockApp();
+        return;
+      }
+      el.hidden = false;
+      el.className = `expiry${left <= 3600 ? " danger" : left <= 86400 ? " warn" : ""}`;
+      el.textContent = `${formatRemaining(exp)} · עד ${formatUntil(exp)}`;
+    }
+
     function unlockApp(session) {
       writeSession(session);
       document.getElementById("gate").hidden = true;
       document.getElementById("app").hidden = false;
       document.getElementById("licenseBtn").hidden = session.role !== "admin";
+      refreshExpiry(session);
+      if (!window.__expiryClock) {
+        window.__expiryClock = setInterval(() => {
+          const current = readSession();
+          if (!current) {
+            lockApp();
+            return;
+          }
+          refreshExpiry(current);
+        }, 30000);
+      }
       bootPlayer();
     }
 
@@ -769,9 +875,8 @@
         err.textContent = "הזינו רישיון";
         return;
       }
-      const exp = Math.floor(Date.now() / 1000) + 30 * 86400;
       if (await sha256Hex(value) === ADMIN_HASH) {
-        unlockApp({ role: "admin", exp });
+        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400 });
         return;
       }
       const license = await verifyLicense(value);
@@ -779,7 +884,7 @@
         err.textContent = "רישיון לא תקין או שפג תוקפו";
         return;
       }
-      unlockApp({ role: "user", exp: Math.min(exp, license.exp), note: license.n });
+      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, note: license.n });
     });
 
     document.getElementById("logoutBtn").addEventListener("click", lockApp);
@@ -789,10 +894,35 @@
     document.getElementById("licClose").addEventListener("click", () => {
       document.getElementById("licenseDlg").close();
     });
+    function selectedLicenseSeconds() {
+      const amount = Number(document.getElementById("licAmount").value) || 1;
+      const unit = Number(document.getElementById("licUnit").value) || 86400;
+      return Math.max(60, amount * unit);
+    }
+
+    document.querySelectorAll("#licenseDlg .presets button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const sec = Number(btn.dataset.sec);
+        if (sec >= 2592000 && sec % 2592000 === 0) {
+          document.getElementById("licAmount").value = String(sec / 2592000);
+          document.getElementById("licUnit").value = "2592000";
+        } else if (sec >= 86400 && sec % 86400 === 0) {
+          document.getElementById("licAmount").value = String(sec / 86400);
+          document.getElementById("licUnit").value = "86400";
+        } else {
+          document.getElementById("licAmount").value = String(Math.max(1, Math.round(sec / 3600)));
+          document.getElementById("licUnit").value = "3600";
+        }
+      });
+    });
+
     document.getElementById("licMake").addEventListener("click", async () => {
       const note = document.getElementById("licNote").value.trim();
-      const days = Number(document.getElementById("licDays").value) || 365;
-      document.getElementById("licOut").value = await createLicense(note, days);
+      const seconds = selectedLicenseSeconds();
+      const code = await createLicense(note, seconds);
+      document.getElementById("licOut").value = code;
+      const exp = nowSec() + seconds;
+      document.getElementById("licUntil").textContent = `${formatRemaining(exp)} · עד ${formatUntil(exp)}`;
     });
     document.getElementById("licCopy").addEventListener("click", async () => {
       const value = document.getElementById("licOut").value;
