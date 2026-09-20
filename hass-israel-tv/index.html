@@ -727,7 +727,7 @@
         z-index: 3;
       }
       #searchBtn { display: grid !important; }
-      .expiry-until { display: none; }
+      .expiry .expiry-until { display: none; }
       .icon-btn { width: 36px; height: 36px; }
       .count { display: none; }
       main { padding: 10px 12px 0; }
@@ -989,7 +989,7 @@
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=63";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=64";
     import { PWF_CHECK_URL } from "./pwf.js?v=9";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -2628,7 +2628,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=63").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=64").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
