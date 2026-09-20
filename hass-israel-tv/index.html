@@ -1735,13 +1735,11 @@
       try {
         const issued = await createLicense(note, seconds);
         out.value = issued.license_key;
-        wrap.hidden = false;
-        const exp = issued.expires_at
-          ? Math.floor(Date.parse(issued.expires_at) / 1000)
-          : nowSec() + seconds;
-        until.textContent = Number.isFinite(exp)
-          ? `${formatRemaining(exp)} · עד ${formatUntil(exp)}`
-          : "";
+        wrap.hidden = true;
+        until.textContent = "";
+        try { await navigator.clipboard.writeText(issued.license_key); } catch {}
+        document.getElementById("licenseDlg").close();
+        showToast("הרישיון נוצר והועתק");
       } catch (error) {
         until.textContent = error?.message || "לא הצלחנו ליצור רישיון";
       }
@@ -1817,7 +1815,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=43").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=44").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
