@@ -765,7 +765,6 @@
     </div>
     <div class="row">
       <button type="button" id="licMake">צור</button>
-      <button type="button" class="ghost" id="licClose">סגור</button>
     </div>
   </dialog>
 
@@ -1723,8 +1722,14 @@
       resetLicenseForm();
       document.getElementById("licenseDlg").showModal();
     });
-    document.getElementById("licClose").addEventListener("click", () => {
-      document.getElementById("licenseDlg").close();
+    document.getElementById("licenseDlg").addEventListener("click", (event) => {
+      const box = event.currentTarget.getBoundingClientRect();
+      const inside =
+        event.clientX >= box.left &&
+        event.clientX <= box.right &&
+        event.clientY >= box.top &&
+        event.clientY <= box.bottom;
+      if (!inside) event.currentTarget.close();
     });
     function selectedLicenseSeconds() {
       const amount = Number(document.getElementById("licAmount").value) || 1;
@@ -1839,7 +1844,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=47").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=48").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
