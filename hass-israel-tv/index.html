@@ -696,9 +696,9 @@
     html.tv .tv-only { display: grid !important; }
     html.tv .tv-hint { display: block; margin: 0 0 16px; color: var(--muted); font-size: 16px; }
     html.tv #pipBtn, html.tv #castBtn, html.tv #openBtn, html.tv #installBtn { display: none !important; }
-    html.tv .grid { grid-template-columns: repeat(auto-fill, minmax(188px, 1fr)); gap: 18px; }
-    html.tv .card { padding: 16px 12px 18px; }
-    html.tv .logo { width: 92px; height: 92px; }
+    html.tv .grid { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 14px; }
+    html.tv .card { padding: 12px 8px 14px; }
+    html.tv .logo { width: 72px; height: 72px; }
     html.tv .card .title { font-size: 16px; }
     html.tv .chip, html.tv .cat { min-height: 48px; font-size: 16px; padding: 10px 16px; }
     html.tv .chip.chip-logo { width: 56px; height: 56px; }
@@ -891,7 +891,7 @@
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
-    import { CHANNELS, CATEGORY_LABELS } from "./channels.js?v=59";
+    import { CHANNELS, CATEGORY_LABELS } from "./channels.js?v=60";
     import { PWF_CHECK_URL } from "./pwf.js?v=9";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1483,6 +1483,7 @@
     }
 
     function render() {
+      const query = document.getElementById("q").value.trim().toLowerCase();
       paintRecent();
 
       catsEl.innerHTML = "";
@@ -2353,7 +2354,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=59").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=60").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
