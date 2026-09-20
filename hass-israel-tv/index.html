@@ -450,6 +450,38 @@
       cursor: pointer;
     }
     .login .err { color: #ff8a8a; font-size: 13px; min-height: 18px; margin: 0 0 8px; }
+    .login .login-btns { display: grid; gap: 8px; }
+    .login button.scan-btn { background: #243044; }
+    .login button.scan-btn svg { width: 18px; height: 18px; }
+    .login .scan-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    html.tv .scan-btn, html.tv #scanDlg { display: none !important; }
+    .qr-card {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      margin: 12px 0 4px;
+      padding: 16px 14px 12px;
+      background: #fff;
+      border-radius: 16px;
+    }
+    .qr-card[hidden] { display: none !important; }
+    .qr-card canvas { width: 220px; height: 220px; }
+    .qr-card p { margin: 0; color: #243044; font-size: 13px; text-align: center; font-weight: 600; }
+    #scanDlg { width: min(420px, calc(100% - 24px)); }
+    #scanVideo {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #000;
+    }
+    #scanHint { color: var(--muted); font-size: 14px; margin: 10px 0 12px; text-align: center; }
+    #scanFile { display: none; }
     .icon-btn {
       border: 0;
       border-radius: 12px;
@@ -809,11 +841,17 @@
   <div id="gate">
     <form class="login" id="loginForm">
       <h2>כניסה</h2>
-      <p>העתיקו את הרישיון מהלוח, בלי להקליד אותו מחדש</p>
+      <p>סירקו את הברקוד של הרישיון, או הדביקו אותו מהלוח</p>
       <p class="tv-hint">בטלוויזיה: לחצו OK על השדה, הזינו את הרישיון במקלדת השלט, ואז כניסה</p>
       <p class="err" id="loginErr"></p>
       <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון" inputmode="text" />
-      <button type="submit">כניסה</button>
+      <div class="login-btns">
+        <button type="button" class="scan-btn" id="scanBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 8h8v8H8z"/></svg>
+          סריקת ברקוד
+        </button>
+        <button type="submit">כניסה</button>
+      </div>
     </form>
   </div>
   <div id="app" hidden>
@@ -922,6 +960,10 @@
             <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
           </button>
         </div>
+        <div class="qr-card" id="viewLicQrWrap" hidden>
+          <canvas id="viewLicQr" width="220" height="220"></canvas>
+          <p>סריקה במסך הכניסה במכשיר אחר</p>
+        </div>
       </div>
       <div class="custom-box">
         <h4>ערוצים שלי</h4>
@@ -974,10 +1016,24 @@
         <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
       </button>
     </div>
+    <div class="qr-card" id="licQrWrap" hidden>
+      <canvas id="licQr" width="220" height="220"></canvas>
+      <p>סירקו את הברקוד במסך הכניסה</p>
+    </div>
     <button type="button" class="lic-make" id="licMake">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 21 2l-3 1-2 3-3 1z"/></svg>
       צור רישיון
     </button>
+  </dialog>
+  <dialog class="sheet" id="scanDlg">
+    <h3>סריקת ברקוד</h3>
+    <video id="scanVideo" autoplay muted playsinline></video>
+    <p id="scanHint">כוונו את המצלמה לברקוד של הרישיון</p>
+    <input id="scanFile" type="file" accept="image/*" />
+    <div class="row">
+      <button type="button" class="ghost" id="scanFileBtn">בחירה מתמונה</button>
+      <button type="button" class="ghost" id="scanClose">ביטול</button>
+    </div>
   </dialog>
 
   <script>
@@ -988,8 +1044,10 @@
   </script>
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=64";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=65";
     import { PWF_CHECK_URL } from "./pwf.js?v=9";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1062,6 +1120,7 @@
     let category = "all";
     const isAndroid = /Android/i.test(navigator.userAgent);
     const isTv = document.documentElement.classList.contains("tv");
+    if (isTv) document.getElementById("scanBtn").hidden = true;
     const searchInput = document.getElementById("q");
     const searchBtn = document.getElementById("searchBtn");
     if (isTv) {
@@ -1260,6 +1319,53 @@
       return stripLicenseSpaces(value).toUpperCase();
     }
 
+    function licenseQrPayload(key) {
+      const url = new URL(location.origin + location.pathname);
+      url.hash = `k=${encodeURIComponent(key)}`;
+      return url.toString();
+    }
+
+    function parseLicensePayload(text) {
+      const raw = String(text || "").trim();
+      if (!raw) return "";
+      try {
+        const url = new URL(raw);
+        const fromQuery = url.searchParams.get("k") || url.searchParams.get("lic");
+        if (fromQuery) return stripLicenseSpaces(fromQuery);
+        const hash = url.hash.replace(/^#/, "");
+        if (hash.startsWith("k=") || hash.startsWith("lic=")) {
+          return stripLicenseSpaces(decodeURIComponent(hash.slice(hash.indexOf("=") + 1)));
+        }
+      } catch {}
+      return stripLicenseSpaces(raw);
+    }
+
+    function consumeLicenseLink() {
+      const url = new URL(location.href);
+      let key = url.searchParams.get("k") || url.searchParams.get("lic") || "";
+      const hash = url.hash.replace(/^#/, "");
+      if (!key && (hash.startsWith("k=") || hash.startsWith("lic="))) {
+        key = decodeURIComponent(hash.slice(hash.indexOf("=") + 1));
+      }
+      if (!key) return "";
+      url.searchParams.delete("k");
+      url.searchParams.delete("lic");
+      if (hash.startsWith("k=") || hash.startsWith("lic=")) url.hash = "";
+      history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      return stripLicenseSpaces(key);
+    }
+
+    async function paintQr(canvas, key) {
+      if (!key || !window.QRCode) return false;
+      await window.QRCode.toCanvas(canvas, licenseQrPayload(key), {
+        width: 220,
+        margin: 2,
+        errorCorrectionLevel: "M",
+        color: { dark: "#070b12", light: "#ffffff" },
+      });
+      return true;
+    }
+
     const licenseInput = document.getElementById("licenseInput");
     function lockLicenseInput() {
       const cleaned = stripLicenseSpaces(licenseInput.value);
@@ -1269,8 +1375,129 @@
     licenseInput.addEventListener("blur", lockLicenseInput);
     licenseInput.addEventListener("paste", (event) => {
       event.preventDefault();
-      const pasted = stripLicenseSpaces(event.clipboardData?.getData("text") || "");
+      const pasted = parseLicensePayload(event.clipboardData?.getData("text") || "");
       licenseInput.value = pasted;
+    });
+
+    const scanDlg = document.getElementById("scanDlg");
+    const scanVideo = document.getElementById("scanVideo");
+    const scanHint = document.getElementById("scanHint");
+    const scanFile = document.getElementById("scanFile");
+    let scanStream = null;
+    let scanTimer = 0;
+    let scanBusy = false;
+
+    function stopScan() {
+      window.clearTimeout(scanTimer);
+      scanTimer = 0;
+      if (scanStream) {
+        scanStream.getTracks().forEach((track) => track.stop());
+        scanStream = null;
+      }
+      scanVideo.srcObject = null;
+    }
+
+    async function applyScannedLicense(text) {
+      const key = parseLicensePayload(text);
+      if (!key) return false;
+      stopScan();
+      if (scanDlg.open) scanDlg.close();
+      licenseInput.value = key;
+      showToast("הרישיון נסרק");
+      document.getElementById("loginForm").requestSubmit();
+      return true;
+    }
+
+    function readQrFromCanvas(canvas) {
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = window.jsQR?.(image.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+      return code?.data || "";
+    }
+
+    async function detectQrFromSource(source) {
+      if ("BarcodeDetector" in window) {
+        try {
+          const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
+          const codes = await detector.detect(source);
+          if (codes[0]?.rawValue) return codes[0].rawValue;
+        } catch {}
+      }
+      return "";
+    }
+
+    async function tickScan() {
+      if (!scanDlg.open || scanBusy) return;
+      if (scanVideo.readyState >= 2 && scanVideo.videoWidth) {
+        const canvas = document.createElement("canvas");
+        canvas.width = scanVideo.videoWidth;
+        canvas.height = scanVideo.videoHeight;
+        canvas.getContext("2d").drawImage(scanVideo, 0, 0);
+        const native = await detectQrFromSource(scanVideo);
+        const found = native || readQrFromCanvas(canvas);
+        if (found && await applyScannedLicense(found)) return;
+      }
+      scanTimer = window.setTimeout(tickScan, 220);
+    }
+
+    async function startScan() {
+      scanHint.textContent = "כוונו את המצלמה לברקוד של הרישיון";
+      stopScan();
+      if (!navigator.mediaDevices?.getUserMedia) {
+        scanHint.textContent = "אין מצלמה כאן. בחרו תמונה של הברקוד";
+        return;
+      }
+      try {
+        scanStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: "environment" } },
+          audio: false,
+        });
+        scanVideo.srcObject = scanStream;
+        await scanVideo.play();
+        tickScan();
+      } catch {
+        scanHint.textContent = "לא ניתן לפתוח מצלמה. בחרו תמונה של הברקוד";
+      }
+    }
+
+    async function scanImageFile(file) {
+      if (!file) return;
+      scanBusy = true;
+      try {
+        const bitmap = await createImageBitmap(file);
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        canvas.getContext("2d").drawImage(bitmap, 0, 0);
+        const native = await detectQrFromSource(canvas);
+        const found = native || readQrFromCanvas(canvas);
+        if (!found || !(await applyScannedLicense(found))) {
+          scanHint.textContent = "לא נמצא ברקוד בתמונה. נסו תמונה אחרת";
+        }
+      } catch {
+        scanHint.textContent = "לא הצלחנו לקרוא את התמונה";
+      } finally {
+        scanBusy = false;
+        scanFile.value = "";
+      }
+    }
+
+    document.getElementById("scanBtn").addEventListener("click", () => {
+      scanDlg.showModal();
+      startScan();
+    });
+    document.getElementById("scanClose").addEventListener("click", () => scanDlg.close());
+    document.getElementById("scanFileBtn").addEventListener("click", () => scanFile.click());
+    scanFile.addEventListener("change", () => scanImageFile(scanFile.files?.[0]));
+    scanDlg.addEventListener("close", stopScan);
+    scanDlg.addEventListener("click", (event) => {
+      const box = event.currentTarget.getBoundingClientRect();
+      const inside =
+        event.clientX >= box.left &&
+        event.clientX <= box.right &&
+        event.clientY >= box.top &&
+        event.clientY <= box.bottom;
+      if (!inside) event.currentTarget.close();
     });
 
     function deviceHwid() {
@@ -1435,6 +1662,14 @@
       const wrap = document.getElementById("viewLicenseWrap");
       document.getElementById("viewLicense").value = license;
       wrap.hidden = !license;
+      const qrWrap = document.getElementById("viewLicQrWrap");
+      if (license) {
+        paintQr(document.getElementById("viewLicQr"), license)
+          .then((ok) => { qrWrap.hidden = !ok; })
+          .catch(() => { qrWrap.hidden = true; });
+      } else {
+        qrWrap.hidden = true;
+      }
       document.getElementById("customName").value = "";
       document.getElementById("customUrl").value = "";
       document.getElementById("customErr").textContent = "";
@@ -2233,7 +2468,7 @@
 
     document.getElementById("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      const value = stripLicenseSpaces(document.getElementById("licenseInput").value);
+      const value = parseLicensePayload(document.getElementById("licenseInput").value);
       const err = document.getElementById("loginErr");
       err.textContent = "";
       if (!value) {
@@ -2325,6 +2560,7 @@
       document.getElementById("licUntil").textContent = "";
       document.getElementById("licOut").value = "";
       document.getElementById("licOutWrap").hidden = true;
+      document.getElementById("licQrWrap").hidden = true;
     }
 
     document.getElementById("licenseBtn").addEventListener("click", () => {
@@ -2374,11 +2610,16 @@
       try {
         const issued = await createLicense(note, seconds);
         out.value = issued.license_key;
-        wrap.hidden = true;
+        wrap.hidden = false;
         until.textContent = "";
+        const qrWrap = document.getElementById("licQrWrap");
+        try {
+          qrWrap.hidden = !(await paintQr(document.getElementById("licQr"), issued.license_key));
+        } catch {
+          qrWrap.hidden = true;
+        }
         try { await navigator.clipboard.writeText(issued.license_key); } catch {}
-        document.getElementById("licenseDlg").close();
-        showToast("הרישיון נוצר והועתק");
+        showToast("הרישיון נוצר והועתק — אפשר גם לסרוק את הברקוד");
       } catch (error) {
         until.textContent = error?.message || "לא הצלחנו ליצור רישיון";
       }
@@ -2402,6 +2643,7 @@
       }
     }
 
+    const linkedLicense = consumeLicenseLink();
     const existing = readSession();
     if (existing) {
       unlockApp(existing);
@@ -2410,6 +2652,9 @@
         refreshExpiry(session);
         startLiveSession(session);
       });
+    } else if (linkedLicense) {
+      licenseInput.value = linkedLicense;
+      document.getElementById("loginForm").requestSubmit();
     }
 
     const installBtn = document.getElementById("installBtn");
@@ -2628,7 +2873,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=64").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=65").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
