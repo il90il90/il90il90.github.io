@@ -397,6 +397,16 @@
       .chip:hover, .cat:hover, .card:hover { background: var(--card-hover); }
     }
     .card.active { outline: 2px solid var(--accent); }
+    .card-add {
+      border-style: dashed;
+      background: rgba(61, 139, 255, 0.08);
+    }
+    .card-add .logo {
+      background: rgba(61, 139, 255, 0.16);
+      color: var(--accent-2);
+      font-size: 34px;
+      font-weight: 700;
+    }
     .logo {
       width: 72px; height: 72px; margin: 0 auto 10px;
       border-radius: 16px; background: #0b1018;
@@ -702,13 +712,18 @@
       padding: 10px 12px;
       font-size: 15px;
     }
+    .custom-box .custom-actions {
+      display: flex;
+      gap: 8px;
+      margin: 2px 0 12px;
+    }
     .custom-box .custom-add {
-      width: 100%;
+      flex: 1;
       min-height: 44px;
-      margin: 2px 0 8px;
       font-size: 15px;
       font-weight: 700;
     }
+    .custom-box .custom-cancel { flex: 0 0 auto; min-height: 44px; }
     .custom-box .custom-err {
       min-height: 18px;
       margin: 0 0 6px;
@@ -725,6 +740,7 @@
       border: 1px solid var(--line);
       border-radius: 10px;
     }
+    .custom-item.editing { outline: 2px solid var(--accent); }
     .custom-item div { min-width: 0; flex: 1; }
     .custom-item strong { display: block; font-size: 14px; }
     .custom-item span {
@@ -737,10 +753,12 @@
       direction: ltr;
       text-align: left;
     }
+    .custom-item-btns { display: flex; flex-shrink: 0; gap: 6px; }
     .custom-item button {
       flex: 0 0 auto;
       background: #243044;
       padding: 8px 10px;
+      min-width: 44px;
     }
     .custom-empty { color: var(--muted); font-size: 13px; margin: 0; }
 
@@ -863,6 +881,9 @@
       </div>
     </button>
     <div class="header-actions">
+      <button type="button" class="icon-btn" id="settingsBtn" title="הגדרות וערוצים שלי" aria-label="הגדרות וערוצים שלי">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .7.4 1.3 1.1 1.5H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg>
+      </button>
       <button type="button" class="expiry" id="expiry" hidden title="הגדרות" aria-label="הגדרות"></button>
       <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
       <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
@@ -966,13 +987,16 @@
           <p>סריקה במסך הכניסה במכשיר אחר</p>
         </div>
       </div>
-      <div class="custom-box">
+      <div class="custom-box" id="customBox">
         <h4>ערוצים שלי</h4>
-        <p class="custom-help">הוסיפו קישור m3u8 משלכם ותנו לו שם</p>
+        <p class="custom-help">כאן מוסיפים, עורכים ומוחקים קישורי m3u8 פרטיים. תנו שם, הדביקו קישור, ואז הוסיפו.</p>
         <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
         <input id="customUrl" type="url" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
         <p class="custom-err" id="customErr"></p>
-        <button type="button" class="custom-add" id="customAdd">הוסף ערוץ</button>
+        <div class="custom-actions">
+          <button type="button" class="custom-add" id="customAdd">הוסף ערוץ</button>
+          <button type="button" class="ghost custom-cancel" id="customCancel" hidden>ביטול</button>
+        </div>
         <div class="custom-list" id="customList"></div>
       </div>
       <div class="row">
@@ -1048,7 +1072,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=67";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=68";
     import { PWF_CHECK_URL } from "./pwf.js?v=9";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1648,7 +1672,7 @@
       el.innerHTML = `<span class="expiry-main">${formatRemaining(exp)}</span><span class="expiry-until"> · עד ${formatUntilDate(exp)}</span>`;
     }
 
-    function openLicenseView() {
+    function openLicenseView(options = {}) {
       const session = readSession();
       if (!session) return;
       const license = session.license || session.note || "";
@@ -1674,11 +1698,23 @@
       } else {
         qrWrap.hidden = true;
       }
-      document.getElementById("customName").value = "";
-      document.getElementById("customUrl").value = "";
-      document.getElementById("customErr").textContent = "";
+      const editId = options.editId || "";
+      const focusCustom = options.focusCustom === true || Boolean(editId);
+      if (editId) {
+        const channel = loadCustomChannels().find((item) => item.id === editId);
+        if (channel) startEditCustom(channel);
+        else resetCustomForm();
+      } else {
+        resetCustomForm();
+      }
       paintCustomList();
       document.getElementById("licenseViewDlg").showModal();
+      if (focusCustom) {
+        requestAnimationFrame(() => {
+          document.getElementById("customBox")?.scrollIntoView({ block: "start" });
+          document.getElementById("customName").focus();
+        });
+      }
     }
 
     function unlockApp(session) {
@@ -1803,6 +1839,37 @@
       }
     }
 
+    let customEditId = "";
+
+    function resetCustomForm() {
+      customEditId = "";
+      document.getElementById("customName").value = "";
+      document.getElementById("customUrl").value = "";
+      document.getElementById("customErr").textContent = "";
+      document.getElementById("customAdd").textContent = "הוסף ערוץ";
+      document.getElementById("customCancel").hidden = true;
+    }
+
+    function startEditCustom(channel) {
+      customEditId = channel.id;
+      document.getElementById("customName").value = channel.name;
+      document.getElementById("customUrl").value = channel.url;
+      document.getElementById("customErr").textContent = "";
+      document.getElementById("customAdd").textContent = "שמור שינויים";
+      document.getElementById("customCancel").hidden = false;
+      paintCustomList();
+    }
+
+    function deleteCustomChannel(id) {
+      saveCustomChannels(loadCustomChannels().filter((item) => item.id !== id));
+      if (current?.id === id) goHome();
+      if (customEditId === id) resetCustomForm();
+      rebuildCatalog();
+      render();
+      paintCustomList();
+      showToast("הערוץ נמחק");
+    }
+
     function paintCustomList() {
       const listEl = document.getElementById("customList");
       const items = loadCustomChannels();
@@ -1810,36 +1877,36 @@
       if (!items.length) {
         const empty = document.createElement("p");
         empty.className = "custom-empty";
-        empty.textContent = "עדיין אין ערוצים מותאמים";
+        empty.textContent = "עדיין אין ערוצים. הוסיפו את הראשון למעלה.";
         listEl.append(empty);
         return;
       }
       for (const channel of items) {
         const row = document.createElement("div");
-        row.className = "custom-item";
+        row.className = `custom-item${customEditId === channel.id ? " editing" : ""}`;
         const meta = document.createElement("div");
         const title = document.createElement("strong");
         title.textContent = channel.name;
         const link = document.createElement("span");
         link.textContent = channel.url;
         meta.append(title, link);
+        const btns = document.createElement("div");
+        btns.className = "custom-item-btns";
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.textContent = "ערוך";
+        edit.addEventListener("click", () => startEditCustom(channel));
         const del = document.createElement("button");
         del.type = "button";
         del.textContent = "מחק";
-        del.addEventListener("click", () => {
-          saveCustomChannels(loadCustomChannels().filter((item) => item.id !== channel.id));
-          if (current?.id === channel.id) goHome();
-          rebuildCatalog();
-          render();
-          paintCustomList();
-          showToast("הערוץ נמחק");
-        });
-        row.append(meta, del);
+        del.addEventListener("click", () => deleteCustomChannel(channel.id));
+        btns.append(edit, del);
+        row.append(meta, btns);
         listEl.append(row);
       }
     }
 
-    async function addCustomChannel() {
+    async function saveCustomChannel() {
       const err = document.getElementById("customErr");
       const name = document.getElementById("customName").value.trim();
       const url = normalizeCustomUrl(document.getElementById("customUrl").value);
@@ -1853,40 +1920,49 @@
         return;
       }
       const existing = loadCustomChannels();
-      if (existing.length >= CUSTOM_LIMIT) {
+      const editing = existing.find((item) => item.id === customEditId);
+      if (!editing && existing.length >= CUSTOM_LIMIT) {
         err.textContent = "הגעתם למספר הערוצים המרבי";
         return;
       }
-      if (existing.some((item) => item.url === url)) {
+      if (existing.some((item) => item.url === url && item.id !== customEditId)) {
         err.textContent = "הקישור הזה כבר שמור";
         return;
       }
-      err.textContent = "בודקים שהשידור נטען…";
-      try {
-        await probeCustomStream(url);
-      } catch {
-        err.textContent = "הקישור לא נטען כ־m3u8 בדפדפן. בדקו CORS או שהקובץ תקין.";
-        return;
+      if (!editing || editing.url !== url) {
+        err.textContent = "בודקים שהשידור נטען…";
+        try {
+          await probeCustomStream(url);
+        } catch {
+          err.textContent = "הקישור לא נטען כ־m3u8 בדפדפן. בדקו CORS או שהקובץ תקין.";
+          return;
+        }
       }
-      existing.unshift({
-        id: `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
-        name,
-        nameEn: name,
-        category: "custom",
-        label: "שלי",
-        path: "",
-        url,
-        channel_type: "custom",
-        logo: "",
-      });
-      saveCustomChannels(existing);
-      document.getElementById("customName").value = "";
-      document.getElementById("customUrl").value = "";
-      err.textContent = "";
+      if (editing) {
+        editing.name = name;
+        editing.nameEn = name;
+        editing.url = url;
+        saveCustomChannels(existing);
+        showToast("הערוץ עודכן");
+      } else {
+        existing.unshift({
+          id: `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+          name,
+          nameEn: name,
+          category: "custom",
+          label: "שלי",
+          path: "",
+          url,
+          channel_type: "custom",
+          logo: "",
+        });
+        saveCustomChannels(existing);
+        showToast("הערוץ נוסף");
+      }
+      resetCustomForm();
       rebuildCatalog();
       render();
       paintCustomList();
-      showToast("הערוץ נוסף");
     }
 
     function matches(channel, query) {
@@ -1993,12 +2069,22 @@
       };
       paintCat("all", "הכל", () => { category = "all"; render(); });
       for (const [id, label] of Object.entries(CATEGORY_LABELS)) {
-        if (!CHANNELS.some((channel) => channel.category === id)) continue;
+        if (id !== "custom" && !CHANNELS.some((channel) => channel.category === id)) continue;
         paintCat(id, label, () => { category = id; render(); });
       }
 
       const list = visibleChannels();
       gridEl.innerHTML = "";
+      if (!query && (category === "all" || category === "custom")) {
+        const addCard = document.createElement("button");
+        addCard.type = "button";
+        addCard.className = "card card-add";
+        addCard.innerHTML = `<div class="logo">+</div><div class="title"></div><div class="sub"></div>`;
+        addCard.querySelector(".title").textContent = "הוסף ערוץ";
+        addCard.querySelector(".sub").textContent = "קישור m3u8 שלי";
+        bindTap(addCard, () => openLicenseView({ focusCustom: true }));
+        gridEl.append(addCard);
+      }
       for (const channel of list) {
         const card = document.createElement("button");
         card.type = "button";
@@ -2521,7 +2607,8 @@
       }
       unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: licenseKey, note: license.n });
     });
-    document.getElementById("expiry").addEventListener("click", openLicenseView);
+    document.getElementById("settingsBtn").addEventListener("click", () => openLicenseView({ focusCustom: true }));
+    document.getElementById("expiry").addEventListener("click", () => openLicenseView());
     document.getElementById("viewLicClose").addEventListener("click", () => {
       document.getElementById("licenseViewDlg").close();
     });
@@ -2535,12 +2622,22 @@
       if (!inside) event.currentTarget.close();
     });
     document.getElementById("customAdd").addEventListener("click", () => {
-      addCustomChannel();
+      saveCustomChannel();
+    });
+    document.getElementById("customCancel").addEventListener("click", () => {
+      resetCustomForm();
+      paintCustomList();
+    });
+    document.getElementById("customName").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        saveCustomChannel();
+      }
     });
     document.getElementById("customUrl").addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
-        addCustomChannel();
+        saveCustomChannel();
       }
     });
     function bindKeyCopy(button, input) {
@@ -2879,7 +2976,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=67").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=68").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
