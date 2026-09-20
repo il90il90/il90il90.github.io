@@ -416,10 +416,19 @@
       white-space: nowrap;
     }
     .license-card .lic-row strong {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
       font-size: 14px;
       font-weight: 700;
       text-align: start;
       word-break: break-word;
+    }
+    .license-card .lic-row strong span + span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
     }
     .license-card .lic-key { margin-bottom: 16px; }
     .license-card .lic-key[hidden] { display: none !important; }
@@ -896,9 +905,9 @@
       const license = session.license || session.note || "";
       document.getElementById("viewEmail").textContent = session.email || "—";
       const exp = session.licenseExp || session.exp;
-      document.getElementById("viewUntil").textContent = session.role === "admin"
+      document.getElementById("viewUntil").innerHTML = session.role === "admin"
         ? "מנהל · ללא הגבלת זמן"
-        : `${formatRemaining(exp)} · עד ${formatUntil(exp)}`;
+        : `<span>${formatRemaining(exp)}</span><span>עד ${formatUntil(exp)}</span>`;
       const wrap = document.getElementById("viewLicenseWrap");
       document.getElementById("viewLicense").textContent = license;
       wrap.hidden = !license;
