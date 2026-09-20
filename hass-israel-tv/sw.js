@@ -1,9 +1,11 @@
-const CACHE = "israel-tv-v65";
+const CACHE = "israel-tv-v66";
 const SHELL = [
   "./",
   "./index.html",
   "./channels.js",
   "./pwf.js",
+  "./qrcode.min.js",
+  "./jsqr.min.js",
   "./manifest.webmanifest",
   "./favicon.png",
   "./icon-192.png",

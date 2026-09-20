@@ -470,7 +470,7 @@
       border-radius: 16px;
     }
     .qr-card[hidden] { display: none !important; }
-    .qr-card canvas { width: 220px; height: 220px; }
+    .qr-card canvas, .qr-card img, .qr-target { width: 220px; height: 220px; }
     .qr-card p { margin: 0; color: #243044; font-size: 13px; text-align: center; font-weight: 600; }
     #scanDlg { width: min(420px, calc(100% - 24px)); }
     #scanVideo {
@@ -961,7 +961,7 @@
           </button>
         </div>
         <div class="qr-card" id="viewLicQrWrap" hidden>
-          <canvas id="viewLicQr" width="220" height="220"></canvas>
+          <div id="viewLicQr" class="qr-target"></div>
           <p>סריקה במסך הכניסה במכשיר אחר</p>
         </div>
       </div>
@@ -1017,7 +1017,7 @@
       </button>
     </div>
     <div class="qr-card" id="licQrWrap" hidden>
-      <canvas id="licQr" width="220" height="220"></canvas>
+      <div id="licQr" class="qr-target"></div>
       <p>סירקו את הברקוד במסך הכניסה</p>
     </div>
     <button type="button" class="lic-make" id="licMake">
@@ -1044,10 +1044,10 @@
   </script>
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="./qrcode.min.js"></script>
+  <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=65";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=66";
     import { PWF_CHECK_URL } from "./pwf.js?v=9";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1355,13 +1355,16 @@
       return stripLicenseSpaces(key);
     }
 
-    async function paintQr(canvas, key) {
+    async function paintQr(el, key) {
       if (!key || !window.QRCode) return false;
-      await window.QRCode.toCanvas(canvas, licenseQrPayload(key), {
+      el.replaceChildren();
+      new window.QRCode(el, {
+        text: licenseQrPayload(key),
         width: 220,
-        margin: 2,
-        errorCorrectionLevel: "M",
-        color: { dark: "#070b12", light: "#ffffff" },
+        height: 220,
+        colorDark: "#070b12",
+        colorLight: "#ffffff",
+        correctLevel: window.QRCode.CorrectLevel.M,
       });
       return true;
     }
@@ -2873,7 +2876,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=65").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=66").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
