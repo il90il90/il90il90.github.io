@@ -69,6 +69,37 @@
     .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
     .expiry.danger { background: rgba(255, 77, 77, 0.12); color: #ff8a8a; border-color: #6d2a2a; }
     .expiry[hidden] { display: none !important; }
+    .account {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .account[hidden] { display: none !important; }
+    .license-view, .email-view {
+      border: 1px solid #2d4f80;
+      background: rgba(61, 139, 255, 0.14);
+      color: #cfe2ff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      max-width: min(280px, 46vw);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .license-view { cursor: pointer; font-family: ui-monospace, Consolas, monospace; }
+    .logout {
+      border: 0;
+      border-radius: 999px;
+      background: #243044;
+      color: inherit;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
     .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
     .presets button {
       background: #243044 !important;
@@ -348,6 +379,8 @@
       }
       .brand h1 { font-size: 16px; }
       .expiry { order: 3; flex: 1 1 100%; text-align: center; white-space: normal; }
+      .account { order: 4; flex: 1 1 100%; justify-content: center; }
+      .license-view, .email-view { max-width: 100%; }
       .search { width: 100%; flex-basis: 100%; }
       .count { display: none; }
       .install { margin-inline-start: auto; }
@@ -381,8 +414,9 @@
   <div id="gate">
     <form class="login" id="loginForm">
       <h2>כניסה</h2>
-      <p>הזינו רישיון כדי לצפות בערוצים</p>
+      <p>הזינו אימייל ורישיון כדי לצפות בערוצים</p>
       <p class="err" id="loginErr"></p>
+      <input id="emailInput" type="email" autocomplete="email" spellcheck="false" placeholder="אימייל" />
       <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון או סיסמת מנהל" />
       <button type="submit">כניסה</button>
     </form>
@@ -397,8 +431,12 @@
       </div>
     </div>
     <div class="expiry" id="expiry" hidden></div>
+    <div class="account" id="account" hidden>
+      <button type="button" class="license-view" id="licenseView" hidden title="העתק רישיון"></button>
+      <span class="email-view" id="emailView" hidden></span>
+    </div>
     <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
-    <button type="button" class="icon-btn" id="logoutBtn" title="יציאה" aria-label="יציאה">⎋</button>
+    <button type="button" class="logout" id="logoutBtn">יציאה</button>
     <button type="button" class="install" id="installBtn">התקן אפליקציה</button>
     <input class="search" id="q" type="search" placeholder="חיפוש: ספורט 4, קשת, 12, 14..." enterkeyhint="search" />
     <div class="count" id="count"></div>
@@ -498,7 +536,7 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
     import { CHANNELS, CATEGORY_LABELS } from "./channels.js";
-    import { PWF_CHECK_URL } from "./pwf.js?v=4";
+    import { PWF_CHECK_URL } from "./pwf.js?v=5";
 
     const AUTH_KEY = "israel-tv-auth";
     const LICENSE_SECRET = "israel-tv-license-hs256";
@@ -654,7 +692,7 @@
 
     function pwfErrorMessage(data) {
       const code = data?.error_code || "";
-      if (code === "INVALID_KEY") return "הרישיון לא נמצא";
+      if (code === "INVALID_KEY") return "הרישיון לא נמצא. העתיקו אותו מהלוח, בלי להקליד מחדש.";
       if (code === "EXPIRED") return "פג תוקף הרישיון";
       if (code === "BANNED") return "הרישיון נחסם";
       if (code === "PAUSED") return "הרישיון מושהה";
@@ -664,13 +702,17 @@
       return detail || "רישיון לא תקין או שפג תוקפו";
     }
 
-    async function verifyPwfLicense(code) {
+    function isEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    async function verifyPwfLicense(code, email) {
       const res = await fetch(PWF_CHECK_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ license_key: code }),
+        body: JSON.stringify({ license_key: code, email }),
       });
       const data = await res.json().catch(() => ({}));
       const status = String(data?.key?.status || "").toLowerCase();
@@ -712,11 +754,25 @@
       el.textContent = `${formatRemaining(exp)} · עד ${formatUntil(exp)}`;
     }
 
+    function refreshAccount(session) {
+      const box = document.getElementById("account");
+      const licenseEl = document.getElementById("licenseView");
+      const emailEl = document.getElementById("emailView");
+      const license = session.license || session.note || "";
+      const email = session.email || "";
+      licenseEl.hidden = !license || session.role === "admin";
+      licenseEl.textContent = license ? `רישיון: ${license}` : "";
+      emailEl.hidden = !email;
+      emailEl.textContent = email;
+      box.hidden = licenseEl.hidden && emailEl.hidden;
+    }
+
     function unlockApp(session) {
       writeSession(session);
       document.getElementById("gate").hidden = true;
       document.getElementById("app").hidden = false;
       document.getElementById("licenseBtn").hidden = session.role !== "admin";
+      refreshAccount(session);
       refreshExpiry(session);
       if (!window.__expiryClock) {
         window.__expiryClock = setInterval(() => {
@@ -726,6 +782,7 @@
             return;
           }
           refreshExpiry(current);
+          refreshAccount(current);
         }, 30000);
       }
       bootPlayer();
@@ -1083,6 +1140,7 @@
     document.getElementById("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const value = document.getElementById("licenseInput").value.trim();
+      const email = document.getElementById("emailInput").value.trim().toLowerCase();
       const err = document.getElementById("loginErr");
       err.textContent = "";
       if (!value) {
@@ -1090,18 +1148,22 @@
         return;
       }
       if (await sha256Hex(value) === ADMIN_HASH) {
-        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400 });
+        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, email: email || "" });
+        return;
+      }
+      if (!isEmail(email)) {
+        err.textContent = "הזינו אימייל תקין";
         return;
       }
       let pwf;
       try {
-        pwf = await verifyPwfLicense(value);
+        pwf = await verifyPwfLicense(value, email);
       } catch (error) {
         pwf = { ok: false, data: { message: String(error?.message || error) } };
       }
       if (pwf.ok) {
         const exp = parsePwfExp(pwf.key);
-        unlockApp({ role: "user", exp, licenseExp: exp, note: value });
+        unlockApp({ role: "user", exp, licenseExp: exp, license: value, email, note: value });
         return;
       }
       const license = await verifyLicense(value);
@@ -1109,7 +1171,12 @@
         err.textContent = pwfErrorMessage(pwf.data);
         return;
       }
-      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, note: license.n });
+      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: value, email, note: license.n });
+    });
+    document.getElementById("licenseView").addEventListener("click", async () => {
+      const session = readSession();
+      const value = session?.license || session?.note || "";
+      if (value) await navigator.clipboard.writeText(value);
     });
 
     document.getElementById("logoutBtn").addEventListener("click", lockApp);
