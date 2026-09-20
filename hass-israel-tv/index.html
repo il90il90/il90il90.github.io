@@ -66,6 +66,8 @@
     .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; }
     .brand span { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
     .expiry {
+      appearance: none;
+      font: inherit;
       margin-inline-start: auto;
       display: flex;
       flex-direction: column;
@@ -80,8 +82,11 @@
       font-weight: 700;
       line-height: 1.25;
       text-align: center;
+      cursor: pointer;
     }
     .expiry span { display: block; }
+    .expiry:hover { filter: brightness(1.12); }
+    .expiry:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
     .expiry.danger { background: rgba(255, 77, 77, 0.12); color: #ff8a8a; border-color: #6d2a2a; }
     .expiry[hidden] { display: none !important; }
@@ -358,6 +363,88 @@
       cursor: pointer;
     }
     dialog.sheet button.ghost { background: #243044; }
+    dialog.sheet button[hidden] { display: none !important; }
+    .license-card {
+      width: min(400px, calc(100% - 24px));
+      padding: 0;
+      overflow: hidden;
+    }
+    .license-card .lic-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 22px 22px 16px;
+      background: linear-gradient(180deg, rgba(61, 139, 255, 0.18), transparent);
+    }
+    .license-card .lic-icon {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 48px;
+      border-radius: 14px;
+      background: rgba(61, 139, 255, 0.2);
+      color: #9ec2ff;
+      display: grid;
+      place-items: center;
+    }
+    .license-card .lic-icon svg { width: 24px; height: 24px; display: block; }
+    .license-card h3 { margin: 0; font-size: 18px; }
+    .license-card .lic-sub {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .license-card .lic-body { padding: 4px 22px 22px; }
+    .license-card .lic-meta {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .license-card .lic-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .license-card .lic-row span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .license-card .lic-row strong {
+      font-size: 14px;
+      font-weight: 700;
+      text-align: start;
+      word-break: break-word;
+    }
+    .license-card .lic-key { margin-bottom: 16px; }
+    .license-card .lic-key[hidden] { display: none !important; }
+    .license-card .lic-key > span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .license-card .lic-key code {
+      display: block;
+      padding: 16px 14px;
+      border-radius: 12px;
+      border: 1px dashed #3d5a86;
+      background: #0b1220;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 15px;
+      letter-spacing: 0.05em;
+      line-height: 1.45;
+      text-align: center;
+      word-break: break-all;
+      direction: ltr;
+    }
+    .license-card .row { justify-content: flex-end; }
 
     @media (max-width: 720px) {
       header.top {
@@ -419,11 +506,8 @@
         <span>צפייה ישירה</span>
       </div>
     </div>
-    <div class="expiry" id="expiry" hidden></div>
+    <button type="button" class="expiry" id="expiry" hidden title="הרישיון שלכם" aria-label="הרישיון שלכם"></button>
     <div class="header-actions">
-      <button type="button" class="icon-btn" id="licenseView" hidden title="הרישיון" aria-label="הרישיון">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="8" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M12 15h5"/></svg>
-      </button>
       <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
       <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/></svg>
@@ -493,14 +577,35 @@
     Made with ♥️ From&nbsp;<a href="https://t.me/israelCohen" target="_blank" rel="noopener">Israel</a>
   </footer>
   </div>
-  <dialog class="sheet" id="licenseViewDlg">
-    <h3>הרישיון שלכם</h3>
-    <p id="viewEmail" style="color:var(--muted);margin:0 0 8px"></p>
-    <p id="viewUntil" style="color:var(--muted);margin:0 0 10px"></p>
-    <textarea id="viewLicense" rows="3" readonly></textarea>
-    <div class="row">
-      <button type="button" id="viewLicCopy">העתק</button>
-      <button type="button" class="ghost" id="viewLicClose">סגור</button>
+  <dialog class="sheet license-card" id="licenseViewDlg">
+    <div class="lic-head">
+      <div class="lic-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="8" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M12 15h5"/></svg>
+      </div>
+      <div>
+        <h3>הרישיון שלכם</h3>
+        <p class="lic-sub">פרטי החשבון והמפתח</p>
+      </div>
+    </div>
+    <div class="lic-body">
+      <div class="lic-meta">
+        <div class="lic-row">
+          <span>אימייל</span>
+          <strong id="viewEmail"></strong>
+        </div>
+        <div class="lic-row">
+          <span>תוקף</span>
+          <strong id="viewUntil"></strong>
+        </div>
+      </div>
+      <div class="lic-key" id="viewLicenseWrap">
+        <span>מפתח רישיון</span>
+        <code id="viewLicense"></code>
+      </div>
+      <div class="row">
+        <button type="button" id="viewLicCopy">העתק מפתח</button>
+        <button type="button" class="ghost" id="viewLicClose">סגור</button>
+      </div>
     </div>
   </dialog>
   <dialog class="sheet" id="licenseDlg">
@@ -785,22 +890,19 @@
       el.innerHTML = `<span>${formatRemaining(exp)}</span><span>עד ${formatUntilDate(exp)}</span>`;
     }
 
-    function refreshAccount(session) {
-      const licenseEl = document.getElementById("licenseView");
-      const license = session.license || session.note || "";
-      licenseEl.hidden = session.role === "admin" || !license;
-    }
-
     function openLicenseView() {
       const session = readSession();
       if (!session) return;
       const license = session.license || session.note || "";
-      document.getElementById("viewEmail").textContent = session.email || "";
+      document.getElementById("viewEmail").textContent = session.email || "—";
       const exp = session.licenseExp || session.exp;
       document.getElementById("viewUntil").textContent = session.role === "admin"
         ? "מנהל · ללא הגבלת זמן"
         : `${formatRemaining(exp)} · עד ${formatUntil(exp)}`;
-      document.getElementById("viewLicense").value = license;
+      const wrap = document.getElementById("viewLicenseWrap");
+      document.getElementById("viewLicense").textContent = license;
+      wrap.hidden = !license;
+      document.getElementById("viewLicCopy").hidden = !license;
       document.getElementById("licenseViewDlg").showModal();
     }
 
@@ -811,7 +913,6 @@
       document.getElementById("gate").hidden = true;
       document.getElementById("app").hidden = false;
       document.getElementById("licenseBtn").hidden = session.role !== "admin";
-      refreshAccount(session);
       refreshExpiry(session);
       if (!window.__expiryClock) {
         window.__expiryClock = setInterval(() => {
@@ -821,7 +922,6 @@
             return;
           }
           refreshExpiry(current);
-          refreshAccount(current);
         }, 30000);
       }
       bootPlayer();
@@ -1214,12 +1314,12 @@
       }
       unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: value, email, note: license.n });
     });
-    document.getElementById("licenseView").addEventListener("click", openLicenseView);
+    document.getElementById("expiry").addEventListener("click", openLicenseView);
     document.getElementById("viewLicClose").addEventListener("click", () => {
       document.getElementById("licenseViewDlg").close();
     });
     document.getElementById("viewLicCopy").addEventListener("click", async () => {
-      const value = document.getElementById("viewLicense").value;
+      const value = document.getElementById("viewLicense").textContent;
       if (value) await navigator.clipboard.writeText(value);
     });
 
@@ -1286,7 +1386,6 @@
       repairSession(existing).then((session) => {
         writeSession(session);
         refreshExpiry(session);
-        refreshAccount(session);
       });
     }
 
