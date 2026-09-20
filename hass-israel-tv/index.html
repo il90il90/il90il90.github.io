@@ -63,7 +63,20 @@
       border-bottom: 1px solid var(--line);
       backdrop-filter: blur(12px);
     }
-    .brand { display: flex; align-items: center; gap: 10px; min-width: max-content; }
+    .brand {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: start;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: max-content;
+      cursor: pointer;
+    }
     .brand img { width: 36px; height: 36px; border-radius: 10px; }
     .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; }
     .brand span { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
@@ -541,13 +554,13 @@
   </div>
   <div id="app" hidden>
   <header class="top">
-    <div class="brand">
+    <button type="button" class="brand" id="homeBtn" title="מסך ראשי" aria-label="מסך ראשי">
       <img src="favicon.png" alt="" />
       <div>
         <h1>Israel TV</h1>
         <span>צפייה ישירה</span>
       </div>
-    </div>
+    </button>
     <button type="button" class="expiry" id="expiry" hidden title="הרישיון שלכם" aria-label="הרישיון שלכם"></button>
     <div class="header-actions">
       <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
@@ -1173,6 +1186,24 @@
       setStatus("הדפדפן לא תומך ב-HLS. העתיקו את הקישור ל-VLC.");
     }
 
+    function goHome() {
+      current = undefined;
+      currentUrl = "";
+      stopLocalPlayback();
+      idle.classList.remove("hidden");
+      live.hidden = true;
+      nowName.textContent = "אין ערוץ נבחר";
+      nowEn.textContent = "";
+      setStatus("");
+      setOpenButton("");
+      document.getElementById("q").value = "";
+      category = "all";
+      history.replaceState(null, "", location.pathname + location.search);
+      syncCastUi();
+      render();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
     function stopLocalPlayback() {
       if (hls) {
         hls.destroy();
@@ -1327,6 +1358,7 @@
       }
     }
 
+    document.getElementById("homeBtn").addEventListener("click", goHome);
     document.getElementById("q").addEventListener("input", render);
     castBtn.addEventListener("click", async () => {
       try {
