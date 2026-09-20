@@ -594,7 +594,10 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         padding-bottom: 4px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
       }
+      .chips::-webkit-scrollbar, .cats::-webkit-scrollbar { display: none; }
       .chip, .cat { flex: 0 0 auto; min-height: 40px; }
       .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
       .logo { width: 52px; height: 52px; border-radius: 12px; }
@@ -1844,7 +1847,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=48").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=49").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
