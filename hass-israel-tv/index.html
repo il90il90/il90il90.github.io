@@ -697,10 +697,17 @@
       font-size: 15px;
     }
     .custom-box .custom-help {
-      margin: 0 0 12px;
+      margin: 0 0 8px;
       color: var(--muted);
       font-size: 13px;
     }
+    .custom-sync {
+      margin: 0 0 12px;
+      color: #8fd19e;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .custom-sync.warn { color: #f5c451; }
     .custom-box input {
       width: 100%;
       box-sizing: border-box;
@@ -989,7 +996,8 @@
       </div>
       <div class="custom-box" id="customBox">
         <h4>ערוצים שלי</h4>
-        <p class="custom-help">כאן מוסיפים, עורכים ומוחקים קישורי m3u8 פרטיים. תנו שם, הדביקו קישור, ואז הוסיפו.</p>
+        <p class="custom-help">כאן מוסיפים, עורכים ומוחקים קישורי m3u8. הם נשמרים על הרישיון ומסתנכרנים בין כל המכשירים.</p>
+        <p class="custom-sync" id="customSync">נשמר על הרישיון</p>
         <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
         <input id="customUrl" type="url" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
         <p class="custom-err" id="customErr"></p>
@@ -1072,8 +1080,8 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=68";
-    import { PWF_CHECK_URL } from "./pwf.js?v=9";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=69";
+    import { PWF_CHECK_URL } from "./pwf.js?v=10";
 
     const AUTH_KEY = "israel-tv-auth";
     const HWID_KEY = "israel-tv-hwid";
@@ -1085,6 +1093,7 @@
     const RECENT_KEY = "israel-tv-recent";
     const RECENT_LIMIT = 12;
     const CUSTOM_KEY = "israel-tv-custom";
+    const CUSTOM_REV_KEY = "israel-tv-custom-rev";
     const CUSTOM_LIMIT = 50;
 
     const CATEGORY_LABELS = { custom: "שלי", ...BASE_LABELS };
@@ -1738,6 +1747,7 @@
       }
       bootPlayer();
       startLiveSession(session);
+      pullProfile().catch(() => {});
       if (isTv) {
         requestAnimationFrame(() => focusTvDefault());
       }
@@ -1798,15 +1808,132 @@
       const owner = customOwner();
       if (!owner) return [];
       const list = loadAllCustom()[owner];
-      return Array.isArray(list) ? list.filter((item) => item?.id && item.url && item.name) : [];
+      return Array.isArray(list) ? list.filter((item) => item?.id && item.url && item.name && !item.deleted) : [];
     }
 
-    function saveCustomChannels(list) {
+    function getCustomRev() {
+      const owner = customOwner();
+      if (!owner) return 0;
+      try {
+        const all = JSON.parse(localStorage.getItem(CUSTOM_REV_KEY) || "{}");
+        return Number(all[owner] || 0);
+      } catch {
+        return 0;
+      }
+    }
+
+    function setCustomRev(ts) {
+      const owner = customOwner();
+      if (!owner) return;
+      let all = {};
+      try {
+        all = JSON.parse(localStorage.getItem(CUSTOM_REV_KEY) || "{}") || {};
+      } catch {
+        all = {};
+      }
+      all[owner] = Number(ts) || Date.now();
+      localStorage.setItem(CUSTOM_REV_KEY, JSON.stringify(all));
+    }
+
+    function setCustomSync(ok, text) {
+      const el = document.getElementById("customSync");
+      if (!el) return;
+      el.className = `custom-sync${ok ? "" : " warn"}`;
+      el.textContent = text;
+    }
+
+    function saveCustomChannels(list, options = {}) {
       const owner = customOwner();
       if (!owner) return;
       const all = loadAllCustom();
       all[owner] = list;
       localStorage.setItem(CUSTOM_KEY, JSON.stringify(all));
+      if (options.rev != null) setCustomRev(options.rev);
+      else setCustomRev(Date.now());
+      if (options.silent !== true) queueProfilePush();
+    }
+
+    function profileAuthBody(action, extra = {}) {
+      const session = readSession() || {};
+      const body = { action, ...extra };
+      if (session.license) body.license_key = session.license;
+      if (session.role === "admin") {
+        body.admin = window.__adminPass || "";
+        body.token = session.adminToken || "";
+      }
+      return body;
+    }
+
+    async function pushProfile() {
+      const session = readSession();
+      if (!session || (session.role !== "admin" && !session.license)) return false;
+      try {
+        const res = await fetch(PWF_CHECK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(profileAuthBody("profile-set", {
+            custom: loadCustomChannels(),
+            updatedAt: getCustomRev(),
+          })),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!data?.success) {
+          setCustomSync(false, "נשמר במכשיר. הסנכרון לרישיון יינסה שוב");
+          return false;
+        }
+        if (data.profile?.updatedAt) setCustomRev(data.profile.updatedAt);
+        setCustomSync(true, "מסונכרן בין כל המכשירים של הרישיון");
+        return true;
+      } catch {
+        setCustomSync(false, "נשמר במכשיר. אין חיבור לסנכרון כרגע");
+        return false;
+      }
+    }
+
+    let profilePushTimer = 0;
+    function queueProfilePush() {
+      window.clearTimeout(profilePushTimer);
+      profilePushTimer = window.setTimeout(() => {
+        pushProfile().catch(() => {});
+      }, 400);
+    }
+
+    async function pullProfile() {
+      const session = readSession();
+      if (!session || (session.role !== "admin" && !session.license)) return;
+      try {
+        const res = await fetch(PWF_CHECK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(profileAuthBody("profile-get")),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!data?.success) {
+          setCustomSync(false, "נשמר במכשיר. הסנכרון לרישיון יינסה שוב");
+          return;
+        }
+        const remote = data.profile || { custom: [], updatedAt: 0 };
+        const remoteRev = Number(remote.updatedAt) || 0;
+        const localRev = getCustomRev();
+        const local = loadCustomChannels();
+        const remoteList = Array.isArray(remote.custom) ? remote.custom : [];
+        if (remoteRev > localRev && remoteList.length) {
+          saveCustomChannels(remoteList, { silent: true, rev: remoteRev });
+          setCustomSync(true, "מסונכרן בין כל המכשירים של הרישיון");
+        } else if (local.length) {
+          await pushProfile();
+        } else if (remoteList.length) {
+          saveCustomChannels(remoteList, { silent: true, rev: remoteRev });
+          setCustomSync(true, "מסונכרן בין כל המכשירים של הרישיון");
+        } else {
+          setCustomSync(true, "מסונכרן בין כל המכשירים של הרישיון");
+        }
+        rebuildCatalog();
+        render();
+        paintCustomList();
+      } catch {
+        setCustomSync(false, "נשמר במכשיר. אין חיבור לסנכרון כרגע");
+      }
     }
 
     function rebuildCatalog() {
@@ -1942,6 +2069,7 @@
         editing.name = name;
         editing.nameEn = name;
         editing.url = url;
+        editing.updatedAt = Date.now();
         saveCustomChannels(existing);
         showToast("הערוץ עודכן");
       } else {
@@ -1955,6 +2083,7 @@
           url,
           channel_type: "custom",
           logo: "",
+          updatedAt: Date.now(),
         });
         saveCustomChannels(existing);
         showToast("הערוץ נוסף");
@@ -2607,6 +2736,9 @@
       }
       unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: licenseKey, note: license.n });
     });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") pullProfile().catch(() => {});
+    });
     document.getElementById("settingsBtn").addEventListener("click", () => openLicenseView({ focusCustom: true }));
     document.getElementById("expiry").addEventListener("click", () => openLicenseView());
     document.getElementById("viewLicClose").addEventListener("click", () => {
@@ -2976,7 +3108,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=68").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=69").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
