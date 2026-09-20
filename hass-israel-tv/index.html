@@ -317,6 +317,26 @@
       touch-action: manipulation;
     }
     .chip.active, .cat.active { background: var(--accent); border-color: transparent; color: #fff; }
+    .chip.chip-logo {
+      width: 44px;
+      height: 44px;
+      min-height: 44px;
+      padding: 5px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .chip.chip-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .chip.chip-logo.active {
+      background: var(--card);
+      color: inherit;
+      outline: 2px solid var(--accent);
+    }
 
     .grid {
       display: grid;
@@ -1233,22 +1253,37 @@
       });
     }
 
-    function render() {
+    function makeRecentChip(channel) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.id = channel.id;
+      btn.className = `chip chip-logo${current?.id === channel.id ? " active" : ""}`;
+      btn.title = channel.name;
+      btn.setAttribute("aria-label", channel.name);
+      if (channel.logo) {
+        const img = document.createElement("img");
+        img.src = channel.logo;
+        img.alt = "";
+        btn.append(img);
+      } else {
+        btn.textContent = channel.name.slice(0, 2);
+      }
+      bindTap(btn, () => playChannel(channel));
+      return btn;
+    }
+
+    function paintRecent() {
       const query = document.getElementById("q").value.trim().toLowerCase();
       recentEl.innerHTML = "";
       const recent = loadRecent()
         .map((id) => CHANNELS.find((item) => item.id === id))
         .filter((channel) => channel && matches(channel, query));
       recentSection.hidden = recent.length === 0;
-      for (const channel of recent) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.dataset.id = channel.id;
-        btn.className = `chip${current?.id === channel.id ? " active" : ""}`;
-        btn.textContent = channel.name;
-        bindTap(btn, () => playChannel(channel));
-        recentEl.append(btn);
-      }
+      for (const channel of recent) recentEl.append(makeRecentChip(channel));
+    }
+
+    function render() {
+      paintRecent();
 
       catsEl.innerHTML = "";
       const allBtn = document.createElement("button");
@@ -1591,21 +1626,7 @@
     }
 
     function refreshRecent() {
-      const query = document.getElementById("q").value.trim().toLowerCase();
-      recentEl.innerHTML = "";
-      const recent = loadRecent()
-        .map((id) => CHANNELS.find((item) => item.id === id))
-        .filter((channel) => channel && matches(channel, query));
-      recentSection.hidden = recent.length === 0;
-      for (const channel of recent) {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.dataset.id = channel.id;
-        btn.className = `chip${current?.id === channel.id ? " active" : ""}`;
-        btn.textContent = channel.name;
-        bindTap(btn, () => playChannel(channel));
-        recentEl.append(btn);
-      }
+      paintRecent();
     }
 
     let playSeq = 0;
@@ -1950,7 +1971,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=51").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=52").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
