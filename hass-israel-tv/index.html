@@ -222,11 +222,6 @@
       display: block;
     }
     .now-logo[hidden] { display: none !important; }
-    .now .live {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(255, 77, 77, 0.12); color: #ff8a8a;
-      border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700;
-    }
     .actions { margin-inline-start: auto; display: flex; gap: 8px; }
     .actions button, .actions a {
       border: 0;
@@ -612,7 +607,6 @@
     </section>
 
     <div class="now">
-      <span class="live" id="live" hidden><span class="dot"></span> LIVE</span>
       <img class="now-logo" id="nowLogo" alt="" hidden />
       <div class="actions">
         <button type="button" class="primary" id="playBtn" title="נגן" aria-label="נגן">
@@ -767,7 +761,6 @@
     const theater = document.getElementById("theater");
     const idle = document.getElementById("idle");
     const status = document.getElementById("status");
-    const live = document.getElementById("live");
     const nowLogo = document.getElementById("nowLogo");
     const openBtn = document.getElementById("openBtn");
     const castBtn = document.getElementById("castBtn");
@@ -1255,7 +1248,6 @@
       currentUrl = "";
       stopLocalPlayback();
       idle.classList.remove("hidden");
-      live.hidden = true;
       setNowLogo();
       setStatus("");
       setOpenButton("");
@@ -1399,7 +1391,6 @@
       current = channel;
       saveRecent(channel.id);
       idle.classList.add("hidden");
-      live.hidden = false;
       setNowLogo(channel);
       setStatus("טוען שידור…");
       history.replaceState(null, "", `#${channel.id}`);
@@ -1659,7 +1650,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=34").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=35").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
