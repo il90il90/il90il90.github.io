@@ -22,6 +22,17 @@
         document.documentElement.dataset.admin = session.role === "admin" ? "1" : "0";
       }
     } catch {}
+    (function detectTv() {
+      const params = new URLSearchParams(location.search);
+      if (params.get("tv") === "1") localStorage.setItem("israel-tv-tv", "1");
+      if (params.get("tv") === "0") localStorage.removeItem("israel-tv-tv");
+      const ua = navigator.userAgent || "";
+      const tv = params.get("tv") === "1"
+        || localStorage.getItem("israel-tv-tv") === "1"
+        || /IsraelTV-AndroidTV/i.test(ua)
+        || (/Android/i.test(ua) && /(Android TV|GoogleTV|SDK_GOOGLE_ATV|AOSP on ATV|BRAVIA|AFT[A-Z0-9]|SHIELD|MIBOX|BeyondTV|SmartTV|Nexus Player|ADT-|AndroidTV)/i.test(ua));
+      if (tv) document.documentElement.classList.add("tv");
+    })();
   </script>
   <style>
     :root {
@@ -658,6 +669,51 @@
     @media (max-width: 1024px) {
       .install:not([hidden]) { display: grid !important; }
     }
+
+    .tv-only { display: none !important; }
+    .tv-hint { display: none; }
+    html.tv {
+      --header: 76px;
+      --video-max-h: min(46vh, 520px);
+      --radius: 18px;
+    }
+    html.tv body { font-size: 18px; }
+    html.tv #app, html.tv main { max-width: none; }
+    html.tv header.top {
+      gap: 16px;
+      padding: 24px 56px 16px;
+    }
+    html.tv main { padding: 16px 56px 0; }
+    html.tv .catalog { padding-bottom: 48px; }
+    html.tv .brand img { width: 44px; height: 44px; }
+    html.tv .brand h1 { font-size: 22px; }
+    html.tv .icon-btn, html.tv .actions button, html.tv .actions a {
+      width: 52px;
+      height: 52px;
+    }
+    html.tv .search { height: 52px; font-size: 20px; display: none; }
+    html.tv .search.tv-search-open { display: block; flex-basis: 100%; }
+    html.tv .tv-only { display: grid !important; }
+    html.tv .tv-hint { display: block; margin: 0 0 16px; color: var(--muted); font-size: 16px; }
+    html.tv #pipBtn, html.tv #castBtn, html.tv #openBtn, html.tv #installBtn { display: none !important; }
+    html.tv .grid { grid-template-columns: repeat(auto-fill, minmax(188px, 1fr)); gap: 18px; }
+    html.tv .card { padding: 16px 12px 18px; }
+    html.tv .logo { width: 92px; height: 92px; }
+    html.tv .card .title { font-size: 16px; }
+    html.tv .chip, html.tv .cat { min-height: 48px; font-size: 16px; padding: 10px 16px; }
+    html.tv .chip.chip-logo { width: 56px; height: 56px; }
+    html.tv .login { width: min(640px, 78vw); padding: 40px 36px 32px; }
+    html.tv .login h2 { font-size: 32px; }
+    html.tv .login p { font-size: 18px; }
+    html.tv .login input, html.tv .login button { height: 58px; font-size: 22px; }
+    html.tv .stage { max-height: 52vh; }
+    html.tv .now-logo { height: 44px; }
+    html.tv button:focus, html.tv a:focus, html.tv input:focus, html.tv select:focus, html.tv textarea:focus, html.tv .theater:focus {
+      outline: 3px solid var(--accent-2);
+      outline-offset: 4px;
+    }
+    html.tv .card:focus, html.tv .chip:focus, html.tv .cat:focus { background: var(--card-hover); }
+    html.tv .chip.active:focus, html.tv .cat.active:focus { filter: brightness(1.12); }
   </style>
 </head>
 <body>
@@ -665,6 +721,7 @@
     <form class="login" id="loginForm">
       <h2>כניסה</h2>
       <p>העתיקו את הרישיון מהלוח, בלי להקליד אותו מחדש</p>
+      <p class="tv-hint">בטלוויזיה: לחצו OK על השדה, הזינו את הרישיון במקלדת השלט, ואז כניסה</p>
       <p class="err" id="loginErr"></p>
       <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון" inputmode="text" />
       <button type="submit">כניסה</button>
@@ -685,6 +742,9 @@
       <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8v6"/><path d="M9 11h6"/></svg>
       </button>
+      <button type="button" class="icon-btn tv-only" id="searchBtn" title="חיפוש" aria-label="חיפוש">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      </button>
       <button type="button" class="icon-btn" id="logoutBtn" title="יציאה" aria-label="יציאה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"/><path d="m14 8 4 4-4 4"/><path d="M18 12H9"/></svg>
       </button>
@@ -695,7 +755,7 @@
 
   <main>
     <div class="stage" id="stage" hidden>
-    <section class="theater" id="theater">
+    <section class="theater" id="theater" tabindex="-1">
       <video id="player" controls playsinline autoplay x-webkit-airplay="allow"></video>
       <div class="cast-banner" id="castBanner" hidden>
         <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor" aria-hidden="true"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
@@ -831,7 +891,7 @@
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
-    import { CHANNELS, CATEGORY_LABELS } from "./channels.js?v=58";
+    import { CHANNELS, CATEGORY_LABELS } from "./channels.js?v=59";
     import { PWF_CHECK_URL } from "./pwf.js?v=9";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -897,6 +957,13 @@
     let currentUrl = "";
     let category = "all";
     const isAndroid = /Android/i.test(navigator.userAgent);
+    const isTv = document.documentElement.classList.contains("tv");
+    const searchInput = document.getElementById("q");
+    const searchBtn = document.getElementById("searchBtn");
+    if (isTv) {
+      video.controls = false;
+      theater.tabIndex = 0;
+    }
 
     function androidChooserUrl(url) {
       const parsed = new URL(url, location.href);
@@ -1287,6 +1354,9 @@
       }
       bootPlayer();
       startLiveSession(session);
+      if (isTv) {
+        requestAnimationFrame(() => focusTvDefault());
+      }
     }
 
     function lockApp() {
@@ -2114,8 +2184,176 @@
 
     document.getElementById("iosHint")?.remove();
 
+    const TV_FOCUSABLE = "button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), .theater[tabindex]";
+
+    function tvVisible(el) {
+      if (!el || el.hidden) return false;
+      if (el.closest("[hidden]")) return false;
+      const style = getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden") return false;
+      const box = el.getBoundingClientRect();
+      return box.width > 1 && box.height > 1;
+    }
+
+    function tvRoot() {
+      const dialog = document.querySelector("dialog[open]");
+      if (dialog) return dialog;
+      if (document.documentElement.dataset.session !== "1") return document.getElementById("gate");
+      return document.getElementById("app");
+    }
+
+    function tvFocusables() {
+      const root = tvRoot();
+      if (!root) return [];
+      return [...root.querySelectorAll(TV_FOCUSABLE)].filter((el) => {
+        if (!tvVisible(el)) return false;
+        if (el.id === "q" && !el.classList.contains("tv-search-open")) return false;
+        return true;
+      });
+    }
+
+    function focusTvDefault() {
+      const items = tvFocusables();
+      const preferred = items.find((el) => el.classList.contains("card") && el.classList.contains("active"))
+        || items.find((el) => el.classList.contains("cat"))
+        || items.find((el) => el.id === "licenseInput")
+        || items[0];
+      preferred?.focus({ preventScroll: true });
+      preferred?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+
+    function openTvSearch() {
+      searchInput.classList.add("tv-search-open");
+      searchInput.focus();
+    }
+
+    function closeTvSearch() {
+      searchInput.classList.remove("tv-search-open");
+      searchInput.blur();
+      searchBtn?.focus();
+    }
+
+    function tvTogglePlay() {
+      if (!current) return;
+      if (video.paused) video.play().catch(() => {});
+      else video.pause();
+    }
+
+    function moveTvFocus(dx, dy) {
+      const items = tvFocusables();
+      if (!items.length) return;
+      const active = items.includes(document.activeElement) ? document.activeElement : null;
+      if (!active) {
+        focusTvDefault();
+        return;
+      }
+      const from = active.getBoundingClientRect();
+      const ax = from.left + from.width / 2;
+      const ay = from.top + from.height / 2;
+      let best;
+      let bestScore = Infinity;
+      for (const el of items) {
+        if (el === active) continue;
+        const to = el.getBoundingClientRect();
+        const bx = to.left + to.width / 2;
+        const by = to.top + to.height / 2;
+        const vx = bx - ax;
+        const vy = by - ay;
+        if (dx && vx * dx < Math.max(8, from.width * 0.2)) continue;
+        if (dy && vy * dy < Math.max(8, from.height * 0.2)) continue;
+        const overlap = dx
+          ? Math.max(0, Math.min(from.bottom, to.bottom) - Math.max(from.top, to.top))
+          : Math.max(0, Math.min(from.right, to.right) - Math.max(from.left, to.left));
+        const primary = dx ? vx * dx : vy * dy;
+        const secondary = dx ? Math.abs(vy) : Math.abs(vx);
+        const score = primary + secondary * (overlap > 10 ? 0.12 : 2.2);
+        if (score < bestScore) {
+          bestScore = score;
+          best = el;
+        }
+      }
+      if (!best) return;
+      best.focus({ preventScroll: true });
+      best.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+
+    function tvBack() {
+      const dialog = document.querySelector("dialog[open]");
+      if (dialog) {
+        dialog.close();
+        focusTvDefault();
+        return true;
+      }
+      if (searchInput.classList.contains("tv-search-open")) {
+        closeTvSearch();
+        return true;
+      }
+      if (current) {
+        goHome();
+        focusTvDefault();
+        return true;
+      }
+      return false;
+    }
+
+    window.__tvBack = tvBack;
+
+    if (isTv) {
+      searchBtn?.addEventListener("click", openTvSearch);
+      searchInput.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeTvSearch();
+        }
+      });
+      theater.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          tvTogglePlay();
+        }
+      });
+      window.addEventListener("keydown", (event) => {
+        const typing = event.target instanceof HTMLInputElement
+          || event.target instanceof HTMLTextAreaElement
+          || event.target instanceof HTMLSelectElement;
+        if (event.key === "ArrowLeft") {
+          if (typing) return;
+          event.preventDefault();
+          moveTvFocus(-1, 0);
+        } else if (event.key === "ArrowRight") {
+          if (typing) return;
+          event.preventDefault();
+          moveTvFocus(1, 0);
+        } else if (event.key === "ArrowUp") {
+          if (typing) return;
+          event.preventDefault();
+          moveTvFocus(0, -1);
+        } else if (event.key === "ArrowDown") {
+          if (typing) return;
+          event.preventDefault();
+          moveTvFocus(0, 1);
+        } else if (event.key === "Escape" || event.key === "BrowserBack") {
+          if (tvBack()) event.preventDefault();
+        } else if (event.key === "MediaPlayPause" || event.key === "MediaPlay" || event.key === "MediaPause") {
+          event.preventDefault();
+          if (event.key === "MediaPlay") video.play().catch(() => {});
+          else if (event.key === "MediaPause") video.pause();
+          else tvTogglePlay();
+        } else if (event.key === "MediaStop") {
+          event.preventDefault();
+          goHome();
+          focusTvDefault();
+        }
+      }, true);
+      if (document.documentElement.dataset.session === "1") {
+        requestAnimationFrame(() => focusTvDefault());
+      } else {
+        document.getElementById("licenseInput")?.focus();
+      }
+    }
+
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=58").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=59").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
