@@ -1,4 +1,4 @@
-const CACHE = "israel-tv-v61";
+const CACHE = "israel-tv-v62";
 const SHELL = [
   "./",
   "./index.html",

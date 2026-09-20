@@ -66,8 +66,9 @@
       flex-shrink: 0;
       z-index: 20;
       display: flex;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       min-height: var(--header);
       padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
       background: rgba(7, 11, 18, 0.92);
@@ -89,27 +90,29 @@
       cursor: pointer;
     }
     .brand img { width: 36px; height: 36px; border-radius: 10px; }
-    .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; }
-    .brand span { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
+    .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; white-space: nowrap; }
+    .brand span { display: none; }
     .expiry {
       appearance: none;
       font: inherit;
-      display: flex;
-      flex-direction: column;
+      display: inline-flex;
+      flex-direction: row;
       align-items: center;
-      gap: 1px;
+      flex-shrink: 0;
+      gap: 6px;
       background: rgba(61, 139, 255, 0.14);
       color: #cfe2ff;
       border: 1px solid #2d4f80;
-      border-radius: 14px;
-      padding: 5px 10px;
-      font-size: 11px;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
       font-weight: 700;
-      line-height: 1.25;
+      line-height: 1;
       text-align: center;
+      white-space: nowrap;
       cursor: pointer;
     }
-    .expiry span { display: block; }
+    .expiry span { display: inline; }
     .expiry:hover { filter: brightness(1.12); }
     .expiry:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
@@ -117,7 +120,9 @@
     .expiry[hidden] { display: none !important; }
     .header-actions {
       display: flex;
+      flex-wrap: nowrap;
       align-items: center;
+      flex-shrink: 0;
       gap: 8px;
       margin-inline-start: auto;
     }
@@ -133,8 +138,8 @@
     #iosHint, .ios-hint { display: none !important; }
 
     .search {
-      flex: 1;
-      min-width: 0;
+      flex: 1 1 140px;
+      min-width: 72px;
       height: 42px;
       border: 1px solid var(--line);
       border-radius: 999px;
@@ -701,13 +706,16 @@
 
     @media (max-width: 720px) {
       header.top {
-        flex-wrap: wrap;
-        gap: 8px;
-        padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px;
+        flex-wrap: nowrap;
+        gap: 6px;
+        padding: calc(8px + env(safe-area-inset-top, 0px)) 10px 8px;
       }
-      .brand h1 { font-size: 16px; }
-      .expiry { padding: 4px 8px; font-size: 10px; }
-      .search { width: 100%; flex-basis: 100%; }
+      .brand { gap: 6px; }
+      .brand img { width: 28px; height: 28px; border-radius: 8px; }
+      .brand h1 { font-size: 14px; }
+      .expiry { padding: 5px 8px; font-size: 10px; }
+      .search { flex: 1 1 80px; min-width: 56px; height: 36px; padding: 0 12px; }
+      .icon-btn { width: 36px; height: 36px; }
       .count { display: none; }
       main { padding: 10px 12px 0; }
       .theater {
@@ -760,7 +768,7 @@
       height: 52px;
     }
     html.tv .search { height: 52px; font-size: 20px; display: none; }
-    html.tv .search.tv-search-open { display: block; flex-basis: 100%; }
+    html.tv .search.tv-search-open { display: block; flex: 1 1 220px; }
     html.tv .tv-only { display: grid !important; }
     html.tv .tv-hint { display: block; margin: 0 0 16px; color: var(--muted); font-size: 16px; }
     html.tv #pipBtn, html.tv #castBtn, html.tv #openBtn, html.tv #installBtn { display: none !important; }
@@ -968,7 +976,7 @@
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=61";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=62";
     import { PWF_CHECK_URL } from "./pwf.js?v=9";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1393,7 +1401,7 @@
       }
       el.hidden = false;
       el.className = `expiry${left <= 3600 ? " danger" : left <= 86400 ? " warn" : ""}`;
-      el.innerHTML = `<span>${formatRemaining(exp)}</span><span>עד ${formatUntilDate(exp)}</span>`;
+      el.textContent = `${formatRemaining(exp)} · עד ${formatUntilDate(exp)}`;
     }
 
     function openLicenseView() {
@@ -2606,7 +2614,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=61").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=62").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
