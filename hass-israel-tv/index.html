@@ -595,7 +595,7 @@
   <main>
     <div class="stage">
     <section class="theater" id="theater">
-      <video id="player" controls playsinline x-webkit-airplay="allow"></video>
+      <video id="player" controls playsinline autoplay x-webkit-airplay="allow"></video>
       <div class="cast-banner" id="castBanner" hidden>
         <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor" aria-hidden="true"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
         <strong>משודר בטלוויזיה</strong>
@@ -1204,6 +1204,20 @@
     video.addEventListener("loadedmetadata", syncVideoFrame);
     video.addEventListener("loadeddata", syncVideoFrame);
     video.addEventListener("resize", syncVideoFrame);
+    video.addEventListener("playing", () => setStatus(""));
+
+    function startPlayback() {
+      video.autoplay = true;
+      video.playsInline = true;
+      setStatus("");
+      const tryPlay = (muted) => {
+        video.muted = muted;
+        return video.play().then(() => {
+          if (muted) video.muted = false;
+        });
+      };
+      return tryPlay(false).catch(() => tryPlay(true)).catch(() => {});
+    }
 
     function attachHls(url) {
       if (hls) {
@@ -1213,15 +1227,14 @@
       video.removeAttribute("src");
       if (video.canPlayType("application/vnd.apple.mpegurl") && !window.Hls?.isSupported()) {
         video.src = url;
-        return video.play().catch(() => {});
+        return startPlayback();
       }
       if (window.Hls?.isSupported()) {
         hls = new Hls({ enableWorker: true, lowLatencyMode: false });
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          setStatus("");
-          video.play().catch(() => setStatus("לחצו נגן כדי להתחיל עם שמע"));
+          startPlayback();
         });
         hls.on(Hls.Events.ERROR, (_event, data) => {
           if (data?.fatal) setStatus("השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.");
@@ -1394,7 +1407,7 @@
       saveRecent(channel.id);
       idle.classList.add("hidden");
       setNowLogo(channel);
-      setStatus("טוען שידור…");
+      setStatus("");
       history.replaceState(null, "", `#${channel.id}`);
       render();
       try {
@@ -1428,6 +1441,12 @@
     });
     if (window.__castReady) initCastApi();
 
+    const unmuteVideo = () => {
+      if (!video.paused) video.muted = false;
+    };
+    window.addEventListener("pointerdown", unmuteVideo);
+    window.addEventListener("keydown", unmuteVideo);
+
     document.getElementById("playBtn").addEventListener("click", () => {
       if (!current) {
         const lastId = loadRecent()[0] || "yes4";
@@ -1435,8 +1454,7 @@
         if (fallback) playChannel(fallback);
         return;
       }
-      video.play().catch(() => {});
-      setStatus("");
+      startPlayback();
     });
     openBtn.addEventListener("click", (event) => {
       if (!currentUrl) {
@@ -1652,7 +1670,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=36").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=37").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
