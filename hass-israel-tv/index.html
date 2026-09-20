@@ -148,13 +148,22 @@
       background: rgba(255, 77, 77, 0.12); color: #ff8a8a;
       border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 700;
     }
-    .actions { margin-inline-start: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+    .actions { margin-inline-start: auto; display: flex; gap: 8px; }
     .actions button, .actions a {
-      border: 0; border-radius: 10px; padding: 8px 12px;
-      background: #243044; color: var(--text); text-decoration: none;
-      cursor: pointer; font-size: 13px;
+      border: 0;
+      border-radius: 12px;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      background: #243044;
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
     }
     .actions button.primary { background: var(--accent); color: #fff; }
+    .actions svg { width: 20px; height: 20px; display: block; }
 
     .section { margin-top: 22px; }
     .section[hidden] { display: none !important; }
@@ -233,8 +242,7 @@
       .theater video { max-height: 36vh; }
       .now { padding: 10px 10px; gap: 8px; }
       .now .en { display: none; }
-      .actions { width: 100%; }
-      .actions button, .actions a { flex: 1; text-align: center; min-height: 40px; }
+      .actions { width: auto; }
       .chips, .cats {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -281,9 +289,15 @@
       <span class="name" id="nowName">אין ערוץ נבחר</span>
       <span class="en" id="nowEn"></span>
       <div class="actions">
-        <button type="button" class="primary" id="playBtn">נגן</button>
-        <button type="button" id="copyBtn">העתק קישור</button>
-        <a id="openBtn" href="#" target="_blank" rel="noopener">פתח בחלון</a>
+        <button type="button" class="primary" id="playBtn" title="נגן" aria-label="נגן">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72L19.06 12 8 5.14z"/></svg>
+        </button>
+        <button type="button" id="copyBtn" title="העתק קישור" aria-label="העתק קישור">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        </button>
+        <a id="openBtn" href="#" target="_blank" rel="noopener" title="פתח בחלון" aria-label="פתח בחלון">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5"/><path d="M10 14 19 5"/><path d="M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>
+        </a>
       </div>
     </div>
 
@@ -546,6 +560,11 @@
       }
       if (currentUrl) {
         await navigator.clipboard.writeText(currentUrl);
+        const btn = document.getElementById("copyBtn");
+        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>';
+        setTimeout(() => {
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+        }, 1200);
       }
     });
 
