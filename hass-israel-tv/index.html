@@ -381,7 +381,7 @@
   <div id="gate">
     <form class="login" id="loginForm">
       <h2>כניסה</h2>
-      <p>הזינו מפתח מ-PWF License כדי לצפות בערוצים</p>
+      <p>הזינו רישיון כדי לצפות בערוצים</p>
       <p class="err" id="loginErr"></p>
       <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון או סיסמת מנהל" />
       <button type="submit">כניסה</button>
@@ -659,8 +659,8 @@
       if (code === "BANNED") return "הרישיון נחסם";
       if (code === "PAUSED") return "הרישיון מושהה";
       const detail = String(data?.detail || data?.message || "");
-      if (detail.includes("CSRF") || detail.includes("Failed to fetch")) return "לא הצלחנו לאמת מול PWF. נסו שוב בעוד רגע.";
-      if (detail.toLowerCase().includes("app secret")) return "App Secret לא תואם ל-PWF";
+      if (detail.includes("CSRF") || detail.includes("Failed to fetch")) return "לא הצלחנו לאמת את הרישיון. נסו שוב בעוד רגע.";
+      if (detail.toLowerCase().includes("app secret")) return "אימות הרישיון נכשל";
       return detail || "רישיון לא תקין או שפג תוקפו";
     }
 
