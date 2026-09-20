@@ -223,6 +223,27 @@
       display: block;
     }
     .now-logo[hidden] { display: none !important; }
+    #toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      transform: translate(-50%, 12px);
+      z-index: 80;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: #1c2738;
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 650;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
     .actions { margin-inline-start: auto; display: flex; gap: 8px; }
     .actions button, .actions a {
       border: 0;
@@ -614,13 +635,10 @@
         <button type="button" class="primary" id="playBtn" title="נגן" aria-label="נגן">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72L19.06 12 8 5.14z"/></svg>
         </button>
-        <button type="button" id="copyBtn" title="העתק קישור" aria-label="העתק קישור">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
-        </button>
         <button type="button" id="castBtn" title="Cast לטלוויזיה" aria-label="Cast לטלוויזיה">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
         </button>
-        <a id="openBtn" href="#" rel="noopener" title="פתח באפליקציה" aria-label="פתח באפליקציה">
+        <a id="openBtn" href="#" rel="noopener" title="פתח באפליקציה · לחיצה ארוכה להעתקה" aria-label="פתח באפליקציה">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 5h5v5"/><path d="M10 14 19 5"/><path d="M19 13v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>
         </a>
       </div>
@@ -647,6 +665,7 @@
     </footer>
     </div>
   </main>
+  <div id="toast" role="status" aria-live="polite"></div>
   </div>
   <dialog class="sheet license-card" id="licenseViewDlg">
     <div class="lic-head">
@@ -1456,25 +1475,48 @@
       }
       startPlayback();
     });
+    function showToast(text) {
+      const el = document.getElementById("toast");
+      el.textContent = text;
+      el.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = setTimeout(() => el.classList.remove("show"), 1800);
+    }
+
+    async function copyStreamUrl() {
+      if (!currentUrl) {
+        showToast("בחרו ערוץ קודם");
+        return;
+      }
+      await navigator.clipboard.writeText(currentUrl);
+      showToast("הקישור הועתק");
+    }
+
+    let openHold;
+    let openCopied = false;
+    const clearOpenHold = () => clearTimeout(openHold);
+    openBtn.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      openCopied = false;
+      clearOpenHold();
+      openHold = setTimeout(() => {
+        openCopied = true;
+        copyStreamUrl();
+      }, 500);
+    });
+    openBtn.addEventListener("pointerup", clearOpenHold);
+    openBtn.addEventListener("pointerleave", clearOpenHold);
+    openBtn.addEventListener("pointercancel", clearOpenHold);
+    openBtn.addEventListener("contextmenu", (event) => event.preventDefault());
     openBtn.addEventListener("click", (event) => {
+      if (openCopied) {
+        event.preventDefault();
+        openCopied = false;
+        return;
+      }
       if (!currentUrl) {
         event.preventDefault();
-        setStatus("בחרו ערוץ כדי לפתוח בנגן");
-      }
-    });
-    document.getElementById("copyBtn").addEventListener("click", async () => {
-      if (!currentUrl) {
-        const lastId = loadRecent()[0] || "yes4";
-        const fallback = CHANNELS.find((channel) => channel.id === lastId);
-        if (fallback) await playChannel(fallback);
-      }
-      if (currentUrl) {
-        await navigator.clipboard.writeText(currentUrl);
-        const btn = document.getElementById("copyBtn");
-        btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>';
-        setTimeout(() => {
-          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
-        }, 1200);
+        showToast("בחרו ערוץ קודם");
       }
     });
 
@@ -1670,7 +1712,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=37").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=38").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
