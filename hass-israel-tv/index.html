@@ -554,7 +554,7 @@
     <button type="button" class="expiry" id="expiry" hidden title="הרישיון שלכם" aria-label="הרישיון שלכם"></button>
     <div class="header-actions">
       <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
-      <button type="button" class="icon-btn install" id="installBtn" hidden title="התקן אפליקציה" aria-label="התקן אפליקציה">
+      <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8v6"/><path d="M9 11h6"/></svg>
       </button>
       <button type="button" class="icon-btn" id="logoutBtn" title="יציאה" aria-label="יציאה">
@@ -1571,34 +1571,33 @@
 
     const installBtn = document.getElementById("installBtn");
     const installDlg = document.getElementById("installDlg");
-    const standalone = window.matchMedia("(display-mode: standalone)").matches
-      || window.matchMedia("(display-mode: fullscreen)").matches
-      || window.matchMedia("(display-mode: minimal-ui)").matches
-      || window.navigator.standalone === true
-      || document.referrer.startsWith("android-app://");
+    const standaloneMedia = window.matchMedia("(display-mode: standalone)");
     let deferredPrompt;
 
-    function hideInstall() {
-      installBtn.hidden = true;
+    function isInstalledApp() {
+      return standaloneMedia.matches || window.navigator.standalone === true;
     }
 
-    if (standalone) hideInstall();
+    function syncInstallButton() {
+      installBtn.hidden = isInstalledApp();
+    }
+
+    syncInstallButton();
+    standaloneMedia.addEventListener("change", syncInstallButton);
 
     window.addEventListener("beforeinstallprompt", (event) => {
       event.preventDefault();
-      if (standalone) return;
       deferredPrompt = event;
-      installBtn.hidden = false;
+      syncInstallButton();
     });
 
     window.addEventListener("appinstalled", () => {
       deferredPrompt = undefined;
-      hideInstall();
     });
 
     installBtn.addEventListener("click", () => {
-      if (standalone) {
-        hideInstall();
+      if (isInstalledApp()) {
+        syncInstallButton();
         return;
       }
       installDlg.showModal();
@@ -1610,15 +1609,14 @@
       installDlg.close();
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
+      await deferredPrompt.userChoice;
       deferredPrompt = undefined;
-      if (choice?.outcome === "accepted") hideInstall();
     });
 
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=27").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=28").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
