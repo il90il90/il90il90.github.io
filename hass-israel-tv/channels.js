@@ -22,6 +22,8 @@ export const CHANNELS = [
     "category": "broadcast",
     "label": "שידורי ישראל",
     "path": "ngx/78/hrr_iltv/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/iltv.png"
   },
   {
@@ -31,6 +33,8 @@ export const CHANNELS = [
     "category": "broadcast",
     "label": "שידורי ישראל",
     "path": "bpk-12-live/bpk-tv/bpk_kan_ateme/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/kan11.png"
   },
   {
@@ -40,6 +44,8 @@ export const CHANNELS = [
     "category": "broadcast",
     "label": "שידורי ישראל",
     "path": "ngx/56/hrr_i24-heb/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/i24_hebrew.png"
   },
   {
@@ -49,6 +55,8 @@ export const CHANNELS = [
     "category": "broadcast",
     "label": "שידורי ישראל",
     "path": "bpk-12-live/bpk-tv/bpk_chan14/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/ch14.png"
   },
   {
@@ -58,6 +66,8 @@ export const CHANNELS = [
     "category": "broadcast",
     "label": "שידורי ישראל",
     "path": "ngx/910/hrr_09v/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/ch9.png"
   },
   {
@@ -67,6 +77,8 @@ export const CHANNELS = [
     "category": "broadcast",
     "label": "שידורי ישראל",
     "path": "ngx/78/hrr_kneset/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/knesset.png"
   },
   {
@@ -76,6 +88,8 @@ export const CHANNELS = [
     "category": "broadcast",
     "label": "שידורי ישראל",
     "path": "bpk-12-live/bpk-tv/bpk_keshetnew_h264/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/keshet_12.png"
   },
   {
@@ -85,6 +99,8 @@ export const CHANNELS = [
     "category": "broadcast",
     "label": "שידורי ישראל",
     "path": "bpk-12-live/bpk-tv/bpk_reshet_h264/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/reshet_13.png"
   },
   {
@@ -94,6 +110,8 @@ export const CHANNELS = [
     "category": "news",
     "label": "חדשות",
     "path": "ngx/78/srt_dwenglish/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/dw_english.png"
   },
   {
@@ -103,6 +121,8 @@ export const CHANNELS = [
     "category": "news",
     "label": "חדשות",
     "path": "ngx/78/srt_dwrussian/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/dw_russian.png"
   },
   {
@@ -112,6 +132,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "ngx/78/hrr_euros1/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/eurosport_1.png"
   },
   {
@@ -121,6 +143,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "ngx/78/hrr_euros2/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/eurosport_2.png"
   },
   {
@@ -130,6 +154,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_one_h264/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/one_1.png"
   },
   {
@@ -139,6 +165,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_one2_h264/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/one_2.png"
   },
   {
@@ -148,6 +176,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "ngx/56/hrr_onedoco/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/one_doco.png"
   },
   {
@@ -157,6 +187,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "ngx/56/hrr_oneedge/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/one_edge.png"
   },
   {
@@ -166,6 +198,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_Sport5/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/sport_5.png"
   },
   {
@@ -175,6 +209,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "ngx/78/hrr_sport5gold/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/sport_5_gold.png"
   },
   {
@@ -184,6 +220,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_Sport5live/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/sport_5_live.png"
   },
   {
@@ -193,6 +231,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_sport5max/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/sport_5_max.png"
   },
   {
@@ -202,6 +242,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_sport5plus/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/sport_5_plus.png"
   },
   {
@@ -211,6 +253,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_Sport5Strars/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/sport_5_star.png"
   },
   {
@@ -220,6 +264,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_sport1/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/yes1.png"
   },
   {
@@ -229,6 +275,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_sport2/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/yes2.png"
   },
   {
@@ -238,6 +286,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_sport3/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/yes3.png"
   },
   {
@@ -247,6 +297,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_sport4/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/yes4.png"
   },
   {
@@ -256,6 +308,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_sport54k_ateme/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/sport_5_4k.png"
   },
   {
@@ -265,6 +319,8 @@ export const CHANNELS = [
     "category": "sport",
     "label": "ספורט",
     "path": "bpk-12-live/bpk-tv/bpk_sport6_ateme/default/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/sport_6.png"
   },
   {
@@ -274,6 +330,8 @@ export const CHANNELS = [
     "category": "movies",
     "label": "סרטים",
     "path": "ngx/56/playout02/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/cellcom_action_movies.png"
   },
   {
@@ -283,6 +341,8 @@ export const CHANNELS = [
     "category": "movies",
     "label": "סרטים",
     "path": "ngx/56/playout04/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/cellcom_comedy_movies.png"
   },
   {
@@ -292,6 +352,8 @@ export const CHANNELS = [
     "category": "movies",
     "label": "סרטים",
     "path": "ngx/56/playout08/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/cellcom_drama_movies.png"
   },
   {
@@ -301,6 +363,8 @@ export const CHANNELS = [
     "category": "movies",
     "label": "סרטים",
     "path": "ngx/56/playout06/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/cellcom_family_movies.png"
   },
   {
@@ -310,6 +374,8 @@ export const CHANNELS = [
     "category": "movies",
     "label": "סרטים",
     "path": "ngx/910/srt_global_action1/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/global_action_1.png"
   },
   {
@@ -319,6 +385,8 @@ export const CHANNELS = [
     "category": "movies",
     "label": "סרטים",
     "path": "ngx/910/srt_global_action2/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/global_action_2.png"
   },
   {
@@ -328,6 +396,8 @@ export const CHANNELS = [
     "category": "movies",
     "label": "סרטים",
     "path": "ngx/78/srt_yamtichoniemovies2/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/mediterranean_movies_2.png"
   },
   {
@@ -337,7 +407,20 @@ export const CHANNELS = [
     "category": "movies",
     "label": "סרטים",
     "path": "ngx/78/srt_israeli_movies/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/israeli_cinema.png"
+  },
+  {
+    "id": "30a_classic_movies",
+    "name": "קלאסיקות 30A",
+    "nameEn": "30A Classic Movies",
+    "category": "movies",
+    "label": "סרטים",
+    "path": "",
+    "url": "https://30a-tv.com/feeds/pzaz/30atvmovies.m3u8",
+    "channel_type": "static",
+    "logo": ""
   },
   {
     "id": "cellcom_series",
@@ -346,6 +429,8 @@ export const CHANNELS = [
     "category": "series",
     "label": "סדרות ובידור",
     "path": "ngx/56/playout03/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/cellcom_series.png"
   },
   {
@@ -355,6 +440,8 @@ export const CHANNELS = [
     "category": "series",
     "label": "סדרות ובידור",
     "path": "ngx/78/hrr_humor/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/humor_channel.png"
   },
   {
@@ -364,6 +451,8 @@ export const CHANNELS = [
     "category": "series",
     "label": "סדרות ובידור",
     "path": "ngx/910/hrr_comedy/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/classic_comedy.png"
   },
   {
@@ -373,6 +462,8 @@ export const CHANNELS = [
     "category": "docu",
     "label": "דוקו וטבע",
     "path": "ngx/78/hrr_discovery/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/discovery.png"
   },
   {
@@ -382,6 +473,8 @@ export const CHANNELS = [
     "category": "docu",
     "label": "דוקו וטבע",
     "path": "ngx/78/hrr_animal/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/animal_planet.png"
   },
   {
@@ -391,6 +484,8 @@ export const CHANNELS = [
     "category": "docu",
     "label": "דוקו וטבע",
     "path": "ngx/56/playout01/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/cellcom_doco.png"
   },
   {
@@ -400,6 +495,8 @@ export const CHANNELS = [
     "category": "docu",
     "label": "דוקו וטבע",
     "path": "ngx/78/hrr_nghd_new/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/national_geographic.png"
   },
   {
@@ -409,6 +506,8 @@ export const CHANNELS = [
     "category": "docu",
     "label": "דוקו וטבע",
     "path": "ngx/56/hrr_ngwhd/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/national_geographic_wild.png"
   },
   {
@@ -418,6 +517,8 @@ export const CHANNELS = [
     "category": "docu",
     "label": "דוקו וטבע",
     "path": "ngx/910/srt_tarbut/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/channel_23_israeli.png"
   },
   {
@@ -427,6 +528,8 @@ export const CHANNELS = [
     "category": "docu",
     "label": "דוקו וטבע",
     "path": "ngx/78/hrr_history/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/history_channel.png"
   },
   {
@@ -436,7 +539,31 @@ export const CHANNELS = [
     "category": "docu",
     "label": "דוקו וטבע",
     "path": "ngx/78/srt_economy/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/economy_channel.png"
+  },
+  {
+    "id": "viva",
+    "name": "VIVA",
+    "nameEn": "VIVA",
+    "category": "viva",
+    "label": "VIVA ודרמות",
+    "path": "",
+    "url": "https://d1zqtf09wb8nt5.cloudfront.net/livehls/oil/freetv/live/viva/live.livx/playlist.m3u8?fmp4",
+    "channel_type": "static",
+    "logo": "logos/viva.png"
+  },
+  {
+    "id": "viva_plus",
+    "name": "VIVA פלוס",
+    "nameEn": "VIVA Plus",
+    "category": "viva",
+    "label": "VIVA ודרמות",
+    "path": "",
+    "url": "https://d1zqtf09wb8nt5.cloudfront.net/livehls/oil/freetv/live/viva_plus/live.livx/playlist.m3u8?fmp4",
+    "channel_type": "static",
+    "logo": "logos/viva_plus.png"
   },
   {
     "id": "viva_premium",
@@ -445,6 +572,8 @@ export const CHANNELS = [
     "category": "viva",
     "label": "VIVA ודרמות",
     "path": "ngx/78/srt_vivaprem/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/viva_premium.png"
   },
   {
@@ -454,6 +583,8 @@ export const CHANNELS = [
     "category": "viva",
     "label": "VIVA ודרמות",
     "path": "ngx/910/hrr_tichoniplus/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/mediterranean_plus.png"
   },
   {
@@ -463,6 +594,8 @@ export const CHANNELS = [
     "category": "viva",
     "label": "VIVA ודרמות",
     "path": "ngx/56/hrr_yamticoni2/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/mediterranean_2.png"
   },
   {
@@ -472,6 +605,8 @@ export const CHANNELS = [
     "category": "viva",
     "label": "VIVA ודרמות",
     "path": "ngx/910/srt_india1/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/indian_drama_1.png"
   },
   {
@@ -481,6 +616,8 @@ export const CHANNELS = [
     "category": "viva",
     "label": "VIVA ודרמות",
     "path": "ngx/910/srt_india2/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/indian_drama_2.png"
   },
   {
@@ -490,6 +627,8 @@ export const CHANNELS = [
     "category": "viva",
     "label": "VIVA ודרמות",
     "path": "ngx/910/hrr_spanish_drama/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/spanish_drama_1.png"
   },
   {
@@ -499,6 +638,8 @@ export const CHANNELS = [
     "category": "viva",
     "label": "VIVA ודרמות",
     "path": "ngx/78/srt_spanish_drama2/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/spanish_drama_2.png"
   },
   {
@@ -508,6 +649,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/56/hrr_juniornew/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/junior.png"
   },
   {
@@ -517,6 +660,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/910/hrr_disney/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/disney.png"
   },
   {
@@ -526,6 +671,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/56/hrr_junior/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/disney_junior.png"
   },
   {
@@ -535,6 +682,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/78/hrr_yalduti/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/yalduti.png"
   },
   {
@@ -544,6 +693,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/78/hrr_kanhinuchit/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/kan_hinuchit.png"
   },
   {
@@ -553,6 +704,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/78/srt_logi/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/logi.png"
   },
   {
@@ -562,6 +715,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/910/hrr_starsnew/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/stars_channel.png"
   },
   {
@@ -571,6 +726,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/56/playout07/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/cellcom_kids.png"
   },
   {
@@ -580,6 +737,8 @@ export const CHANNELS = [
     "category": "kids",
     "label": "ילדים",
     "path": "ngx/910/hrr_shireiyalduti/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/shirei_yalduti.png"
   },
   {
@@ -589,6 +748,8 @@ export const CHANNELS = [
     "category": "music",
     "label": "מוזיקה",
     "path": "ngx/56/hrr_musicil/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/music_il.png"
   },
   {
@@ -598,6 +759,8 @@ export const CHANNELS = [
     "category": "music",
     "label": "מוזיקה",
     "path": "ngx/56/hrr_24hd/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/music24.png"
   },
   {
@@ -607,7 +770,20 @@ export const CHANNELS = [
     "category": "music",
     "label": "מוזיקה",
     "path": "ngx/78/srt_karaoke/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/karaoke.png"
+  },
+  {
+    "id": "a_plus",
+    "name": "A פלוס",
+    "nameEn": "A Plus",
+    "category": "lifestyle",
+    "label": "לייפסטייל",
+    "path": "",
+    "url": "https://d1zqtf09wb8nt5.cloudfront.net/livehls/oil/freetv/live/a_plus/live.livx/playlist.m3u8?fmp4",
+    "channel_type": "static",
+    "logo": ""
   },
   {
     "id": "daystar",
@@ -616,6 +792,8 @@ export const CHANNELS = [
     "category": "lifestyle",
     "label": "לייפסטייל",
     "path": "ngx/56/hrr_daystar/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/daystar.png"
   },
   {
@@ -625,7 +803,20 @@ export const CHANNELS = [
     "category": "lifestyle",
     "label": "לייפסטייל",
     "path": "ngx/78/hrr_food/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/food_network.png"
+  },
+  {
+    "id": "beautyz",
+    "name": "ביוטיז",
+    "nameEn": "Beautyz",
+    "category": "lifestyle",
+    "label": "לייפסטייל",
+    "path": "",
+    "url": "https://d1zqtf09wb8nt5.cloudfront.net/livehls/oil/freetv/live/beautyz/live.livx/playlist.m3u8?fmp4",
+    "channel_type": "static",
+    "logo": ""
   },
   {
     "id": "home_plus",
@@ -634,6 +825,8 @@ export const CHANNELS = [
     "category": "lifestyle",
     "label": "לייפסטייל",
     "path": "ngx/910/hrr_bait/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/home_plus.png"
   },
   {
@@ -643,6 +836,8 @@ export const CHANNELS = [
     "category": "lifestyle",
     "label": "לייפסטייל",
     "path": "ngx/56/hrr_hidabrutHD/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/hidabroot.png"
   },
   {
@@ -652,6 +847,8 @@ export const CHANNELS = [
     "category": "lifestyle",
     "label": "לייפסטייל",
     "path": "ngx/910/srt_nofesh/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/vacation_channel.png"
   },
   {
@@ -661,6 +858,8 @@ export const CHANNELS = [
     "category": "lifestyle",
     "label": "לייפסטייל",
     "path": "ngx/910/srt_reality/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/reality_channel.png"
   },
   {
@@ -670,6 +869,8 @@ export const CHANNELS = [
     "category": "lifestyle",
     "label": "לייפסטייל",
     "path": "ngx/910/srt_gameshow/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/game_shows.png"
   },
   {
@@ -679,6 +880,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_friday/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/friday.png"
   },
   {
@@ -688,6 +891,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_o/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/o.png"
   },
   {
@@ -697,6 +902,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_1plus1/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/1_plus_1.png"
   },
   {
@@ -706,6 +913,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_8tv/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/8tv.png"
   },
   {
@@ -715,6 +924,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_muzon/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/muzon.png"
   },
   {
@@ -724,6 +935,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_ntv_mir/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/ntv_mir.png"
   },
   {
@@ -733,6 +946,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_rtvi/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/rtvi.png"
   },
   {
@@ -742,6 +957,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_tht/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/tht.png"
   },
   {
@@ -751,6 +968,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_tvci/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/tvci.png"
   },
   {
@@ -760,6 +979,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_domkino/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/ru8.png"
   },
   {
@@ -769,6 +990,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_carousel/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/ru15.png"
   },
   {
@@ -778,6 +1001,8 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_muzika/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/ru17.png"
   },
   {
@@ -787,6 +1012,1042 @@ export const CHANNELS = [
     "category": "russian",
     "label": "רוסית",
     "path": "ngx/910/ru_rtrplaneta/index.m3u8?smil_profile=default",
+    "url": "",
+    "channel_type": "cellcom",
     "logo": "logos/ru3.png"
+  },
+  {
+    "id": "erez_nehederet",
+    "name": "ארץ נהדרת",
+    "nameEn": "Eretz Nehederet",
+    "category": "reality",
+    "label": "ריאליטי ותוכן",
+    "path": "",
+    "url": "https://d1zqtf09wb8nt5.cloudfront.net/livehls/oil/freetv/live/erez_nehederet/live.livx/playlist.m3u8?fmp4",
+    "channel_type": "static",
+    "logo": ""
+  },
+  {
+    "id": "vamos",
+    "name": "וואמוס",
+    "nameEn": "Vamos",
+    "category": "reality",
+    "label": "ריאליטי ותוכן",
+    "path": "",
+    "url": "https://d1zqtf09wb8nt5.cloudfront.net/livehls/oil/freetv/live/vamos/live.livx/playlist.m3u8?fmp4",
+    "channel_type": "static",
+    "logo": ""
+  },
+  {
+    "id": "sg_30a_golf_kingdom",
+    "name": "30A Golf Kingdom",
+    "nameEn": "30A Golf Kingdom",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://30a-tv.com/feeds/vidaa/golf.m3u8",
+    "channel_type": "static",
+    "logo": ""
+  },
+  {
+    "id": "sg_accdn",
+    "name": "ACCDN",
+    "nameEn": "ACCDN",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://raycom-accdn-firetv.amagi.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_accdn.png"
+  },
+  {
+    "id": "sg_aci_sport_tv",
+    "name": "ACI Sport TV",
+    "nameEn": "ACI Sport TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://webstream.multistream.it/memfs/e2cb3629-c1a2-495b-b43a-9eb386f04ed8.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_aci_sport_tv.png"
+  },
+  {
+    "id": "sg_ado_tv",
+    "name": "ADO TV",
+    "nameEn": "ADO TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://strhls.streamakaci.tv/ortb/ortb2-multi/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_ado_tv.png"
+  },
+  {
+    "id": "sg_as3_sport_tv",
+    "name": "AS3 Sport TV",
+    "nameEn": "AS3 Sport TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://streamtv.as3sport.online:3394/hybrid/play.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_as3_sport_tv.png"
+  },
+  {
+    "id": "sg_atg_live",
+    "name": "ATG Live",
+    "nameEn": "ATG Live",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://kanal75xto-llhls.akamaized.net/live/Data/atg-kanal-15-02a-rr/HLS-Legacy-HL/atg-kanal-15-02a-rr.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_atg_live.png"
+  },
+  {
+    "id": "sg_africa_24_sport",
+    "name": "Africa 24 Sport",
+    "nameEn": "Africa 24 Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://africa24.vedge.infomaniak.com/livecast/ik:africa24sport/manifest.m3u8",
+    "channel_type": "static",
+    "logo": ""
+  },
+  {
+    "id": "sg_bek_tv_sports_west",
+    "name": "BEK TV Sports West",
+    "nameEn": "BEK TV Sports West",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://cdn3.wowza.com/5/ZWQ1K2NYTmpFbGsr/BEK-WOWZA-1/smil:BEKPRIMEW.smil/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_bek_tv_sports_west.png"
+  },
+  {
+    "id": "sg_bahrain_sports_1",
+    "name": "Bahrain Sports 1",
+    "nameEn": "Bahrain Sports 1",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://5c7b683162943.streamlock.net/live/ngrp:sportsone_all/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_bahrain_sports_1.png"
+  },
+  {
+    "id": "sg_bahrain_sports_2",
+    "name": "Bahrain Sports 2",
+    "nameEn": "Bahrain Sports 2",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://5c7b683162943.streamlock.net/live/ngrp:bahrainsportstwo_all/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_bahrain_sports_2.png"
+  },
+  {
+    "id": "sg_bellator_mma",
+    "name": "Bellator MMA",
+    "nameEn": "Bellator MMA",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://jmp2.uk/plu-5ebc8688f3697d00072f7cf8.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_bellator_mma.png"
+  },
+  {
+    "id": "sg_colimdot_tv",
+    "name": "ColimdoT TV",
+    "nameEn": "ColimdoT TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://cnn.livestreaminggroup.info:3132/live/colimdotvlive.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_colimdot_tv.png"
+  },
+  {
+    "id": "sg_cricket_gold",
+    "name": "Cricket Gold",
+    "nameEn": "Cricket Gold",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://streams2.sofast.tv/scheduler/scheduleMaster/418.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_cricket_gold.png"
+  },
+  {
+    "id": "sg_dd_sports_sd",
+    "name": "DD Sports SD",
+    "nameEn": "DD Sports SD",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://d3qs3d2rkhfqrt.cloudfront.net/out/v1/b17adfe543354fdd8d189b110617cddd/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_dd_sports_sd.png"
+  },
+  {
+    "id": "sg_draftkings_network",
+    "name": "DraftKings Network",
+    "nameEn": "DraftKings Network",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://na.linear.zype.com/e0bd0e23-a958-4e43-8164-4f2fef8876a8/fd3614bd-90bf-4530-a277-65ae3a1720c8-zype/live.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_draftkings_network.png"
+  },
+  {
+    "id": "sg_espn8_the_ocho",
+    "name": "ESPN8 The Ocho",
+    "nameEn": "ESPN8 The Ocho",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://d3b6q2ou5kp8ke.cloudfront.net/ESPNTheOcho.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_espn8_the_ocho.png"
+  },
+  {
+    "id": "sg_equidia",
+    "name": "Equidia",
+    "nameEn": "Equidia",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://raw.githubusercontent.com/Paradise-91/ParaTV/main/streams/equidia/live2.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_equidia.png"
+  },
+  {
+    "id": "sg_ftf_sports",
+    "name": "FTF Sports",
+    "nameEn": "FTF Sports",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://1657061170.rsc.cdn77.org/HLS/FTF-LINEAR.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_ftf_sports.png"
+  },
+  {
+    "id": "sg_ftv",
+    "name": "FTV",
+    "nameEn": "FTV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://master.tucableip.com/ftvhd/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_ftv.png"
+  },
+  {
+    "id": "sg_fuel_tv_emea",
+    "name": "FUEL TV EMEA",
+    "nameEn": "FUEL TV EMEA",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg01074-fueltv-fueltvemeaen-rakuten-b6j62.amagi.tv/hls/amagi_hls_data_rakutenAA-fueltvemeaen/CDN/master.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_fuel_tv_emea.png"
+  },
+  {
+    "id": "sg_floracing_247",
+    "name": "FloRacing 24/7",
+    "nameEn": "FloRacing 24/7",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg02278-amg02278c1-flosports-worldwide-7592.playouts.now.amagi.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_floracing_247.png"
+  },
+  {
+    "id": "sg_fox_sports_es",
+    "name": "Fox Sports en Espanol",
+    "nameEn": "Fox Sports en Espanol",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://live-manifest.production-public.tubi.io/live/d906efca-1302-4e29-b0d9-9a1d7a305d69/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_fox_sports_es.png"
+  },
+  {
+    "id": "sg_fuel_tv",
+    "name": "Fuel TV",
+    "nameEn": "Fuel TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg01074-fueltv-fueltvau-samsungau-g09kq.amagi.tv/playlist/amg01074-fueltv-fueltvau-samsungau/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_fuel_tv.png"
+  },
+  {
+    "id": "sg_game_plus",
+    "name": "Game+",
+    "nameEn": "Game+",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://a-cdn.klowdtv.com/live2/fntsy_720p/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_game_plus.png"
+  },
+  {
+    "id": "sg_htspor_tv",
+    "name": "HTSpor TV",
+    "nameEn": "HTSpor TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://ciner.daioncdn.net/ht-spor/ht-spor.m3u8?app=web",
+    "channel_type": "static",
+    "logo": "logos/sg_htspor_tv.png"
+  },
+  {
+    "id": "sg_horse_tv",
+    "name": "Horse TV",
+    "nameEn": "Horse TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://a-cdn.klowdtv.com/live2/horsetv_720p/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_horse_tv.png"
+  },
+  {
+    "id": "sg_introuble",
+    "name": "INTROUBLE",
+    "nameEn": "INTROUBLE",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg00861-amg00861c6-stirr-us-8229.playouts.now.amagi.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_introuble.png"
+  },
+  {
+    "id": "sg_itv_deportes",
+    "name": "ITV Deportes",
+    "nameEn": "ITV Deportes",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://thm-it-roku.otteravision.com/thm/it/it.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_itv_deportes.png"
+  },
+  {
+    "id": "sg_ktv_sport",
+    "name": "KTV Sport",
+    "nameEn": "KTV Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://kwtspta.cdn.mangomolo.com/sp/smil:sp.stream.smil/chunklist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_ktv_sport.png"
+  },
+  {
+    "id": "sg_mma_tv_com",
+    "name": "MMA TV.com",
+    "nameEn": "MMA TV.com",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://streams2.sofast.tv/vglive-sk-462904/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_mma_tv_com.png"
+  },
+  {
+    "id": "sg_mnb_sport",
+    "name": "MNB Sport",
+    "nameEn": "MNB Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://live.mnb.mn/hls/mnb_sport.stream.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_mnb_sport.png"
+  },
+  {
+    "id": "sg_madeinbo_tv",
+    "name": "MadeinBO TV",
+    "nameEn": "MadeinBO TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://srvx1.selftv.video/dmchannel/live/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_madeinbo_tv.png"
+  },
+  {
+    "id": "sg_monterrico_tv",
+    "name": "Monterrico TV",
+    "nameEn": "Monterrico TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://www.opencaster.com/resources/hls_stream/hipodromojcp2.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_monterrico_tv.png"
+  },
+  {
+    "id": "sg_more_than_sports",
+    "name": "More Than Sports TV",
+    "nameEn": "More Than Sports TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://mts1.iptv-playoutcenter.de/mts/mts-web/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_more_than_sports.png"
+  },
+  {
+    "id": "sg_nhra_tv",
+    "name": "NHRA TV",
+    "nameEn": "NHRA TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://d265y4sk8257lt.cloudfront.net/nh.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_nhra_tv.png"
+  },
+  {
+    "id": "sg_nautical_channel",
+    "name": "Nautical Channel",
+    "nameEn": "Nautical Channel",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://a-cdn.klowdtv.com/live2/nautical_720p/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_nautical_channel.png"
+  },
+  {
+    "id": "sg_oman_sports_tv",
+    "name": "Oman Sports TV",
+    "nameEn": "Oman Sports TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://partneta.cdn.mgmlcdn.com/omsport/smil:omsport.stream.smil/chunklist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_oman_sports_tv.png"
+  },
+  {
+    "id": "sg_ovacion_tv",
+    "name": "Ovacion TV",
+    "nameEn": "Ovacion TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "http://cdn2.ujjina.com:1935/iptvovacion1/liveovacion1tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_ovacion_tv.png"
+  },
+  {
+    "id": "sg_overtime",
+    "name": "Overtime",
+    "nameEn": "Overtime",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://d1a8aq6t30gkqj.cloudfront.net/v1/amc_overtime_1/samsungheadend_us/latest/main/hls/playlist_hd.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_overtime.png"
+  },
+  {
+    "id": "sg_pbr_ridepass",
+    "name": "PBR RidePass",
+    "nameEn": "PBR RidePass",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://jmp2.uk/plu-60d39387706fe50007fda8e8.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_pbr_ridepass.png"
+  },
+  {
+    "id": "sg_pga_tour",
+    "name": "PGA Tour",
+    "nameEn": "PGA Tour",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://d11k1mnrgfposz.cloudfront.net/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_pga_tour.png"
+  },
+  {
+    "id": "sg_pac12_insider",
+    "name": "Pac 12 Insider",
+    "nameEn": "Pac 12 Insider",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://pac12-firetv.amagi.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_pac12_insider.png"
+  },
+  {
+    "id": "sg_persiana_fight",
+    "name": "Persiana Fight",
+    "nameEn": "Persiana Fight",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://fighthls.persiana.live/hls/stream.m3u8",
+    "channel_type": "static",
+    "logo": ""
+  },
+  {
+    "id": "sg_qazsport",
+    "name": "QazSport",
+    "nameEn": "QazSport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://qazsporttv-stream.qazcdn.com/qazsporttv/qazsporttv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_qazsport.png"
+  },
+  {
+    "id": "sg_racer_intl",
+    "name": "RACER International",
+    "nameEn": "RACER International",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg00378-mavtv-amg00378c2-rakuten-us-1048.playouts.now.amagi.tv/playlist/amg00378-mavtvfast-motorsportsnetwork-rakutenus/playlist.m3u8",
+    "channel_type": "static",
+    "logo": ""
+  },
+  {
+    "id": "sg_racer_select",
+    "name": "Racer Select",
+    "nameEn": "Racer Select",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg00378-amg00378c4-freelivesports-emea-5637.playouts.now.amagi.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_racer_select.png"
+  },
+  {
+    "id": "sg_realmadrid_tv",
+    "name": "Realmadrid TV",
+    "nameEn": "Realmadrid TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://jmp2.uk/plu-63dac28760bc8f0008a7654b.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_realmadrid_tv.png"
+  },
+  {
+    "id": "sg_red_bull_tv",
+    "name": "Red Bull TV",
+    "nameEn": "Red Bull TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_red_bull_tv.png"
+  },
+  {
+    "id": "sg_san_marino_rtv",
+    "name": "San Marino RTV Sport",
+    "nameEn": "San Marino RTV Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://d2hrvno5bw6tg2.cloudfront.net/smrtv-ch02/smil:ch-02.smil/master.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_san_marino_rtv.png"
+  },
+  {
+    "id": "sg_sky_racing_1",
+    "name": "Sky Racing 1",
+    "nameEn": "Sky Racing 1",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://636ffd31f0e12.streamlock.net/RacingStream1/RacingStream1/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_sky_racing_1.png"
+  },
+  {
+    "id": "sg_sky_racing_2",
+    "name": "Sky Racing 2",
+    "nameEn": "Sky Racing 2",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://636ffd31f0e12.streamlock.net/RacingStream2/RacingStream2/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_sky_racing_2.png"
+  },
+  {
+    "id": "sg_sport_italia",
+    "name": "Sport Italia",
+    "nameEn": "Sport Italia",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg01370-italiansportcom-sportitalia-rakuten-3hmdb.amagi.tv/hls/amagi_hls_data_rakutenAA-sportitalia-rakuten/CDN/master.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_sport_italia.png"
+  },
+  {
+    "id": "sg_stadium",
+    "name": "Stadium",
+    "nameEn": "Stadium",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://wurl120sports.global.transmit.live/hls/679a907dce42a042c23ace37/v1/stadium_gracenote/samsung_us/latest/main/hls/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_stadium.png"
+  },
+  {
+    "id": "sg_strongman",
+    "name": "Strongman",
+    "nameEn": "Strongman",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rightsboosterltd-scl-1-eu.rakuten.wurl.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_strongman.png"
+  },
+  {
+    "id": "sg_strongman_champions",
+    "name": "Strongman Champions League",
+    "nameEn": "Strongman Champions League",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rightsboosterltd-scl-2-eu.rakuten.wurl.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_strongman_champions.png"
+  },
+  {
+    "id": "sg_suspilne_sport",
+    "name": "Suspilne Sport",
+    "nameEn": "Suspilne Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://cdnua05.hls.tv/934/hls/8743361621b245838bee193c9ec28322/4856/stream.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_suspilne_sport.png"
+  },
+  {
+    "id": "sg_swerve_combat",
+    "name": "Swerve Combat",
+    "nameEn": "Swerve Combat",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://linear-253.frequency.stream/mt/roku/253/hls/master/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_swerve_combat.png"
+  },
+  {
+    "id": "sg_tjk_tv",
+    "name": "TJK TV",
+    "nameEn": "TJK TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://tjktv-live.tjk.org/tjktv.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tjk_tv.png"
+  },
+  {
+    "id": "sg_tr_sport",
+    "name": "TR Sport",
+    "nameEn": "TR Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://livetr.teleromagna.it/mia/live/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tr_sport.png"
+  },
+  {
+    "id": "sg_tvr_sport",
+    "name": "TVR Sport",
+    "nameEn": "TVR Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://tvr-sport.lg.mncdn.com/tvrsport/smil:tvrsport.smil/chunklist_b5160000.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tvr_sport.png"
+  },
+  {
+    "id": "sg_tvs_bowling",
+    "name": "TVS Bowling Network",
+    "nameEn": "TVS Bowling Network",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rpn.bozztv.com/gusa/gusa-tvsbowling/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tvs_bowling.png"
+  },
+  {
+    "id": "sg_tvs_boxing",
+    "name": "TVS Boxing",
+    "nameEn": "TVS Boxing",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rpn.bozztv.com/gusa/gusa-tvsboxing/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tvs_boxing.png"
+  },
+  {
+    "id": "sg_tvs_classic_sports",
+    "name": "TVS Classic Sports",
+    "nameEn": "TVS Classic Sports",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rpn.bozztv.com/gusa/gusa-tvs/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tvs_classic_sports.png"
+  },
+  {
+    "id": "sg_tvs_sports",
+    "name": "TVS Sports",
+    "nameEn": "TVS Sports",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rpn.bozztv.com/gusa/gusa-tvssports/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tvs_sports.png"
+  },
+  {
+    "id": "sg_tvs_sports_bureau",
+    "name": "TVS Sports Bureau",
+    "nameEn": "TVS Sports Bureau",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rpn.bozztv.com/gusa/gusa-tvssportsbureau/index.m3u8",
+    "channel_type": "static",
+    "logo": ""
+  },
+  {
+    "id": "sg_tvs_turbo",
+    "name": "TVS Turbo",
+    "nameEn": "TVS Turbo",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rpn.bozztv.com/gusa/gusa-tvsturbo/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tvs_turbo.png"
+  },
+  {
+    "id": "sg_tvs_women_sports",
+    "name": "TVS Women Sports",
+    "nameEn": "TVS Women Sports",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rpn.bozztv.com/gusa/gusa-tvswsn/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tvs_women_sports.png"
+  },
+  {
+    "id": "sg_talent_tv",
+    "name": "Talent TV",
+    "nameEn": "Talent TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "http://live.talenttv.lk:8080/hls/x8kd5n3tm8e8lsv/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_talent_tv.png"
+  },
+  {
+    "id": "sg_teledeporte",
+    "name": "Teledeporte",
+    "nameEn": "Teledeporte",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://rtvelivestream.rtve.es/rtvesec/tdp/tdp_main.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_teledeporte.png"
+  },
+  {
+    "id": "sg_teletrak",
+    "name": "Teletrak",
+    "nameEn": "Teletrak",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://unlimited6-cl.dps.live/sportinghd/sportinghd.smil/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_teletrak.png"
+  },
+  {
+    "id": "sg_tennis_channel",
+    "name": "Tennis Channel",
+    "nameEn": "Tennis Channel",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://cdn-ue1-prod.tsv2.amagi.tv/linear/amg01444-tennischannelth-tennischannelnl-samsungnl/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tennis_channel.png"
+  },
+  {
+    "id": "sg_tennis_channel_2",
+    "name": "Tennis Channel 2",
+    "nameEn": "Tennis Channel 2",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://jmp2.uk/plu-681109b688b9d85d0938c6ba.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tennis_channel_2.png"
+  },
+  {
+    "id": "sg_tigo_sports_plus",
+    "name": "Tigo Sports+",
+    "nameEn": "Tigo Sports+",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "http://45.170.130.224:8000/play/a04i/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tigo_sports_plus.png"
+  },
+  {
+    "id": "sg_tour_spot_tv",
+    "name": "Tour Spot TV",
+    "nameEn": "Tour Spot TV",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://fox.hostlagarto.com:8081/toursporttv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tour_spot_tv.png"
+  },
+  {
+    "id": "sg_trace_sport_stars_au",
+    "name": "Trace Sport Stars (Australia)",
+    "nameEn": "Trace Sport Stars Australia",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://lightning-tracesport-samsungau.amagi.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_trace_sport_stars_au.png"
+  },
+  {
+    "id": "sg_turf_movil",
+    "name": "Turf Movil",
+    "nameEn": "Turf Movil",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://tvturf4.janus.cl/playlist/stream.m3u8?d=w&id=",
+    "channel_type": "static",
+    "logo": "logos/sg_turf_movil.png"
+  },
+  {
+    "id": "sg_tyc_sports",
+    "name": "TyC Sports",
+    "nameEn": "TyC Sports",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg26268-amg26268c14-freelivesports-emea-10267.playouts.now.amagi.tv/ts-us-e2-n2/playlist/amg26268-sportsstudio-tycsports-freelivesportsemea/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tyc_sports.png"
+  },
+  {
+    "id": "sg_tyc_sports_usa",
+    "name": "TyC Sports USA",
+    "nameEn": "TyC Sports USA",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "http://45.170.130.224:8000/play/a020/index.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_tyc_sports_usa.png"
+  },
+  {
+    "id": "sg_turkmenistan_sport",
+    "name": "Türkmenistan Sport",
+    "nameEn": "Turkmenistan Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://alpha.tv.online.tm/hls/ch004.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_turkmenistan_sport.png"
+  },
+  {
+    "id": "sg_unbeaten_sports",
+    "name": "Unbeaten Sports Channel",
+    "nameEn": "Unbeaten Sports Channel",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://d1t5afz6qed3xk.cloudfront.net/Unbeaten.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_unbeaten_sports.png"
+  },
+  {
+    "id": "sg_willow_sports",
+    "name": "Willow Sports",
+    "nameEn": "Willow Sports",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://d36r8jifhgsk5j.cloudfront.net/Willow_TV.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_willow_sports.png"
+  },
+  {
+    "id": "sg_world_poker_tour",
+    "name": "World Poker Tour",
+    "nameEn": "World Poker Tour",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://jmp2.uk/plu-5ad9b7aae738977e2c312132.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_world_poker_tour.png"
+  },
+  {
+    "id": "sg_world_poker_tour_hd",
+    "name": "World Poker Tour HD",
+    "nameEn": "World Poker Tour HD",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://amg00477-samsungelectron-worldpokertour-samsunguk-81igb.amagi.tv/playlist/amg00477-samsungelectron-worldpokertour-samsunguk/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_world_poker_tour_hd.png"
+  },
+  {
+    "id": "sg_world_of_freesports",
+    "name": "World of Freesports",
+    "nameEn": "World of Freesports",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://mainstreammedia-worldoffreesportsintl-rakuten.amagi.tv/hls/amagi_hls_data_rakutenAA-mainstreammediafreesportsintl-rakuten/CDN/master.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_world_of_freesports.png"
+  },
+  {
+    "id": "sg_world_of_freesports_2",
+    "name": "World of Freesports 2",
+    "nameEn": "World of Freesports 2",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://mainstreammedia-worldoffreesportsintl-rakuten.amagi.tv/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_world_of_freesports_2.png"
+  },
+  {
+    "id": "sg_bein_sports_xtra_es",
+    "name": "beIN Sports XTRA en Espanol",
+    "nameEn": "beIN Sports XTRA en Espanol",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://dc1644a9jazgj.cloudfront.net/beIN_Sports_Xtra_Espanol.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_bein_sports_xtra_es.png"
+  },
+  {
+    "id": "sg_fubo_sports",
+    "name": "fubo Sports Network",
+    "nameEn": "fubo Sports Network",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://dnf08l6u6uxnz.cloudfront.net/master.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_fubo_sports.png"
+  },
+  {
+    "id": "sg_ct_sport",
+    "name": "ČT Sport",
+    "nameEn": "CT Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "http://88.212.15.19/live/test_ctsport_25p/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_ct_sport.png"
+  },
+  {
+    "id": "sg_dong_nai_2",
+    "name": "Đồng Nai 2",
+    "nameEn": "Dong Nai 2",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "http://118.107.85.4:1935/live/smil:DNTV2.smil/chunklist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_dong_nai_2.png"
+  },
+  {
+    "id": "sg_astrakhan_sport",
+    "name": "Астрахань Sport",
+    "nameEn": "Astrakhan Sport",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://streaming.astrakhan.ru/astrakhanrusporthd/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_astrakhan_sport.png"
+  },
+  {
+    "id": "sg_belarus_5",
+    "name": "Беларусь 5",
+    "nameEn": "Belarus 5",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://ngtrk.dc.beltelecom.by/ngtrk/smil:belarus5.smil/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_belarus_5.png"
+  },
+  {
+    "id": "sg_belarus_5_int",
+    "name": "Беларусь 5 Интернет",
+    "nameEn": "Belarus 5 International",
+    "category": "sport_global",
+    "label": "🌍 ספורט גלובל",
+    "path": "",
+    "url": "https://edge59.dc.beltelecom.by/ngtrk/smil:belarus5int.smil/playlist.m3u8",
+    "channel_type": "static",
+    "logo": "logos/sg_belarus_5_int.png"
   }
 ];

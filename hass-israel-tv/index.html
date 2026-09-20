@@ -1744,7 +1744,8 @@
       syncActive();
       refreshRecent();
       try {
-        currentUrl = await buildCatUrl(channel.path);
+        currentUrl = channel.path ? await buildCatUrl(channel.path) : String(channel.url || "");
+        if (!currentUrl) throw new Error("no-url");
         if (requestId !== playSeq) return;
         setOpenButton(currentUrl);
         if (getCastSession()) {
@@ -1758,7 +1759,7 @@
         await attachHls(currentUrl, requestId);
       } catch (error) {
         if (requestId !== playSeq) return;
-        setStatus("לא ניתן לחתום את הקישור בדפדפן הזה.");
+        setStatus(channel.path ? "לא ניתן לחתום את הקישור בדפדפן הזה." : "השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.");
       }
     }
 
@@ -2086,7 +2087,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=54").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=55").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
