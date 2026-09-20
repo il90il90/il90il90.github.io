@@ -44,7 +44,7 @@
     }
 
     * { box-sizing: border-box; }
-    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+    html, body, #app { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
     body {
       font-family: "Segoe UI", "Rubik", "Arial Hebrew", Arial, sans-serif;
     }
@@ -159,6 +159,23 @@
       background: var(--bg);
     }
     .stage[hidden] { display: none !important; }
+    html.pip-on .theater {
+      width: 1px;
+      height: 1px;
+      max-height: 1px;
+      aspect-ratio: auto;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      overflow: hidden;
+    }
+    html.pip-on .theater video {
+      width: 1px;
+      height: 1px;
+    }
+    html.pip-on .now { display: none; }
+    html.pip-on .stage { max-height: none; }
     .catalog {
       flex: 1 1 auto;
       min-height: 0;
@@ -1447,17 +1464,27 @@
       return Boolean(document.pictureInPictureEnabled || video.webkitSupportsPresentationMode);
     }
 
+    function setPipMode(on) {
+      document.documentElement.classList.toggle("pip-on", on);
+      pipBtn.classList.toggle("casting", on);
+    }
+
+    function isPipOpen() {
+      return Boolean(document.pictureInPictureElement)
+        || video.webkitPresentationMode === "picture-in-picture";
+    }
+
     async function enterPip() {
-      if (document.pictureInPictureElement) return;
+      if (isPipOpen()) return;
+      if (video.paused) await startPlayback();
       if (video.webkitSetPresentationMode) {
-        if (video.webkitPresentationMode !== "picture-in-picture") {
-          video.webkitSetPresentationMode("picture-in-picture");
-        }
+        video.webkitSetPresentationMode("picture-in-picture");
         return;
       }
-      if (document.pictureInPictureEnabled) {
-        await video.requestPictureInPicture();
+      if (!document.pictureInPictureEnabled) {
+        throw new Error("pip-unavailable");
       }
+      await video.requestPictureInPicture();
     }
 
     async function togglePip() {
@@ -1512,14 +1539,27 @@
     });
     if (window.__castReady) initCastApi();
 
-    pipBtn.hidden = !pipAvailable();
-    pipBtn.addEventListener("click", async () => {
-      if (!current) return;
+    pipBtn.hidden = false;
+    pipBtn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!current) {
+        showToast("בחרו ערוץ קודם");
+        return;
+      }
       try {
         await togglePip();
       } catch {
         showToast("לא ניתן לפתוח חלונית");
       }
+    });
+    video.addEventListener("enterpictureinpicture", () => setPipMode(true));
+    video.addEventListener("leavepictureinpicture", () => {
+      setPipMode(false);
+      if (current) showStage(true);
+    });
+    video.addEventListener("webkitpresentationmodechanged", () => {
+      setPipMode(video.webkitPresentationMode === "picture-in-picture");
     });
 
     let keepPlaying = false;
@@ -1528,12 +1568,11 @@
       if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing";
     });
     video.addEventListener("pause", () => {
-      if (!document.hidden && !document.pictureInPictureElement) keepPlaying = false;
+      if (!document.hidden && !isPipOpen()) keepPlaying = false;
       if (navigator.mediaSession && !keepPlaying) navigator.mediaSession.playbackState = "paused";
     });
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden || !keepPlaying || !current) return;
-      enterPip().catch(() => {});
       video.play().catch(() => {});
     });
 
@@ -1790,7 +1829,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=41").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=42").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
