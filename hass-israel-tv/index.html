@@ -119,17 +119,6 @@
       font-size: 13px;
     }
     .install[hidden] { display: none !important; }
-    .ios-hint {
-      display: none;
-      margin: 0 16px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: #1a2740;
-      color: var(--text);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-    .ios-hint.show { display: block; }
 
     .search {
       flex: 1;
@@ -564,8 +553,8 @@
     <button type="button" class="expiry" id="expiry" hidden title="הרישיון שלכם" aria-label="הרישיון שלכם"></button>
     <div class="header-actions">
       <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
-      <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M5 19h14"/></svg>
+      <button type="button" class="icon-btn install" id="installBtn" hidden title="התקן אפליקציה" aria-label="התקן אפליקציה">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8v6"/><path d="M9 11h6"/></svg>
       </button>
       <button type="button" class="icon-btn" id="logoutBtn" title="יציאה" aria-label="יציאה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"/><path d="m14 8 4 4-4 4"/><path d="M18 12H9"/></svg>
@@ -574,7 +563,6 @@
     <input class="search" id="q" type="search" placeholder="חיפוש: ספורט 4, קשת, 12, 14..." enterkeyhint="search" />
     <div class="count" id="count"></div>
   </header>
-  <p class="ios-hint" id="iosHint">באייפון: לחצו <b>שתף</b> למטה ואז <b>הוסף למסך הבית</b>. באנדרואיד: התפריט ⋮ ואז <b>הוסף למסך הבית</b>.</p>
 
   <main>
     <section class="theater" id="theater">
@@ -665,6 +653,14 @@
       <div class="row">
         <button type="button" class="ghost" id="viewLicClose">סגור</button>
       </div>
+    </div>
+  </dialog>
+  <dialog class="sheet" id="installDlg">
+    <h3>התקנת האפליקציה</h3>
+    <p style="color:var(--muted);margin:0 0 14px">להתקין את Israel TV במסך הבית?</p>
+    <div class="row">
+      <button type="button" id="installYes">התקן</button>
+      <button type="button" class="ghost" id="installNo">לא עכשיו</button>
     </div>
   </dialog>
   <dialog class="sheet" id="licenseDlg">
@@ -1573,30 +1569,49 @@
     }
 
     const installBtn = document.getElementById("installBtn");
-    const iosHint = document.getElementById("iosHint");
+    const installDlg = document.getElementById("installDlg");
     const standalone = window.matchMedia("(display-mode: standalone)").matches
-      || window.navigator.standalone === true;
+      || window.matchMedia("(display-mode: fullscreen)").matches
+      || window.matchMedia("(display-mode: minimal-ui)").matches
+      || window.navigator.standalone === true
+      || document.referrer.startsWith("android-app://");
     let deferredPrompt;
 
-    if (standalone) {
+    function hideInstall() {
       installBtn.hidden = true;
     }
 
+    if (standalone) hideInstall();
+
     window.addEventListener("beforeinstallprompt", (event) => {
       event.preventDefault();
+      if (standalone) return;
       deferredPrompt = event;
       installBtn.hidden = false;
     });
 
-    installBtn.addEventListener("click", async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = undefined;
-        installBtn.hidden = true;
+    window.addEventListener("appinstalled", () => {
+      deferredPrompt = undefined;
+      hideInstall();
+    });
+
+    installBtn.addEventListener("click", () => {
+      if (standalone) {
+        hideInstall();
         return;
       }
-      iosHint.classList.toggle("show");
+      installDlg.showModal();
+    });
+    document.getElementById("installNo").addEventListener("click", () => {
+      installDlg.close();
+    });
+    document.getElementById("installYes").addEventListener("click", async () => {
+      installDlg.close();
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      deferredPrompt = undefined;
+      if (choice?.outcome === "accepted") hideInstall();
     });
 
     if ("serviceWorker" in navigator) {
