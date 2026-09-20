@@ -545,7 +545,7 @@
   <div id="gate">
     <form class="login" id="loginForm">
       <h2>כניסה</h2>
-      <p>הזינו אימייל ורישיון כדי לצפות בערוצים</p>
+      <p>הזינו אימייל והעתיקו את הרישיון מהלוח, בלי להקליד אותו מחדש</p>
       <p class="err" id="loginErr"></p>
       <input id="emailInput" type="email" autocomplete="email" spellcheck="false" placeholder="אימייל" />
       <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון או סיסמת מנהל" />
@@ -709,7 +709,7 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
     import { CHANNELS, CATEGORY_LABELS } from "./channels.js";
-    import { PWF_CHECK_URL } from "./pwf.js?v=5";
+    import { PWF_CHECK_URL } from "./pwf.js?v=6";
 
     const AUTH_KEY = "israel-tv-auth";
     const LICENSE_SECRET = "israel-tv-license-hs256";
@@ -931,10 +931,17 @@
       if (code === "EXPIRED") return "פג תוקף הרישיון";
       if (code === "BANNED") return "הרישיון נחסם";
       if (code === "PAUSED") return "הרישיון מושהה";
+      if (code === "NETWORK") return "אין חיבור לשרת האימות. בדקו את הרשת ונסו שוב.";
       const detail = String(data?.detail || data?.message || "");
-      if (detail.includes("CSRF") || detail.includes("Failed to fetch")) return "לא הצלחנו לאמת את הרישיון. נסו שוב בעוד רגע.";
+      if (detail.includes("CSRF") || detail.includes("Failed to fetch") || detail.includes("NetworkError")) {
+        return "אין חיבור לשרת האימות. רעננו את העמוד ונסו שוב.";
+      }
       if (detail.toLowerCase().includes("app secret")) return "אימות הרישיון נכשל";
       return detail || "רישיון לא תקין או שפג תוקפו";
+    }
+
+    function normalizeLicenseInput(value) {
+      return String(value || "").trim().toUpperCase().replace(/[\s\u200e\u200f\u202a-\u202e]+/g, "");
     }
 
     function isEmail(value) {
@@ -1418,7 +1425,7 @@
 
     document.getElementById("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      const value = document.getElementById("licenseInput").value.trim();
+      const value = normalizeLicenseInput(document.getElementById("licenseInput").value);
       const email = document.getElementById("emailInput").value.trim().toLowerCase();
       const err = document.getElementById("loginErr");
       err.textContent = "";
@@ -1449,7 +1456,7 @@
       try {
         pwf = await verifyPwfLicense(value, email);
       } catch (error) {
-        pwf = { ok: false, data: { message: String(error?.message || error) } };
+        pwf = { ok: false, data: { error_code: "NETWORK", message: String(error?.message || error) } };
       }
       if (pwf.ok) {
         const exp = parsePwfExp(pwf.key);
