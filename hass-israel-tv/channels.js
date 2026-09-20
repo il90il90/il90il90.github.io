@@ -34,15 +34,6 @@ export const CHANNELS = [
     "logo": "logos/kan11.png"
   },
   {
-    "id": "makan_33",
-    "name": "מכאן",
-    "nameEn": "Makan 33",
-    "category": "broadcast",
-    "label": "שידורי ישראל",
-    "path": "ngx/56/hrr_mkan33/index.m3u8?smil_profile=default",
-    "logo": "logos/makan_33.png"
-  },
-  {
     "id": "i24_hebrew",
     "name": "עברית i24",
     "nameEn": "i24 Hebrew",
