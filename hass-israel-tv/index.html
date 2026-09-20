@@ -364,6 +364,22 @@
     }
     dialog.sheet button.ghost { background: #243044; }
     dialog.sheet button[hidden] { display: none !important; }
+    .lic-out {
+      display: block;
+      margin: 0 0 12px;
+      padding: 16px 14px;
+      border-radius: 12px;
+      border: 1px dashed #3d5a86;
+      background: #0b1220;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 16px;
+      letter-spacing: 0.06em;
+      line-height: 1.45;
+      text-align: center;
+      word-break: break-all;
+      direction: ltr;
+    }
+    .lic-out[hidden] { display: none !important; }
     .license-card {
       width: min(400px, calc(100% - 24px));
       padding: 0;
@@ -636,7 +652,7 @@
       </select>
     </div>
     <p class="err" id="licUntil" style="color:var(--muted)"></p>
-    <textarea id="licOut" rows="3" readonly placeholder="הרישיון יופיע כאן"></textarea>
+    <code class="lic-out" id="licOut" hidden></code>
     <div class="row">
       <button type="button" id="licMake">צור</button>
       <button type="button" class="ghost" id="licCopy">העתק</button>
@@ -796,14 +812,26 @@
     }
 
     async function createLicense(note, seconds) {
-      const payload = {
-        v: 1,
-        n: note || "license",
-        iat: nowSec(),
-        exp: nowSec() + Math.max(60, seconds),
-      };
-      const body = b64urlJson(payload);
-      return `ITV1.${body}.${await hmacSha256(LICENSE_SECRET, body)}`;
+      const session = readSession();
+      const res = await fetch(PWF_CHECK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          admin: window.__adminPass || "",
+          token: session?.adminToken || "",
+          dashboard_token: session?.dashboardToken || "",
+          note,
+          seconds,
+          amount: Number(document.getElementById("licAmount").value) || 1,
+          unit: Number(document.getElementById("licUnit").value) || 86400,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!data?.success || !data.license_key) {
+        throw new Error(data?.message || "לא הצלחנו ליצור רישיון");
+      }
+      return data;
     }
 
     function durationSeconds(key) {
@@ -1298,7 +1326,18 @@
         return;
       }
       if (await sha256Hex(value) === ADMIN_HASH) {
-        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, email: email || "" });
+        window.__adminPass = value;
+        let adminToken = "";
+        try {
+          const boot = await fetch(PWF_CHECK_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "admin-session", admin: value }),
+          });
+          const data = await boot.json().catch(() => ({}));
+          if (data?.success && data.token) adminToken = data.token;
+        } catch {}
+        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, email: email || "", adminToken });
         return;
       }
       if (!isEmail(email)) {
@@ -1365,13 +1404,26 @@
     document.getElementById("licMake").addEventListener("click", async () => {
       const note = document.getElementById("licNote").value.trim();
       const seconds = selectedLicenseSeconds();
-      const code = await createLicense(note, seconds);
-      document.getElementById("licOut").value = code;
-      const exp = nowSec() + seconds;
-      document.getElementById("licUntil").textContent = `${formatRemaining(exp)} · עד ${formatUntil(exp)}`;
+      const until = document.getElementById("licUntil");
+      const out = document.getElementById("licOut");
+      until.textContent = "יוצר רישיון…";
+      out.hidden = true;
+      try {
+        const issued = await createLicense(note, seconds);
+        out.textContent = issued.license_key;
+        out.hidden = false;
+        const exp = issued.expires_at
+          ? Math.floor(Date.parse(issued.expires_at) / 1000)
+          : nowSec() + seconds;
+        until.textContent = Number.isFinite(exp)
+          ? `${formatRemaining(exp)} · עד ${formatUntil(exp)}`
+          : "";
+      } catch (error) {
+        until.textContent = error?.message || "לא הצלחנו ליצור רישיון";
+      }
     });
     document.getElementById("licCopy").addEventListener("click", async () => {
-      const value = document.getElementById("licOut").value;
+      const value = document.getElementById("licOut").textContent;
       if (value) await navigator.clipboard.writeText(value);
     });
 
