@@ -66,15 +66,21 @@
     .brand span { display: block; color: var(--muted); font-size: 12px; font-weight: 500; }
     .expiry {
       margin-inline-start: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
       background: rgba(61, 139, 255, 0.14);
       color: #cfe2ff;
       border: 1px solid #2d4f80;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 12px;
+      border-radius: 14px;
+      padding: 5px 10px;
+      font-size: 11px;
       font-weight: 700;
-      white-space: nowrap;
+      line-height: 1.25;
+      text-align: center;
     }
+    .expiry span { display: block; }
     .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
     .expiry.danger { background: rgba(255, 77, 77, 0.12); color: #ff8a8a; border-color: #6d2a2a; }
     .expiry[hidden] { display: none !important; }
@@ -356,7 +362,7 @@
         padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px;
       }
       .brand h1 { font-size: 16px; }
-      .expiry { order: 3; flex: 1 1 100%; text-align: center; white-space: normal; }
+      .expiry { order: 3; }
       .header-actions { margin-inline-start: auto; }
       .search { width: 100%; flex-basis: 100%; }
       .count { display: none; }
@@ -624,17 +630,21 @@
       const days = Math.floor(sec / 86400);
       const hours = Math.floor((sec % 86400) / 3600);
       const minutes = Math.floor((sec % 3600) / 60);
-      if (days > 0) {
-        return hours
-          ? `נותרו ${hebrewCount(days, "יום", "ימים")} ו־${hebrewCount(hours, "שעה", "שעות")}`
-          : `נותרו ${hebrewCount(days, "יום", "ימים")}`;
-      }
+      if (days > 0) return `נותרו ${hebrewCount(days, "יום", "ימים")}`;
       if (hours > 0) {
         return minutes
           ? `נותרו ${hebrewCount(hours, "שעה", "שעות")} ו־${hebrewCount(minutes, "דקה", "דקות")}`
           : `נותרו ${hebrewCount(hours, "שעה", "שעות")}`;
       }
       return `נותרו ${hebrewCount(Math.max(1, minutes), "דקה", "דקות")}`;
+    }
+
+    function formatUntilDate(exp) {
+      return new Date(exp * 1000).toLocaleDateString("he-IL", {
+        day: "numeric",
+        month: "numeric",
+        year: "numeric",
+      });
     }
 
     function formatUntil(exp) {
@@ -768,7 +778,7 @@
       }
       el.hidden = false;
       el.className = `expiry${left <= 3600 ? " danger" : left <= 86400 ? " warn" : ""}`;
-      el.textContent = `${formatRemaining(exp)} · עד ${formatUntil(exp)}`;
+      el.innerHTML = `<span>${formatRemaining(exp)}</span><span>עד ${formatUntilDate(exp)}</span>`;
     }
 
     function refreshAccount(session) {
