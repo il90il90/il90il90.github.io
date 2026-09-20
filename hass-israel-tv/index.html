@@ -39,6 +39,8 @@
       --ok: #3dd68c;
       --radius: 16px;
       --header: 64px;
+      --video-max-h: min(62vh, 720px);
+      --video-ar: 1.777778;
     }
 
     * { box-sizing: border-box; }
@@ -134,6 +136,10 @@
 
     .theater {
       position: relative;
+      width: min(100%, calc(var(--video-max-h) * var(--video-ar)));
+      max-height: var(--video-max-h);
+      aspect-ratio: var(--video-ar);
+      margin-inline: auto;
       background: #000;
       border: 1px solid var(--line);
       border-radius: 20px;
@@ -143,8 +149,8 @@
     .theater video {
       display: block;
       width: 100%;
-      aspect-ratio: 16 / 9;
-      max-height: min(62vh, 720px);
+      height: 100%;
+      object-fit: contain;
       background: #000;
     }
     .idle, .status {
@@ -489,7 +495,7 @@
         z-index: 15;
         border-radius: 14px;
       }
-      .theater video { max-height: 36vh; }
+      :root { --video-max-h: 36vh; }
       .now { padding: 10px 10px; gap: 8px; }
       .now .en { display: none; }
       .actions { width: auto; }
@@ -696,6 +702,7 @@
     };
 
     const video = document.getElementById("player");
+    const theater = document.getElementById("theater");
     const idle = document.getElementById("idle");
     const status = document.getElementById("status");
     const live = document.getElementById("live");
@@ -1085,6 +1092,20 @@
         : `כל הערוצים (${CHANNELS.length})`;
     }
 
+    function syncVideoFrame() {
+      const width = video.videoWidth;
+      const height = video.videoHeight;
+      if (width > 0 && height > 0) {
+        theater.style.setProperty("--video-ar", String(width / height));
+        return;
+      }
+      theater.style.removeProperty("--video-ar");
+    }
+
+    video.addEventListener("loadedmetadata", syncVideoFrame);
+    video.addEventListener("loadeddata", syncVideoFrame);
+    video.addEventListener("resize", syncVideoFrame);
+
     function attachHls(url) {
       if (hls) {
         hls.destroy();
@@ -1119,6 +1140,7 @@
       video.pause();
       video.removeAttribute("src");
       video.load();
+      theater.style.removeProperty("--video-ar");
     }
 
     function getCastContext() {
