@@ -458,6 +458,7 @@
       gap: 8px;
       margin-bottom: 16px;
     }
+    .license-card .lic-row[hidden] { display: none !important; }
     .license-card .lic-row {
       display: flex;
       justify-content: space-between;
@@ -545,9 +546,8 @@
   <div id="gate">
     <form class="login" id="loginForm">
       <h2>כניסה</h2>
-      <p>הזינו אימייל והעתיקו את הרישיון מהלוח, בלי להקליד אותו מחדש</p>
+      <p>העתיקו את הרישיון מהלוח, בלי להקליד אותו מחדש</p>
       <p class="err" id="loginErr"></p>
-      <input id="emailInput" type="email" autocomplete="email" spellcheck="false" placeholder="אימייל" />
       <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון" inputmode="text" />
       <button type="submit">כניסה</button>
     </form>
@@ -643,7 +643,7 @@
     </div>
     <div class="lic-body">
       <div class="lic-meta">
-        <div class="lic-row">
+        <div class="lic-row" id="viewEmailRow" hidden>
           <span>אימייל</span>
           <strong id="viewEmail"></strong>
         </div>
@@ -957,10 +957,6 @@
       licenseInput.value = pasted;
     });
 
-    function isEmail(value) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-    }
-
     async function verifyPwfLicense(code, email) {
       const res = await fetch(PWF_CHECK_URL, {
         method: "POST",
@@ -1013,7 +1009,13 @@
       const session = readSession();
       if (!session) return;
       const license = session.license || session.note || "";
-      document.getElementById("viewEmail").textContent = session.email || "—";
+      const emailRow = document.getElementById("viewEmailRow");
+      if (session.email) {
+        emailRow.hidden = false;
+        document.getElementById("viewEmail").textContent = session.email;
+      } else {
+        emailRow.hidden = true;
+      }
       const exp = session.licenseExp || session.exp;
       document.getElementById("viewUntil").innerHTML = session.role === "admin"
         ? "מנהל · ללא הגבלת זמן"
@@ -1439,7 +1441,6 @@
     document.getElementById("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
       const value = normalizeLicenseInput(document.getElementById("licenseInput").value);
-      const email = document.getElementById("emailInput").value.trim().toLowerCase();
       const err = document.getElementById("loginErr");
       err.textContent = "";
       if (!value) {
@@ -1458,22 +1459,18 @@
           const data = await boot.json().catch(() => ({}));
           if (data?.success && data.token) adminToken = data.token;
         } catch {}
-        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, email: email || "", adminToken });
-        return;
-      }
-      if (!isEmail(email)) {
-        err.textContent = "הזינו אימייל תקין";
+        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, adminToken });
         return;
       }
       let pwf;
       try {
-        pwf = await verifyPwfLicense(value, email);
+        pwf = await verifyPwfLicense(value, "");
       } catch (error) {
         pwf = { ok: false, data: { error_code: "NETWORK", message: String(error?.message || error) } };
       }
       if (pwf.ok) {
         const exp = parsePwfExp(pwf.key);
-        unlockApp({ role: "user", exp, licenseExp: exp, license: value, email, note: value });
+        unlockApp({ role: "user", exp, licenseExp: exp, license: value, note: value });
         return;
       }
       const license = await verifyLicense(value);
@@ -1481,7 +1478,7 @@
         err.textContent = pwfErrorMessage(pwf.data);
         return;
       }
-      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: value, email, note: license.n });
+      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: value, note: license.n });
     });
     document.getElementById("expiry").addEventListener("click", openLicenseView);
     document.getElementById("viewLicClose").addEventListener("click", () => {
