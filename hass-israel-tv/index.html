@@ -714,7 +714,20 @@
       .brand img { width: 28px; height: 28px; border-radius: 8px; }
       .brand h1 { font-size: 14px; }
       .expiry { padding: 5px 8px; font-size: 10px; }
-      .search { flex: 1 1 80px; min-width: 56px; height: 36px; padding: 0 12px; }
+      .search { display: none; }
+      .search.search-open {
+        display: block;
+        position: absolute;
+        inset-inline: 10px;
+        top: calc(8px + env(safe-area-inset-top, 0px));
+        width: auto;
+        min-width: 0;
+        height: 36px;
+        padding: 0 12px;
+        z-index: 3;
+      }
+      #searchBtn { display: grid !important; }
+      .expiry-until { display: none; }
       .icon-btn { width: 36px; height: 36px; }
       .count { display: none; }
       main { padding: 10px 12px 0; }
@@ -976,7 +989,7 @@
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=62";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=63";
     import { PWF_CHECK_URL } from "./pwf.js?v=9";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1390,7 +1403,7 @@
       if (session.role === "admin") {
         el.hidden = false;
         el.className = "expiry";
-        el.textContent = "מנהל · ללא הגבלת זמן";
+        el.innerHTML = `<span class="expiry-main">מנהל</span><span class="expiry-until"> · ללא הגבלת זמן</span>`;
         return;
       }
       const exp = session.licenseExp || session.exp;
@@ -1401,7 +1414,7 @@
       }
       el.hidden = false;
       el.className = `expiry${left <= 3600 ? " danger" : left <= 86400 ? " warn" : ""}`;
-      el.textContent = `${formatRemaining(exp)} · עד ${formatUntilDate(exp)}`;
+      el.innerHTML = `<span class="expiry-main">${formatRemaining(exp)}</span><span class="expiry-until"> · עד ${formatUntilDate(exp)}</span>`;
     }
 
     function openLicenseView() {
@@ -2484,12 +2497,12 @@
     }
 
     function openTvSearch() {
-      searchInput.classList.add("tv-search-open");
+      searchInput.classList.add("tv-search-open", "search-open");
       searchInput.focus();
     }
 
     function closeTvSearch() {
-      searchInput.classList.remove("tv-search-open");
+      searchInput.classList.remove("tv-search-open", "search-open");
       searchInput.blur();
       searchBtn?.focus();
     }
@@ -2559,14 +2572,15 @@
 
     window.__tvBack = tvBack;
 
+    searchBtn?.addEventListener("click", openTvSearch);
+    searchInput.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeTvSearch();
+      }
+    });
+
     if (isTv) {
-      searchBtn?.addEventListener("click", openTvSearch);
-      searchInput.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          closeTvSearch();
-        }
-      });
       theater.addEventListener("keydown", (event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -2614,7 +2628,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=62").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=63").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
