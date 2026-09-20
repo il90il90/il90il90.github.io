@@ -83,7 +83,6 @@
     .expiry {
       appearance: none;
       font: inherit;
-      margin-inline-start: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -109,6 +108,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-inline-start: auto;
     }
     .header-actions .icon-btn svg { width: 20px; height: 20px; display: block; }
     .install { display: none !important; }
@@ -549,8 +549,7 @@
         padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px;
       }
       .brand h1 { font-size: 16px; }
-      .expiry { order: 3; }
-      .header-actions { margin-inline-start: auto; }
+      .expiry { padding: 4px 8px; font-size: 10px; }
       .search { width: 100%; flex-basis: 100%; }
       .count { display: none; }
       main { padding: 10px 12px 0; }
@@ -599,8 +598,8 @@
         <span>צפייה ישירה</span>
       </div>
     </button>
-    <button type="button" class="expiry" id="expiry" hidden title="הרישיון שלכם" aria-label="הרישיון שלכם"></button>
     <div class="header-actions">
+      <button type="button" class="expiry" id="expiry" hidden title="הרישיון שלכם" aria-label="הרישיון שלכם"></button>
       <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
       <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8v6"/><path d="M9 11h6"/></svg>
@@ -1717,7 +1716,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=39").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=40").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
