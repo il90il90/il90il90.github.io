@@ -455,6 +455,18 @@
     }
     dialog.sheet button.ghost { background: #243044; }
     dialog.sheet button[hidden] { display: none !important; }
+    dialog.sheet .lic-make {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 46px;
+      margin-top: 4px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    dialog.sheet .lic-make svg { width: 20px; height: 20px; display: block; }
     .key-box {
       position: relative;
       margin: 0 0 12px;
@@ -770,9 +782,10 @@
         <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
       </button>
     </div>
-    <div class="row">
-      <button type="button" id="licMake">צור</button>
-    </div>
+    <button type="button" class="lic-make" id="licMake">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 21 2l-3 1-2 3-3 1z"/></svg>
+      צור רישיון
+    </button>
   </dialog>
 
   <script>
@@ -1937,7 +1950,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=50").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=51").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
