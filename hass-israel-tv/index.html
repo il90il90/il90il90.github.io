@@ -467,7 +467,7 @@
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js"></script>
   <script type="module">
     import { CHANNELS, CATEGORY_LABELS } from "./channels.js";
-    import { PWF_APP_SECRET, PWF_CHECK_URL } from "./pwf.js";
+    import { PWF_CHECK_URL } from "./pwf.js";
 
     const AUTH_KEY = "israel-tv-auth";
     const LICENSE_SECRET = "israel-tv-license-hs256";
@@ -625,8 +625,8 @@
       if (code === "BANNED") return "הרישיון נחסם";
       if (code === "PAUSED") return "הרישיון מושהה";
       const detail = String(data?.detail || data?.message || "");
-      if (detail.includes("CSRF")) return "PWF חוסם את הבדיקה מהדפדפן. היכנסו כמנהל וצרו רישיון עם 🔑, או הוסיפו את כתובת האתר ב-PWF.";
-      if (detail.toLowerCase().includes("app secret")) return "App Secret לא תואם ל-PWF. עדכנו אותו ב-pwf.js";
+      if (detail.includes("CSRF") || detail.includes("Failed to fetch")) return "לא הצלחנו לאמת מול PWF. נסו שוב בעוד רגע.";
+      if (detail.toLowerCase().includes("app secret")) return "App Secret לא תואם ל-PWF";
       return detail || "רישיון לא תקין או שפג תוקפו";
     }
 
@@ -635,7 +635,6 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-App-Secret": PWF_APP_SECRET,
         },
         body: JSON.stringify({ license_key: code }),
       });
