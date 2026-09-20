@@ -44,15 +44,15 @@
     }
 
     * { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
     body {
       font-family: "Segoe UI", "Rubik", "Arial Hebrew", Arial, sans-serif;
-      padding-bottom: calc(48px + env(safe-area-inset-bottom, 0px));
     }
+    html[data-session="1"], html[data-session="1"] body { overflow: hidden; }
 
     header.top {
-      position: sticky;
-      top: 0;
+      position: relative;
+      flex-shrink: 0;
       z-index: 20;
       display: flex;
       align-items: center;
@@ -135,7 +135,34 @@
     .search:focus { outline: 2px solid var(--accent); border-color: transparent; }
     .count { color: var(--muted); font-size: 13px; white-space: nowrap; }
 
-    main { max-width: 1280px; margin: 0 auto; padding: 18px 16px 0; }
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden;
+    }
+    main {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 12px 16px 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .stage {
+      flex-shrink: 0;
+      background: var(--bg);
+    }
+    .catalog {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    }
 
     .theater {
       position: relative;
@@ -187,8 +214,14 @@
       background: var(--bg-soft);
       border-top: 1px solid var(--line);
     }
-    .now .name { font-weight: 700; }
-    .now .en { color: var(--muted); font-size: 13px; }
+    .now-logo {
+      height: 36px;
+      width: auto;
+      max-width: 140px;
+      object-fit: contain;
+      display: block;
+    }
+    .now-logo[hidden] { display: none !important; }
     .now .live {
       display: inline-flex; align-items: center; gap: 6px;
       background: rgba(255, 77, 77, 0.12); color: #ff8a8a;
@@ -285,7 +318,7 @@
     footer.credit a { color: inherit; font-weight: 700; }
 
     html[data-session="1"] #gate { display: none !important; }
-    html[data-session="1"] #app[hidden] { display: block !important; }
+    html[data-session="1"] #app[hidden] { display: flex !important; }
     #app[hidden] { display: none !important; }
     #gate {
       min-height: 100dvh;
@@ -503,16 +536,13 @@
       .header-actions { margin-inline-start: auto; }
       .search { width: 100%; flex-basis: 100%; }
       .count { display: none; }
-      main { padding: 12px 12px 0; }
+      main { padding: 10px 12px 0; }
       .theater {
-        position: sticky;
-        top: calc(var(--header) + env(safe-area-inset-top, 0px));
-        z-index: 15;
         border-radius: 14px;
       }
       :root { --video-max-h: 36vh; }
       .now { padding: 10px 10px; gap: 8px; }
-      .now .en { display: none; }
+      .now-logo { height: 28px; }
       .actions { width: auto; }
       .chips, .cats {
         flex-wrap: nowrap;
@@ -566,6 +596,7 @@
   </header>
 
   <main>
+    <div class="stage">
     <section class="theater" id="theater">
       <video id="player" controls playsinline x-webkit-airplay="allow"></video>
       <div class="cast-banner" id="castBanner" hidden>
@@ -582,8 +613,7 @@
 
     <div class="now">
       <span class="live" id="live" hidden><span class="dot"></span> LIVE</span>
-      <span class="name" id="nowName">אין ערוץ נבחר</span>
-      <span class="en" id="nowEn"></span>
+      <img class="now-logo" id="nowLogo" alt="" hidden />
       <div class="actions">
         <button type="button" class="primary" id="playBtn" title="נגן" aria-label="נגן">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72L19.06 12 8 5.14z"/></svg>
@@ -599,7 +629,9 @@
         </a>
       </div>
     </div>
+    </div>
 
+    <div class="catalog">
     <section class="section" id="recentSection" hidden>
       <h2>נפתח לאחרונה</h2>
       <div class="chips" id="recent"></div>
@@ -614,11 +646,11 @@
       <h2 id="gridTitle">כל הערוצים</h2>
       <div class="grid" id="grid"></div>
     </section>
+    <footer class="credit">
+      Made with ♥️ From&nbsp;<a href="https://t.me/israelCohen" target="_blank" rel="noopener">Israel</a>
+    </footer>
+    </div>
   </main>
-
-  <footer class="credit">
-    Made with ♥️ From&nbsp;<a href="https://t.me/israelCohen" target="_blank" rel="noopener">Israel</a>
-  </footer>
   </div>
   <dialog class="sheet license-card" id="licenseViewDlg">
     <div class="lic-head">
@@ -736,8 +768,7 @@
     const idle = document.getElementById("idle");
     const status = document.getElementById("status");
     const live = document.getElementById("live");
-    const nowName = document.getElementById("nowName");
-    const nowEn = document.getElementById("nowEn");
+    const nowLogo = document.getElementById("nowLogo");
     const openBtn = document.getElementById("openBtn");
     const castBtn = document.getElementById("castBtn");
     const castBanner = document.getElementById("castBanner");
@@ -1205,14 +1236,27 @@
       setStatus("הדפדפן לא תומך ב-HLS. העתיקו את הקישור ל-VLC.");
     }
 
+    function setNowLogo(channel) {
+      if (channel?.logo) {
+        nowLogo.src = channel.logo;
+        nowLogo.alt = channel.name || "";
+        nowLogo.title = channel.name || "";
+        nowLogo.hidden = false;
+        return;
+      }
+      nowLogo.removeAttribute("src");
+      nowLogo.alt = "";
+      nowLogo.title = "";
+      nowLogo.hidden = true;
+    }
+
     function goHome() {
       current = undefined;
       currentUrl = "";
       stopLocalPlayback();
       idle.classList.remove("hidden");
       live.hidden = true;
-      nowName.textContent = "אין ערוץ נבחר";
-      nowEn.textContent = "";
+      setNowLogo();
       setStatus("");
       setOpenButton("");
       document.getElementById("q").value = "";
@@ -1356,8 +1400,7 @@
       saveRecent(channel.id);
       idle.classList.add("hidden");
       live.hidden = false;
-      nowName.textContent = channel.name;
-      nowEn.textContent = channel.nameEn;
+      setNowLogo(channel);
       setStatus("טוען שידור…");
       history.replaceState(null, "", `#${channel.id}`);
       render();
@@ -1616,7 +1659,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=32").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=34").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
