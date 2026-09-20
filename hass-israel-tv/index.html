@@ -370,22 +370,46 @@
     }
     dialog.sheet button.ghost { background: #243044; }
     dialog.sheet button[hidden] { display: none !important; }
-    .lic-out {
-      display: block;
+    .key-box {
+      position: relative;
       margin: 0 0 12px;
-      padding: 16px 14px;
+    }
+    .key-box[hidden] { display: none !important; }
+    dialog.sheet .key-box input {
+      width: 100%;
+      min-height: 48px;
+      margin: 0;
+      padding: 12px 48px 12px 14px;
+      border: 1px solid var(--line);
       border-radius: 12px;
-      border: 1px dashed #3d5a86;
       background: #0b1220;
+      color: inherit;
       font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-size: 16px;
-      letter-spacing: 0.06em;
-      line-height: 1.45;
+      font-size: 15px;
+      letter-spacing: 0.05em;
       text-align: center;
-      word-break: break-all;
       direction: ltr;
     }
-    .lic-out[hidden] { display: none !important; }
+    dialog.sheet .key-copy {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border: 0;
+      border-radius: 10px;
+      background: #243044;
+      color: inherit;
+      display: grid;
+      place-items: center;
+    }
+    dialog.sheet .key-copy svg { width: 18px; height: 18px; display: block; }
+    dialog.sheet .key-copy .icon-check { display: none; }
+    dialog.sheet .key-copy.copied { background: var(--ok); color: #062813; }
+    dialog.sheet .key-copy.copied .icon-copy { display: none; }
+    dialog.sheet .key-copy.copied .icon-check { display: block; }
     .license-card {
       width: min(400px, calc(100% - 24px));
       padding: 0;
@@ -461,20 +485,7 @@
       font-weight: 600;
       margin-bottom: 8px;
     }
-    .license-card .lic-key code {
-      display: block;
-      padding: 16px 14px;
-      border-radius: 12px;
-      border: 1px dashed #3d5a86;
-      background: #0b1220;
-      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-size: 15px;
-      letter-spacing: 0.05em;
-      line-height: 1.45;
-      text-align: center;
-      word-break: break-all;
-      direction: ltr;
-    }
+    .license-card .lic-key .key-box { margin: 0; }
     .license-card .row { justify-content: flex-end; }
 
     @media (max-width: 720px) {
@@ -631,10 +642,15 @@
       </div>
       <div class="lic-key" id="viewLicenseWrap">
         <span>מפתח רישיון</span>
-        <code id="viewLicense"></code>
+        <div class="key-box">
+          <input id="viewLicense" type="text" readonly dir="ltr" spellcheck="false" autocomplete="off" />
+          <button type="button" class="key-copy" id="viewLicCopy" title="העתק" aria-label="העתק">
+            <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+            <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+          </button>
+        </div>
       </div>
       <div class="row">
-        <button type="button" id="viewLicCopy">העתק מפתח</button>
         <button type="button" class="ghost" id="viewLicClose">סגור</button>
       </div>
     </div>
@@ -658,10 +674,15 @@
       </select>
     </div>
     <p class="err" id="licUntil" style="color:var(--muted)"></p>
-    <code class="lic-out" id="licOut" hidden></code>
+    <div class="key-box" id="licOutWrap" hidden>
+      <input id="licOut" type="text" readonly dir="ltr" spellcheck="false" autocomplete="off" />
+      <button type="button" class="key-copy" id="licCopy" title="העתק" aria-label="העתק">
+        <svg class="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+        <svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+      </button>
+    </div>
     <div class="row">
       <button type="button" id="licMake">צור</button>
-      <button type="button" class="ghost" id="licCopy">העתק</button>
       <button type="button" class="ghost" id="licClose">סגור</button>
     </div>
   </dialog>
@@ -944,9 +965,8 @@
         ? "מנהל · ללא הגבלת זמן"
         : `<span>${formatRemaining(exp)}</span><span>עד ${formatUntil(exp)}</span>`;
       const wrap = document.getElementById("viewLicenseWrap");
-      document.getElementById("viewLicense").textContent = license;
+      document.getElementById("viewLicense").value = license;
       wrap.hidden = !license;
-      document.getElementById("viewLicCopy").hidden = !license;
       document.getElementById("licenseViewDlg").showModal();
     }
 
@@ -1388,10 +1408,17 @@
     document.getElementById("viewLicClose").addEventListener("click", () => {
       document.getElementById("licenseViewDlg").close();
     });
-    document.getElementById("viewLicCopy").addEventListener("click", async () => {
-      const value = document.getElementById("viewLicense").textContent;
-      if (value) await navigator.clipboard.writeText(value);
-    });
+    function bindKeyCopy(button, input) {
+      button.addEventListener("click", async () => {
+        const value = input.value.trim();
+        if (!value) return;
+        await navigator.clipboard.writeText(value);
+        button.classList.add("copied");
+        window.setTimeout(() => button.classList.remove("copied"), 1200);
+      });
+    }
+    bindKeyCopy(document.getElementById("viewLicCopy"), document.getElementById("viewLicense"));
+    bindKeyCopy(document.getElementById("licCopy"), document.getElementById("licOut"));
 
     document.getElementById("logoutBtn").addEventListener("click", lockApp);
     document.getElementById("licenseBtn").addEventListener("click", () => {
@@ -1428,12 +1455,13 @@
       const seconds = selectedLicenseSeconds();
       const until = document.getElementById("licUntil");
       const out = document.getElementById("licOut");
+      const wrap = document.getElementById("licOutWrap");
       until.textContent = "יוצר רישיון…";
-      out.hidden = true;
+      wrap.hidden = true;
       try {
         const issued = await createLicense(note, seconds);
-        out.textContent = issued.license_key;
-        out.hidden = false;
+        out.value = issued.license_key;
+        wrap.hidden = false;
         const exp = issued.expires_at
           ? Math.floor(Date.parse(issued.expires_at) / 1000)
           : nowSec() + seconds;
@@ -1443,10 +1471,6 @@
       } catch (error) {
         until.textContent = error?.message || "לא הצלחנו ליצור רישיון";
       }
-    });
-    document.getElementById("licCopy").addEventListener("click", async () => {
-      const value = document.getElementById("licOut").textContent;
-      if (value) await navigator.clipboard.writeText(value);
     });
 
     async function repairSession(session) {
