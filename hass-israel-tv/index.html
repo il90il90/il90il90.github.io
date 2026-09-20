@@ -181,7 +181,10 @@
       min-height: 0;
       overflow: auto;
       padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
+    .catalog::-webkit-scrollbar { display: none; }
 
     .theater {
       position: relative;
@@ -2083,7 +2086,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=53").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=54").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
