@@ -743,6 +743,12 @@
         <option value="2592000">חודשים</option>
       </select>
     </div>
+    <div class="row">
+      <input id="licDevices" type="number" min="1" max="100" value="1" />
+      <select id="licDevicesLabel" disabled>
+        <option selected>מכשירים</option>
+      </select>
+    </div>
     <p class="err" id="licUntil" style="color:var(--muted)"></p>
     <div class="key-box" id="licOutWrap" hidden>
       <input id="licOut" type="text" readonly dir="ltr" spellcheck="false" autocomplete="off" />
@@ -943,6 +949,7 @@
           seconds,
           amount: Number(document.getElementById("licAmount").value) || 1,
           unit: Number(document.getElementById("licUnit").value) || 86400,
+          max_devices: Number(document.getElementById("licDevices").value) || 1,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -1695,8 +1702,19 @@
     bindKeyCopy(document.getElementById("licCopy"), document.getElementById("licOut"));
 
     document.getElementById("logoutBtn").addEventListener("click", lockApp);
+    function resetLicenseForm() {
+      document.getElementById("licNote").value = "";
+      document.getElementById("licAmount").value = "30";
+      document.getElementById("licUnit").value = "86400";
+      document.getElementById("licDevices").value = "1";
+      document.getElementById("licUntil").textContent = "";
+      document.getElementById("licOut").value = "";
+      document.getElementById("licOutWrap").hidden = true;
+    }
+
     document.getElementById("licenseBtn").addEventListener("click", () => {
       if (readSession()?.role !== "admin") return;
+      resetLicenseForm();
       document.getElementById("licenseDlg").showModal();
     });
     document.getElementById("licClose").addEventListener("click", () => {
@@ -1815,7 +1833,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=44").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=45").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
