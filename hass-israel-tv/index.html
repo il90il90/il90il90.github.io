@@ -158,6 +158,7 @@
       max-height: 40vh;
       background: var(--bg);
     }
+    .stage[hidden] { display: none !important; }
     .catalog {
       flex: 1 1 auto;
       min-height: 0;
@@ -245,6 +246,7 @@
       transform: translate(-50%, 0);
     }
     .actions { margin-inline-start: auto; display: flex; gap: 8px; }
+    .actions button[hidden] { display: none !important; }
     .actions button, .actions a {
       border: 0;
       border-radius: 12px;
@@ -613,17 +615,13 @@
   </header>
 
   <main>
-    <div class="stage">
+    <div class="stage" id="stage" hidden>
     <section class="theater" id="theater">
       <video id="player" controls playsinline autoplay x-webkit-airplay="allow"></video>
       <div class="cast-banner" id="castBanner" hidden>
         <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor" aria-hidden="true"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
         <strong>משודר בטלוויזיה</strong>
         <p id="castBannerName">בחרו ערוץ כדי לשלוח ל-Cast</p>
-      </div>
-      <div class="idle" id="idle">
-        <div class="dot"></div>
-        <strong>בחרו ערוץ והשידור מתחיל כאן</strong>
       </div>
       <div class="status hidden" id="status"><p></p></div>
     </section>
@@ -633,6 +631,9 @@
       <div class="actions">
         <button type="button" class="primary" id="playBtn" title="נגן" aria-label="נגן">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.14v13.72L19.06 12 8 5.14z"/></svg>
+        </button>
+        <button type="button" id="pipBtn" title="נגן בחלונית" aria-label="נגן בחלונית">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="11" y="11" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg>
         </button>
         <button type="button" id="castBtn" title="Cast לטלוויזיה" aria-label="Cast לטלוויזיה">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
@@ -779,7 +780,8 @@
 
     const video = document.getElementById("player");
     const theater = document.getElementById("theater");
-    const idle = document.getElementById("idle");
+    const stage = document.getElementById("stage");
+    const pipBtn = document.getElementById("pipBtn");
     const status = document.getElementById("status");
     const nowLogo = document.getElementById("nowLogo");
     const openBtn = document.getElementById("openBtn");
@@ -1280,11 +1282,15 @@
       nowLogo.hidden = true;
     }
 
+    function showStage(show) {
+      stage.hidden = !show;
+    }
+
     function goHome() {
       current = undefined;
       currentUrl = "";
       stopLocalPlayback();
-      idle.classList.remove("hidden");
+      showStage(false);
       setNowLogo();
       setStatus("");
       setOpenButton("");
@@ -1325,8 +1331,8 @@
       castBtn.classList.toggle("casting", Boolean(session));
       castBtn.title = session ? `מנתק Cast${device ? ` · ${device}` : ""}` : "Cast לטלוויזיה";
       if (session && current) {
+        showStage(true);
         castBanner.hidden = false;
-        idle.classList.add("hidden");
         castBannerName.textContent = device ? `${current.name} · ${device}` : current.name;
       } else {
         castBanner.hidden = true;
@@ -1424,11 +1430,54 @@
       syncCastUi();
     }
 
+    function setMediaSession(channel) {
+      if (!navigator.mediaSession || !channel) return;
+      const logo = channel.logo ? new URL(channel.logo, location.href).href : "";
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: channel.name || "Israel TV",
+        artist: "Israel TV",
+        artwork: logo ? [{ src: logo, sizes: "192x192", type: "image/png" }] : [],
+      });
+      navigator.mediaSession.playbackState = "playing";
+      navigator.mediaSession.setActionHandler("play", () => startPlayback());
+      navigator.mediaSession.setActionHandler("pause", () => video.pause());
+    }
+
+    function pipAvailable() {
+      return Boolean(document.pictureInPictureEnabled || video.webkitSupportsPresentationMode);
+    }
+
+    async function enterPip() {
+      if (document.pictureInPictureElement) return;
+      if (video.webkitSetPresentationMode) {
+        if (video.webkitPresentationMode !== "picture-in-picture") {
+          video.webkitSetPresentationMode("picture-in-picture");
+        }
+        return;
+      }
+      if (document.pictureInPictureEnabled) {
+        await video.requestPictureInPicture();
+      }
+    }
+
+    async function togglePip() {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        return;
+      }
+      if (video.webkitPresentationMode === "picture-in-picture") {
+        video.webkitSetPresentationMode("inline");
+        return;
+      }
+      await enterPip();
+    }
+
     async function playChannel(channel) {
       current = channel;
       saveRecent(channel.id);
-      idle.classList.add("hidden");
+      showStage(true);
       setNowLogo(channel);
+      setMediaSession(channel);
       setStatus("");
       history.replaceState(null, "", `#${channel.id}`);
       render();
@@ -1462,6 +1511,31 @@
       if (event.detail) initCastApi();
     });
     if (window.__castReady) initCastApi();
+
+    pipBtn.hidden = !pipAvailable();
+    pipBtn.addEventListener("click", async () => {
+      if (!current) return;
+      try {
+        await togglePip();
+      } catch {
+        showToast("לא ניתן לפתוח חלונית");
+      }
+    });
+
+    let keepPlaying = false;
+    video.addEventListener("play", () => {
+      keepPlaying = true;
+      if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing";
+    });
+    video.addEventListener("pause", () => {
+      if (!document.hidden && !document.pictureInPictureElement) keepPlaying = false;
+      if (navigator.mediaSession && !keepPlaying) navigator.mediaSession.playbackState = "paused";
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden || !keepPlaying || !current) return;
+      enterPip().catch(() => {});
+      video.play().catch(() => {});
+    });
 
     const unmuteVideo = () => {
       if (!video.paused) video.muted = false;
@@ -1716,7 +1790,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=40").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=41").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
