@@ -670,6 +670,7 @@
   <dialog class="sheet" id="licenseDlg">
     <h3>יצירת רישיון</h3>
     <input id="licNote" type="text" placeholder="שם / הערה (לא חובה)" />
+    <input id="licDashToken" type="password" autocomplete="off" spellcheck="false" placeholder="טוקן API מהדשבורד — Profile → API Tokens" />
     <div class="presets">
       <button type="button" data-sec="3600">שעה</button>
       <button type="button" data-sec="86400">יום</button>
@@ -874,15 +875,17 @@
     }
 
     async function createLicense(note, seconds) {
-      const session = readSession();
+      const session = readSession() || {};
+      const dashboardToken = document.getElementById("licDashToken").value.trim() || session.dashboardToken || "";
+      if (dashboardToken) writeSession({ ...session, dashboardToken });
       const res = await fetch(PWF_CHECK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "create",
           admin: window.__adminPass || "",
-          token: session?.adminToken || "",
-          dashboard_token: session?.dashboardToken || "",
+          token: session.adminToken || "",
+          dashboard_token: dashboardToken,
           note,
           seconds,
           amount: Number(document.getElementById("licAmount").value) || 1,
@@ -1488,7 +1491,10 @@
 
     document.getElementById("logoutBtn").addEventListener("click", lockApp);
     document.getElementById("licenseBtn").addEventListener("click", () => {
-      if (readSession()?.role !== "admin") return;
+      const session = readSession();
+      if (session?.role !== "admin") return;
+      const tokenField = document.getElementById("licDashToken");
+      if (session.dashboardToken && !tokenField.value) tokenField.value = session.dashboardToken;
       document.getElementById("licenseDlg").showModal();
     });
     document.getElementById("licClose").addEventListener("click", () => {
