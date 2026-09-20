@@ -982,20 +982,24 @@
       return detail || "רישיון לא תקין או שפג תוקפו";
     }
 
-    function normalizeLicenseInput(value) {
-      return String(value || "").toUpperCase().replace(/[\s\u00a0\u2000-\u200f\u202a-\u202e\u2060]+/g, "");
+    function stripLicenseSpaces(value) {
+      return String(value || "").replace(/[\s\u00a0\u2000-\u200f\u202a-\u202e\u2060]+/g, "");
+    }
+
+    function normalizeLicenseKey(value) {
+      return stripLicenseSpaces(value).toUpperCase();
     }
 
     const licenseInput = document.getElementById("licenseInput");
     function lockLicenseInput() {
-      const cleaned = normalizeLicenseInput(licenseInput.value);
+      const cleaned = stripLicenseSpaces(licenseInput.value);
       if (licenseInput.value !== cleaned) licenseInput.value = cleaned;
     }
     licenseInput.addEventListener("input", lockLicenseInput);
     licenseInput.addEventListener("blur", lockLicenseInput);
     licenseInput.addEventListener("paste", (event) => {
       event.preventDefault();
-      const pasted = normalizeLicenseInput(event.clipboardData?.getData("text") || "");
+      const pasted = stripLicenseSpaces(event.clipboardData?.getData("text") || "");
       licenseInput.value = pasted;
     });
 
@@ -1533,7 +1537,7 @@
 
     document.getElementById("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
-      const value = normalizeLicenseInput(document.getElementById("licenseInput").value);
+      const value = stripLicenseSpaces(document.getElementById("licenseInput").value);
       const err = document.getElementById("loginErr");
       err.textContent = "";
       if (!value) {
@@ -1557,21 +1561,22 @@
       }
       let pwf;
       try {
-        pwf = await verifyPwfLicense(value, "");
+        pwf = await verifyPwfLicense(normalizeLicenseKey(value), "");
       } catch (error) {
         pwf = { ok: false, data: { error_code: "NETWORK", message: String(error?.message || error) } };
       }
+      const licenseKey = normalizeLicenseKey(value);
       if (pwf.ok) {
         const exp = parsePwfExp(pwf.key);
-        unlockApp({ role: "user", exp, licenseExp: exp, license: value, note: value });
+        unlockApp({ role: "user", exp, licenseExp: exp, license: licenseKey, note: licenseKey });
         return;
       }
-      const license = await verifyLicense(value);
+      const license = await verifyLicense(licenseKey);
       if (!license) {
         err.textContent = pwfErrorMessage(pwf.data);
         return;
       }
-      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: value, note: license.n });
+      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: licenseKey, note: license.n });
     });
     document.getElementById("expiry").addEventListener("click", openLicenseView);
     document.getElementById("viewLicClose").addEventListener("click", () => {
@@ -1712,7 +1717,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=38").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=39").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
