@@ -412,17 +412,6 @@ export const CHANNELS = [
     "logo": "logos/israeli_cinema.png"
   },
   {
-    "id": "30a_classic_movies",
-    "name": "קלאסיקות 30A",
-    "nameEn": "30A Classic Movies",
-    "category": "movies",
-    "label": "סרטים",
-    "path": "",
-    "url": "https://30a-tv.com/feeds/pzaz/30atvmovies.m3u8",
-    "channel_type": "static",
-    "logo": ""
-  },
-  {
     "id": "cellcom_series",
     "name": "סדרות",
     "nameEn": "Series",
@@ -1039,17 +1028,6 @@ export const CHANNELS = [
     "logo": ""
   },
   {
-    "id": "sg_30a_golf_kingdom",
-    "name": "30A Golf Kingdom",
-    "nameEn": "30A Golf Kingdom",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://30a-tv.com/feeds/vidaa/golf.m3u8",
-    "channel_type": "static",
-    "logo": ""
-  },
-  {
     "id": "sg_accdn",
     "name": "ACCDN",
     "nameEn": "ACCDN",
@@ -1149,17 +1127,6 @@ export const CHANNELS = [
     "logo": "logos/sg_bahrain_sports_2.png"
   },
   {
-    "id": "sg_bellator_mma",
-    "name": "Bellator MMA",
-    "nameEn": "Bellator MMA",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://jmp2.uk/plu-5ebc8688f3697d00072f7cf8.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_bellator_mma.png"
-  },
-  {
     "id": "sg_colimdot_tv",
     "name": "ColimdoT TV",
     "nameEn": "ColimdoT TV",
@@ -1215,17 +1182,6 @@ export const CHANNELS = [
     "logo": "logos/sg_espn8_the_ocho.png"
   },
   {
-    "id": "sg_equidia",
-    "name": "Equidia",
-    "nameEn": "Equidia",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://raw.githubusercontent.com/Paradise-91/ParaTV/main/streams/equidia/live2.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_equidia.png"
-  },
-  {
     "id": "sg_ftf_sports",
     "name": "FTF Sports",
     "nameEn": "FTF Sports",
@@ -1270,17 +1226,6 @@ export const CHANNELS = [
     "logo": "logos/sg_floracing_247.png"
   },
   {
-    "id": "sg_fox_sports_es",
-    "name": "Fox Sports en Espanol",
-    "nameEn": "Fox Sports en Espanol",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://live-manifest.production-public.tubi.io/live/d906efca-1302-4e29-b0d9-9a1d7a305d69/playlist.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_fox_sports_es.png"
-  },
-  {
     "id": "sg_fuel_tv",
     "name": "Fuel TV",
     "nameEn": "Fuel TV",
@@ -1290,28 +1235,6 @@ export const CHANNELS = [
     "url": "https://amg01074-fueltv-fueltvau-samsungau-g09kq.amagi.tv/playlist/amg01074-fueltv-fueltvau-samsungau/playlist.m3u8",
     "channel_type": "static",
     "logo": "logos/sg_fuel_tv.png"
-  },
-  {
-    "id": "sg_game_plus",
-    "name": "Game+",
-    "nameEn": "Game+",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://a-cdn.klowdtv.com/live2/fntsy_720p/playlist.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_game_plus.png"
-  },
-  {
-    "id": "sg_htspor_tv",
-    "name": "HTSpor TV",
-    "nameEn": "HTSpor TV",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://ciner.daioncdn.net/ht-spor/ht-spor.m3u8?app=web",
-    "channel_type": "static",
-    "logo": "logos/sg_htspor_tv.png"
   },
   {
     "id": "sg_horse_tv",
@@ -1446,17 +1369,6 @@ export const CHANNELS = [
     "logo": "logos/sg_oman_sports_tv.png"
   },
   {
-    "id": "sg_ovacion_tv",
-    "name": "Ovacion TV",
-    "nameEn": "Ovacion TV",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "http://cdn2.ujjina.com:1935/iptvovacion1/liveovacion1tv/playlist.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_ovacion_tv.png"
-  },
-  {
     "id": "sg_overtime",
     "name": "Overtime",
     "nameEn": "Overtime",
@@ -1468,17 +1380,6 @@ export const CHANNELS = [
     "logo": "logos/sg_overtime.png"
   },
   {
-    "id": "sg_pbr_ridepass",
-    "name": "PBR RidePass",
-    "nameEn": "PBR RidePass",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://jmp2.uk/plu-60d39387706fe50007fda8e8.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_pbr_ridepass.png"
-  },
-  {
     "id": "sg_pga_tour",
     "name": "PGA Tour",
     "nameEn": "PGA Tour",
@@ -1488,17 +1389,6 @@ export const CHANNELS = [
     "url": "https://d11k1mnrgfposz.cloudfront.net/playlist.m3u8",
     "channel_type": "static",
     "logo": "logos/sg_pga_tour.png"
-  },
-  {
-    "id": "sg_pac12_insider",
-    "name": "Pac 12 Insider",
-    "nameEn": "Pac 12 Insider",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://pac12-firetv.amagi.tv/playlist.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_pac12_insider.png"
   },
   {
     "id": "sg_persiana_fight",
@@ -1545,17 +1435,6 @@ export const CHANNELS = [
     "logo": "logos/sg_racer_select.png"
   },
   {
-    "id": "sg_realmadrid_tv",
-    "name": "Realmadrid TV",
-    "nameEn": "Realmadrid TV",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://jmp2.uk/plu-63dac28760bc8f0008a7654b.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_realmadrid_tv.png"
-  },
-  {
     "id": "sg_red_bull_tv",
     "name": "Red Bull TV",
     "nameEn": "Red Bull TV",
@@ -1565,17 +1444,6 @@ export const CHANNELS = [
     "url": "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8",
     "channel_type": "static",
     "logo": "logos/sg_red_bull_tv.png"
-  },
-  {
-    "id": "sg_san_marino_rtv",
-    "name": "San Marino RTV Sport",
-    "nameEn": "San Marino RTV Sport",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://d2hrvno5bw6tg2.cloudfront.net/smrtv-ch02/smil:ch-02.smil/master.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_san_marino_rtv.png"
   },
   {
     "id": "sg_sky_racing_1",
@@ -1642,17 +1510,6 @@ export const CHANNELS = [
     "url": "https://rightsboosterltd-scl-2-eu.rakuten.wurl.tv/playlist.m3u8",
     "channel_type": "static",
     "logo": "logos/sg_strongman_champions.png"
-  },
-  {
-    "id": "sg_suspilne_sport",
-    "name": "Suspilne Sport",
-    "nameEn": "Suspilne Sport",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://cdnua05.hls.tv/934/hls/8743361621b245838bee193c9ec28322/4856/stream.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_suspilne_sport.png"
   },
   {
     "id": "sg_swerve_combat",
@@ -1776,17 +1633,6 @@ export const CHANNELS = [
     "logo": "logos/sg_tvs_women_sports.png"
   },
   {
-    "id": "sg_talent_tv",
-    "name": "Talent TV",
-    "nameEn": "Talent TV",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "http://live.talenttv.lk:8080/hls/x8kd5n3tm8e8lsv/index.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_talent_tv.png"
-  },
-  {
     "id": "sg_teledeporte",
     "name": "Teledeporte",
     "nameEn": "Teledeporte",
@@ -1820,28 +1666,6 @@ export const CHANNELS = [
     "logo": "logos/sg_tennis_channel.png"
   },
   {
-    "id": "sg_tennis_channel_2",
-    "name": "Tennis Channel 2",
-    "nameEn": "Tennis Channel 2",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://jmp2.uk/plu-681109b688b9d85d0938c6ba.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_tennis_channel_2.png"
-  },
-  {
-    "id": "sg_tigo_sports_plus",
-    "name": "Tigo Sports+",
-    "nameEn": "Tigo Sports+",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "http://45.170.130.224:8000/play/a04i/index.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_tigo_sports_plus.png"
-  },
-  {
     "id": "sg_tour_spot_tv",
     "name": "Tour Spot TV",
     "nameEn": "Tour Spot TV",
@@ -1851,17 +1675,6 @@ export const CHANNELS = [
     "url": "https://fox.hostlagarto.com:8081/toursporttv/playlist.m3u8",
     "channel_type": "static",
     "logo": "logos/sg_tour_spot_tv.png"
-  },
-  {
-    "id": "sg_trace_sport_stars_au",
-    "name": "Trace Sport Stars (Australia)",
-    "nameEn": "Trace Sport Stars Australia",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://lightning-tracesport-samsungau.amagi.tv/playlist.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_trace_sport_stars_au.png"
   },
   {
     "id": "sg_turf_movil",
@@ -1886,28 +1699,6 @@ export const CHANNELS = [
     "logo": "logos/sg_tyc_sports.png"
   },
   {
-    "id": "sg_tyc_sports_usa",
-    "name": "TyC Sports USA",
-    "nameEn": "TyC Sports USA",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "http://45.170.130.224:8000/play/a020/index.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_tyc_sports_usa.png"
-  },
-  {
-    "id": "sg_turkmenistan_sport",
-    "name": "Türkmenistan Sport",
-    "nameEn": "Turkmenistan Sport",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://alpha.tv.online.tm/hls/ch004.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_turkmenistan_sport.png"
-  },
-  {
     "id": "sg_unbeaten_sports",
     "name": "Unbeaten Sports Channel",
     "nameEn": "Unbeaten Sports Channel",
@@ -1928,17 +1719,6 @@ export const CHANNELS = [
     "url": "https://d36r8jifhgsk5j.cloudfront.net/Willow_TV.m3u8",
     "channel_type": "static",
     "logo": "logos/sg_willow_sports.png"
-  },
-  {
-    "id": "sg_world_poker_tour",
-    "name": "World Poker Tour",
-    "nameEn": "World Poker Tour",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://jmp2.uk/plu-5ad9b7aae738977e2c312132.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_world_poker_tour.png"
   },
   {
     "id": "sg_world_poker_tour_hd",
@@ -1985,39 +1765,6 @@ export const CHANNELS = [
     "logo": "logos/sg_bein_sports_xtra_es.png"
   },
   {
-    "id": "sg_fubo_sports",
-    "name": "fubo Sports Network",
-    "nameEn": "fubo Sports Network",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://dnf08l6u6uxnz.cloudfront.net/master.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_fubo_sports.png"
-  },
-  {
-    "id": "sg_ct_sport",
-    "name": "ČT Sport",
-    "nameEn": "CT Sport",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "http://88.212.15.19/live/test_ctsport_25p/playlist.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_ct_sport.png"
-  },
-  {
-    "id": "sg_dong_nai_2",
-    "name": "Đồng Nai 2",
-    "nameEn": "Dong Nai 2",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "http://118.107.85.4:1935/live/smil:DNTV2.smil/chunklist.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_dong_nai_2.png"
-  },
-  {
     "id": "sg_astrakhan_sport",
     "name": "Астрахань Sport",
     "nameEn": "Astrakhan Sport",
@@ -2038,16 +1785,5 @@ export const CHANNELS = [
     "url": "https://ngtrk.dc.beltelecom.by/ngtrk/smil:belarus5.smil/playlist.m3u8",
     "channel_type": "static",
     "logo": "logos/sg_belarus_5.png"
-  },
-  {
-    "id": "sg_belarus_5_int",
-    "name": "Беларусь 5 Интернет",
-    "nameEn": "Belarus 5 International",
-    "category": "sport_global",
-    "label": "🌍 ספורט גלובל",
-    "path": "",
-    "url": "https://edge59.dc.beltelecom.by/ngtrk/smil:belarus5int.smil/playlist.m3u8",
-    "channel_type": "static",
-    "logo": "logos/sg_belarus_5_int.png"
   }
 ];

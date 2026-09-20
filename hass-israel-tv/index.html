@@ -2115,7 +2115,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=56").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=57").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
