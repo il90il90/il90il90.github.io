@@ -682,8 +682,6 @@
         <option value="2592000">חודשים</option>
       </select>
     </div>
-    <input id="licDashUser" type="text" autocomplete="username" spellcheck="false" placeholder="שם משתמש בדשבורד" />
-    <input id="licDashPass" type="password" autocomplete="current-password" placeholder="סיסמה בדשבורד" />
     <p class="err" id="licUntil" style="color:var(--muted)"></p>
     <div class="key-box" id="licOutWrap" hidden>
       <input id="licOut" type="text" readonly dir="ltr" spellcheck="false" autocomplete="off" />
@@ -872,19 +870,8 @@
       localStorage.removeItem(AUTH_KEY);
     }
 
-    const DASH_KEY = "israel-tv-dash";
-    function readDashToken() {
-      try { return sessionStorage.getItem(DASH_KEY) || ""; } catch { return ""; }
-    }
-    function writeDashToken(token) {
-      if (!token) return;
-      try { sessionStorage.setItem(DASH_KEY, token); } catch {}
-    }
-
     async function createLicense(note, seconds) {
       const session = readSession() || {};
-      const user = document.getElementById("licDashUser").value.trim();
-      const password = document.getElementById("licDashPass").value;
       const res = await fetch(PWF_CHECK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -892,9 +879,6 @@
           action: "create",
           admin: window.__adminPass || "",
           token: session.adminToken || "",
-          dashboard_token: readDashToken(),
-          dashboard_user: user,
-          dashboard_password: password,
           note,
           seconds,
           amount: Number(document.getElementById("licAmount").value) || 1,
@@ -902,14 +886,9 @@
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (data?.dashboard_token) writeDashToken(data.dashboard_token);
-      if (data?.need_dashboard) {
-        try { sessionStorage.removeItem(DASH_KEY); } catch {}
-      }
       if (!data?.success || !data.license_key) {
         throw new Error(data?.message || "לא הצלחנו ליצור רישיון");
       }
-      document.getElementById("licDashPass").value = "";
       return data;
     }
 
@@ -1637,7 +1616,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=30").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=31").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
