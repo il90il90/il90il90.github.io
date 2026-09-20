@@ -39,7 +39,7 @@
       --ok: #3dd68c;
       --radius: 16px;
       --header: 64px;
-      --video-max-h: min(62vh, 720px);
+      --video-max-h: min(32vh, 360px);
       --video-ar: 1.777778;
     }
 
@@ -154,11 +154,12 @@
       overflow: hidden;
     }
     .stage {
-      flex-shrink: 0;
+      flex: 0 0 auto;
+      max-height: 40vh;
       background: var(--bg);
     }
     .catalog {
-      flex: 1;
+      flex: 1 1 auto;
       min-height: 0;
       overflow: auto;
       padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
@@ -209,8 +210,8 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 10px 14px;
-      padding: 12px 14px;
+      gap: 8px 12px;
+      padding: 8px 10px;
       background: var(--bg-soft);
       border-top: 1px solid var(--line);
     }
@@ -255,7 +256,7 @@
     .cast-banner strong { font-size: 20px; }
     .cast-banner p { margin: 0; color: var(--muted); }
 
-    .section { margin-top: 22px; }
+    .section { margin-top: 12px; }
     .section[hidden] { display: none !important; }
     .section h2 {
       margin: 0 0 10px;
@@ -535,8 +536,9 @@
       .theater {
         border-radius: 14px;
       }
-      :root { --video-max-h: 36vh; }
-      .now { padding: 10px 10px; gap: 8px; }
+      :root { --video-max-h: min(26vh, 220px); }
+      .stage { max-height: 34vh; }
+      .now { padding: 6px 8px; gap: 8px; }
       .now-logo { height: 28px; }
       .actions { width: auto; }
       .chips, .cats {
@@ -1650,7 +1652,7 @@
     document.getElementById("iosHint")?.remove();
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=35").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=36").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
