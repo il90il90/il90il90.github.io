@@ -118,14 +118,16 @@
     .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
     .expiry.danger { background: rgba(255, 77, 77, 0.12); color: #ff8a8a; border-color: #6d2a2a; }
     .expiry[hidden] { display: none !important; }
+    .header-account,
     .header-actions {
       display: flex;
       flex-wrap: nowrap;
       align-items: center;
       flex-shrink: 0;
       gap: 8px;
-      margin-inline-start: auto;
     }
+    .header-actions { margin-inline-start: auto; }
+    .header-account .icon-btn svg,
     .header-actions .icon-btn svg { width: 20px; height: 20px; display: block; }
     .install { display: none !important; }
     .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
@@ -942,12 +944,14 @@
         <span>צפייה ישירה</span>
       </div>
     </button>
-    <div class="header-actions">
+    <div class="header-account">
+      <button type="button" class="expiry" id="expiry" hidden title="הגדרות" aria-label="הגדרות"></button>
+      <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
       <button type="button" class="icon-btn" id="settingsBtn" title="הגדרות וערוצים שלי" aria-label="הגדרות וערוצים שלי">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .7.4 1.3 1.1 1.5H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg>
       </button>
-      <button type="button" class="expiry" id="expiry" hidden title="הגדרות" aria-label="הגדרות"></button>
-      <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
+    </div>
+    <div class="header-actions">
       <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8v6"/><path d="M9 11h6"/></svg>
       </button>
@@ -1156,7 +1160,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=70";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=71";
     import { PWF_CHECK_URL } from "./pwf.js?v=11";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -3437,7 +3441,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=70").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=71").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
