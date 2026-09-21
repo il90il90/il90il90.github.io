@@ -1711,7 +1711,9 @@
       if (code === "BANNED") return "הרישיון נחסם";
       if (code === "PAUSED") return "הרישיון מושהה";
       if (code === "NETWORK") return "אין חיבור לשרת האימות. בדקו את הרשת ונסו שוב.";
+      if (code === "RATE_LIMIT") return "שרת האימות עמוס כרגע. המתינו רגע ונסו שוב.";
       const detail = String(data?.detail || data?.message || "");
+      if (/rate limit|too many/i.test(detail)) return "שרת האימות עמוס כרגע. המתינו רגע ונסו שוב.";
       if (detail.includes("CSRF") || detail.includes("Failed to fetch") || detail.includes("NetworkError")) {
         return "אין חיבור לשרת האימות. רעננו את העמוד ונסו שוב.";
       }
@@ -2287,7 +2289,7 @@
       stopLiveSession();
       if (session?.role !== "user" || !session.license) return session;
       let next = session;
-      if (!next.sessionId) {
+      if (!next.sessionId && !(next.sessionRetryAt && Date.now() < next.sessionRetryAt)) {
         try {
           const pwf = await verifyPwfLicense(next.license, next.email || "");
           if (!pwf.ok) return next;
@@ -2295,6 +2297,7 @@
             ...next,
             sessionId: pwf.sessionId,
             heartbeatInterval: pwf.heartbeatInterval,
+            sessionRetryAt: pwf.sessionId ? 0 : Date.now() + 15 * 60000,
           };
           writeSession(next);
         } catch {
@@ -2574,7 +2577,7 @@
       }
       bootPlayer();
       startLiveSession(session);
-      pullProfile().catch(() => {});
+      pullProfile({ force: true }).catch(() => {});
       if (isTv) {
         requestAnimationFrame(() => focusTvDefault());
       }
@@ -2734,9 +2737,13 @@
       }, 400);
     }
 
-    async function pullProfile() {
+    let lastProfilePull = 0;
+
+    async function pullProfile(options = {}) {
       const session = readSession();
       if (!session || (session.role !== "admin" && !session.license)) return;
+      if (!options.force && Date.now() - lastProfilePull < 60000) return;
+      lastProfilePull = Date.now();
       try {
         const res = await fetch(PWF_CHECK_URL, {
           method: "POST",
@@ -4086,7 +4093,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=102").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=103").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
