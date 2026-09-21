@@ -1238,7 +1238,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=80";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=81";
     import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1443,24 +1443,55 @@
       localStorage.removeItem(AUTH_KEY);
     }
 
+    async function refreshAdminToken() {
+      if (!window.__adminPass) return (readSession() || {}).adminToken || "";
+      try {
+        const res = await fetch(PWF_CHECK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "admin-session", admin: window.__adminPass }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data?.success && data.token) {
+          const session = { ...(readSession() || {}), role: "admin", adminToken: data.token };
+          if (!session.exp) session.exp = nowSec() + 3650 * 86400;
+          writeSession(session);
+          return data.token;
+        }
+      } catch {}
+      return (readSession() || {}).adminToken || "";
+    }
+
     async function createLicense(note, seconds) {
-      const session = readSession() || {};
-      const res = await fetch(PWF_CHECK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "create",
-          admin: window.__adminPass || "",
-          token: session.adminToken || "",
-          note,
-          seconds,
-          amount: Number(document.getElementById("licAmount").value) || 1,
-          unit: Number(document.getElementById("licUnit").value) || 86400,
-          max_devices: Number(document.getElementById("licDevices").value) || 1,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
+      const postCreate = async (token) => {
+        const session = readSession() || {};
+        const res = await fetch(PWF_CHECK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "create",
+            admin: window.__adminPass || "",
+            token: token || session.adminToken || "",
+            note,
+            seconds,
+            amount: Number(document.getElementById("licAmount").value) || 1,
+            unit: Number(document.getElementById("licUnit").value) || 86400,
+            max_devices: Number(document.getElementById("licDevices").value) || 1,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        return { res, data };
+      };
+      let token = await refreshAdminToken();
+      let { res, data } = await postCreate(token);
+      if ((!data?.success || !data.license_key) && res.status === 403 && window.__adminPass) {
+        token = await refreshAdminToken();
+        ({ res, data } = await postCreate(token));
+      }
       if (!data?.success || !data.license_key) {
+        if (res.status === 403) {
+          throw new Error("פג תוקף החיבור כמנהל. היכנסו שוב ואז צרו רישיון.");
+        }
         throw new Error(data?.message || "לא הצלחנו ליצור רישיון");
       }
       return data;
@@ -3620,7 +3651,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=80").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=81").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
