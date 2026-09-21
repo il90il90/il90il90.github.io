@@ -947,18 +947,6 @@
       font-size: 13px;
       font-weight: 800;
     }
-    .custom-box .custom-help {
-      margin: 0 0 8px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .custom-sync {
-      margin: 0 0 12px;
-      color: #8fd19e;
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .custom-sync.warn { color: #f5c451; }
     .custom-box input {
       width: 100%;
       box-sizing: border-box;
@@ -1018,8 +1006,6 @@
       padding: 8px 10px;
       min-width: 44px;
     }
-    .custom-empty { color: var(--muted); font-size: 13px; margin: 0; }
-
     @media (max-width: 720px) {
       header.top {
         flex-wrap: wrap;
@@ -1320,8 +1306,6 @@
           <h4>ערוצים שלי</h4>
           <button type="button" class="custom-open-add" id="customOpenAdd">הוסף ערוץ</button>
         </div>
-        <p class="custom-help">הוספה ועריכה נפתחות במסך נפרד. הערוצים נשמרים על הרישיון ומסתנכרנים בין המכשירים.</p>
-        <p class="custom-sync" id="customSync">נשמר על הרישיון</p>
         <div class="custom-list" id="customList"></div>
       </div>
       <div class="row">
@@ -2697,13 +2681,6 @@
       localStorage.setItem(CUSTOM_REV_KEY, JSON.stringify(all));
     }
 
-    function setCustomSync(ok, text) {
-      const el = document.getElementById("customSync");
-      if (!el) return;
-      el.className = `custom-sync${ok ? "" : " warn"}`;
-      el.textContent = text;
-    }
-
     function saveCustomChannels(list, options = {}) {
       const owner = customOwner();
       if (!owner) return;
@@ -2739,15 +2716,10 @@
           })),
         });
         const data = await res.json().catch(() => ({}));
-        if (!data?.success) {
-          setCustomSync(false, "נשמר במכשיר. הסנכרון לרישיון יינסה שוב");
-          return false;
-        }
+        if (!data?.success) return false;
         if (data.profile?.updatedAt) setCustomRev(data.profile.updatedAt);
-        setCustomSync(true, "מסונכרן בין כל המכשירים של הרישיון");
         return true;
       } catch {
-        setCustomSync(false, "נשמר במכשיר. אין חיבור לסנכרון כרגע");
         return false;
       }
     }
@@ -2770,10 +2742,7 @@
           body: JSON.stringify(profileAuthBody("profile-get")),
         });
         const data = await res.json().catch(() => ({}));
-        if (!data?.success) {
-          setCustomSync(false, "נשמר במכשיר. הסנכרון לרישיון יינסה שוב");
-          return;
-        }
+        if (!data?.success) return;
         const remote = data.profile || { custom: [], updatedAt: 0 };
         const remoteRev = Number(remote.updatedAt) || 0;
         const localRev = getCustomRev();
@@ -2781,21 +2750,15 @@
         const remoteList = Array.isArray(remote.custom) ? remote.custom : [];
         if (remoteRev > localRev && remoteList.length) {
           saveCustomChannels(remoteList, { silent: true, rev: remoteRev });
-          setCustomSync(true, "מסונכרן בין כל המכשירים של הרישיון");
         } else if (local.length) {
           await pushProfile();
         } else if (remoteList.length) {
           saveCustomChannels(remoteList, { silent: true, rev: remoteRev });
-          setCustomSync(true, "מסונכרן בין כל המכשירים של הרישיון");
-        } else {
-          setCustomSync(true, "מסונכרן בין כל המכשירים של הרישיון");
         }
         rebuildCatalog();
         render();
         paintCustomList();
-      } catch {
-        setCustomSync(false, "נשמר במכשיר. אין חיבור לסנכרון כרגע");
-      }
+      } catch {}
     }
 
     function rebuildCatalog() {
@@ -2877,13 +2840,7 @@
       const listEl = document.getElementById("customList");
       const items = loadCustomChannels();
       listEl.innerHTML = "";
-      if (!items.length) {
-        const empty = document.createElement("p");
-        empty.className = "custom-empty";
-        empty.textContent = "עדיין אין ערוצים. הוסיפו ערוץ מהכפתור למעלה.";
-        listEl.append(empty);
-        return;
-      }
+      if (!items.length) return;
       for (const channel of items) {
         const row = document.createElement("div");
         row.className = `custom-item${customEditId === channel.id ? " editing" : ""}`;
@@ -4043,7 +4000,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=100").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=101").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
