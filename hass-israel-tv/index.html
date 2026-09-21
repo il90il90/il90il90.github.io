@@ -110,11 +110,10 @@
       line-height: 1;
       text-align: center;
       white-space: nowrap;
-      cursor: pointer;
+      cursor: default;
+      pointer-events: none;
     }
     .expiry span { display: inline; }
-    .expiry:hover { filter: brightness(1.12); }
-    .expiry:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
     .expiry.danger { background: rgba(255, 77, 77, 0.12); color: #ff8a8a; border-color: #6d2a2a; }
     .expiry[hidden] { display: none !important; }
@@ -945,7 +944,7 @@
       </div>
     </button>
     <div class="header-account">
-      <button type="button" class="expiry" id="expiry" hidden title="הגדרות" aria-label="הגדרות"></button>
+      <span class="expiry" id="expiry" hidden></span>
       <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
       <button type="button" class="icon-btn" id="settingsBtn" title="הגדרות וערוצים שלי" aria-label="הגדרות וערוצים שלי">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .7.4 1.3 1.1 1.5H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg>
@@ -1160,7 +1159,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=71";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=72";
     import { PWF_CHECK_URL } from "./pwf.js?v=11";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1966,7 +1965,7 @@
       if (session.role === "admin") {
         el.hidden = false;
         el.className = "expiry";
-        el.innerHTML = `<span class="expiry-main">מנהל</span><span class="expiry-until"> · ללא הגבלת זמן</span>`;
+        el.textContent = "מנהל";
         return;
       }
       const exp = session.licenseExp || session.exp;
@@ -1993,7 +1992,7 @@
       }
       const exp = session.licenseExp || session.exp;
       document.getElementById("viewUntil").innerHTML = session.role === "admin"
-        ? "מנהל · ללא הגבלת זמן"
+        ? "מנהל"
         : `<span>${formatRemaining(exp)}</span><span>עד ${formatUntil(exp)}</span>`;
       const wrap = document.getElementById("viewLicenseWrap");
       document.getElementById("viewLicense").value = license;
@@ -3067,7 +3066,6 @@
       if (document.visibilityState === "visible") pullProfile().catch(() => {});
     });
     document.getElementById("settingsBtn").addEventListener("click", () => openLicenseView({ focusCustom: true }));
-    document.getElementById("expiry").addEventListener("click", () => openLicenseView());
     document.getElementById("viewLicClose").addEventListener("click", () => {
       document.getElementById("licenseViewDlg").close();
     });
@@ -3441,7 +3439,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=71").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=72").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
