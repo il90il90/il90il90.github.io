@@ -2360,7 +2360,7 @@
 
     function formatDevices(count) {
       const n = Math.max(1, Number(count) || 1);
-      return n === 1 ? "מכשיר אחד" : `${n} מכשירים`;
+      return `${n} מכשירים`;
     }
 
     function canShareLicense(session) {
@@ -2372,9 +2372,7 @@
     function formatSlotsLeft(left, max) {
       const free = Math.max(0, Number(left) || 0);
       const total = Math.max(1, Number(max) || 1);
-      if (free === 0) return `0 מכשירים פנויים נשארו · ${total} מתוך ${total} בשימוש`;
-      if (free === 1) return `נשאר מכשיר פנוי אחד מתוך ${total}`;
-      return `נשארו ${free} מכשירים פנויים מתוך ${total}`;
+      return `${free} מתוך ${total} מכשירים פנויים`;
     }
 
     function formatLastSeen(stamp) {
@@ -4088,7 +4086,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=104").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=105").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
