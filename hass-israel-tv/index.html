@@ -4083,9 +4083,12 @@
         bindTap(btn, onTap);
         catsEl.append(btn);
       };
+      if (category === "custom" && !CHANNELS.some((channel) => channel.category === "custom")) {
+        category = "all";
+      }
       paintCat("all", "הכל", () => { category = "all"; render(); });
       for (const [id, label] of Object.entries(CATEGORY_LABELS)) {
-        if (id !== "custom" && !CHANNELS.some((channel) => channel.category === id)) continue;
+        if (!CHANNELS.some((channel) => channel.category === id)) continue;
         paintCat(id, label, () => { category = id; render(); });
       }
 
@@ -5143,7 +5146,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=123").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=124").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
