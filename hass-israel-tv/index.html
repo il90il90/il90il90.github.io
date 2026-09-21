@@ -520,6 +520,57 @@
       gap: 0;
     }
     html.tv .scan-btn, html.tv #scanDlg { display: none !important; }
+    .devices-box {
+      margin: 0 0 16px;
+      padding: 14px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .devices-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 10px;
+    }
+    .devices-head h4 { margin: 0; font-size: 15px; }
+    .devices-left { color: var(--muted); font-size: 13px; font-weight: 700; }
+    .devices-left.full { color: #ffb27a; }
+    .devices-list { display: grid; gap: 8px; }
+    .device-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    .device-item > div { flex: 1; min-width: 0; }
+    .device-item strong { display: block; font-size: 14px; }
+    .device-item small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .device-dot {
+      flex: 0 0 8px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #47506a;
+    }
+    .device-dot.online { background: #45d483; }
+    .device-item button {
+      flex: 0 0 auto;
+      height: 32px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 999px;
+      background: #3a2230;
+      color: #ff9d9d;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .device-empty { margin: 0; color: var(--muted); font-size: 13px; }
     .pair-box { text-align: center; margin: 0 0 8px; }
     html.tv #loginLead, html.pair-login #loginLead { display: none; }
     html.tv #loginType, html.pair-login #loginType:not(.open) { display: none; }
@@ -1079,7 +1130,6 @@
       </div>
       <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
       <div class="pair-box login-pair-on-tv" id="loginPairBox" tabindex="0">
-        <p class="pair-help">סרקו את הברקוד מהטלפון שבו כבר התחברתם — כך המסך מתחבר לאותו רישיון.</p>
         <div class="qr-card login-qr">
           <div id="pairQr" class="qr-target"></div>
         </div>
@@ -1248,6 +1298,13 @@
           <button type="button" id="pairCodeGo">חבר</button>
         </div>
       </div>
+      <div class="devices-box" id="devicesBox">
+        <div class="devices-head">
+          <h4>מכשירים מחוברים</h4>
+          <span class="devices-left" id="devicesLeft">בודקים…</span>
+        </div>
+        <div class="devices-list" id="devicesList"></div>
+      </div>
       <div class="custom-box" id="customBox">
         <div class="custom-box-head">
           <h4>ערוצים שלי</h4>
@@ -1260,6 +1317,14 @@
       <div class="row">
         <button type="button" class="ghost" id="viewLicClose">סגור</button>
       </div>
+    </div>
+  </dialog>
+  <dialog class="sheet" id="devicesDlg">
+    <h3>מכשירים מחוברים</h3>
+    <p class="devices-left" id="devicesDlgLeft">בודקים…</p>
+    <div class="devices-list" id="devicesDlgList"></div>
+    <div class="row">
+      <button type="button" class="ghost" id="devicesDlgClose">סגור</button>
     </div>
   </dialog>
   <dialog class="sheet" id="customDlg">
@@ -2157,13 +2222,24 @@
       return id;
     }
 
+    function deviceLabel() {
+      const ua = navigator.userAgent || "";
+      if (isTv || /IsraelTV-AndroidTV|Android TV|GoogleTV|BRAVIA|SHIELD|AFT/i.test(ua)) return "טלוויזיה";
+      if (/iPad/i.test(ua)) return "אייפד";
+      if (/iPhone|iPod/i.test(ua)) return "אייפון";
+      if (/Android/i.test(ua)) return "טלפון אנדרואיד";
+      if (/Macintosh/i.test(ua)) return "מחשב Mac";
+      if (/Windows/i.test(ua)) return "מחשב Windows";
+      return "מכשיר";
+    }
+
     async function verifyPwfLicense(code, email) {
       const res = await fetch(PWF_CHECK_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ license_key: code, email, hwid: deviceHwid() }),
+        body: JSON.stringify({ license_key: code, email, hwid: deviceHwid(), device_name: deviceLabel() }),
       });
       const data = await res.json().catch(() => ({}));
       const status = String(data?.key?.status || "").toLowerCase();
@@ -2174,6 +2250,8 @@
           key: data.key || {},
           sessionId: data.session_id || "",
           heartbeatInterval: Number(data.heartbeat_interval) || 30,
+          devicesUsed: Number(data.devices_used) || 0,
+          devicesLeft: Number(data.devices_left) || 0,
         }
         : { ok: false, data };
     }
@@ -2194,12 +2272,15 @@
             action: "heartbeat",
             session_id: session.sessionId,
             license_key: session.license,
+            hwid: deviceHwid(),
+            device_name: deviceLabel(),
           }),
         });
         const data = await res.json().catch(() => ({}));
         if (data?.success) return true;
         const code = String(data?.error_code || "").toUpperCase();
-        return !["BANNED", "PAUSED", "EXPIRED", "SESSION_EXPIRED", "SESSION_MISMATCH", "INVALID_KEY"].includes(code);
+        if (code === "DEVICE_REMOVED") showToast("המכשיר נותק מהרישיון");
+        return !["BANNED", "PAUSED", "EXPIRED", "SESSION_EXPIRED", "SESSION_MISMATCH", "INVALID_KEY", "DEVICE_REMOVED"].includes(code);
       } catch {
         return true;
       }
@@ -2250,6 +2331,7 @@
             action: "logout",
             session_id: session.sessionId,
             license_key: session.license || "",
+            hwid: deviceHwid(),
           }),
           keepalive: true,
         }).catch(() => {});
@@ -2288,6 +2370,122 @@
       return Number(session.maxDevices) >= 2;
     }
 
+    function formatSlotsLeft(left, max) {
+      const free = Math.max(0, Number(left) || 0);
+      const total = Math.max(1, Number(max) || 1);
+      if (free === 0) return `0 מכשירים פנויים נשארו · ${total} מתוך ${total} בשימוש`;
+      if (free === 1) return `נשאר מכשיר פנוי אחד מתוך ${total}`;
+      return `נשארו ${free} מכשירים פנויים מתוך ${total}`;
+    }
+
+    function formatLastSeen(stamp) {
+      const diff = Date.now() - (Number(stamp) || 0);
+      if (diff < 5 * 60 * 1000) return "פעיל עכשיו";
+      if (diff < 3600 * 1000) return `לפני ${Math.max(1, Math.round(diff / 60000))} דקות`;
+      if (diff < 86400 * 1000) return `לפני ${Math.round(diff / 3600000)} שעות`;
+      return `לפני ${Math.round(diff / 86400000)} ימים`;
+    }
+
+    async function fetchDevices(license) {
+      return pwfAction({ action: "devices-list", license_key: license });
+    }
+
+    async function removeDevice(license, hwid) {
+      return pwfAction({ action: "device-remove", license_key: license, hwid });
+    }
+
+    function renderDevices(listEl, leftEl, data, license, onChange) {
+      const devices = Array.isArray(data?.devices) ? data.devices : [];
+      const max = Number(data?.max_devices) || 1;
+      leftEl.textContent = formatSlotsLeft(data?.devices_left, max);
+      leftEl.classList.toggle("full", Math.max(0, Number(data?.devices_left) || 0) === 0);
+      listEl.replaceChildren();
+      if (!devices.length) {
+        const empty = document.createElement("p");
+        empty.className = "device-empty";
+        empty.textContent = "אין מכשירים מחוברים כרגע.";
+        listEl.append(empty);
+        return;
+      }
+      const mine = deviceHwid();
+      for (const device of devices) {
+        const row = document.createElement("div");
+        row.className = "device-item";
+        const dot = document.createElement("span");
+        dot.className = `device-dot${device.online ? " online" : ""}`;
+        const meta = document.createElement("div");
+        const name = document.createElement("strong");
+        name.textContent = device.hwid === mine ? `${device.name} · המכשיר הזה` : device.name;
+        const when = document.createElement("small");
+        when.textContent = formatLastSeen(device.last_seen);
+        meta.append(name, when);
+        const cut = document.createElement("button");
+        cut.type = "button";
+        cut.textContent = "נתק";
+        cut.addEventListener("click", async () => {
+          cut.disabled = true;
+          const res = await removeDevice(license, device.hwid);
+          if (!res.ok) {
+            cut.disabled = false;
+            showToast(res.data?.message || "הניתוק נכשל");
+            return;
+          }
+          showToast("המכשיר נותק");
+          if (device.hwid === mine) {
+            lockApp();
+            return;
+          }
+          renderDevices(listEl, leftEl, res.data, license, onChange);
+          onChange?.(res.data);
+        });
+        row.append(dot, meta, cut);
+        listEl.append(row);
+      }
+    }
+
+    async function paintDevicesBox() {
+      const session = readSession();
+      const box = document.getElementById("devicesBox");
+      const license = session?.license || "";
+      box.hidden = !license;
+      if (!license) return;
+      const leftEl = document.getElementById("devicesLeft");
+      const listEl = document.getElementById("devicesList");
+      leftEl.textContent = "בודקים…";
+      listEl.replaceChildren();
+      const res = await fetchDevices(license);
+      if (!res.ok) {
+        leftEl.textContent = "לא הצלחנו לטעון את רשימת המכשירים";
+        return;
+      }
+      renderDevices(listEl, leftEl, res.data, license, (data) => {
+        const current = readSession();
+        if (!current) return;
+        writeSession({
+          ...current,
+          maxDevices: Number(data.max_devices) || current.maxDevices,
+          devicesUsed: Number(data.devices_used) || 0,
+          devicesLeft: Number(data.devices_left) || 0,
+        });
+        refreshExpiry(readSession());
+      });
+    }
+
+    async function openDevicesDialog(license, message) {
+      const dlg = document.getElementById("devicesDlg");
+      const leftEl = document.getElementById("devicesDlgLeft");
+      const listEl = document.getElementById("devicesDlgList");
+      leftEl.textContent = message || "בודקים…";
+      listEl.replaceChildren();
+      if (!dlg.open) dlg.showModal();
+      const res = await fetchDevices(license);
+      if (!res.ok) {
+        leftEl.textContent = "לא הצלחנו לטעון את רשימת המכשירים";
+        return;
+      }
+      renderDevices(listEl, leftEl, res.data, license, () => {});
+    }
+
     function refreshExpiry(session) {
       const el = document.getElementById("expiry");
       if (session.role === "admin") {
@@ -2304,7 +2502,10 @@
       }
       el.hidden = false;
       el.className = `expiry${left <= 3600 ? " danger" : left <= 86400 ? " warn" : ""}`;
-      const devices = formatDevices(session.maxDevices);
+      const max = Math.max(1, Number(session.maxDevices) || 1);
+      const devices = Number.isFinite(Number(session.devicesUsed)) && session.devicesUsed
+        ? `${session.devicesUsed}/${max} מכשירים`
+        : formatDevices(max);
       el.innerHTML = `<span class="expiry-main">${formatRemaining(exp)}</span><span class="expiry-until"> · עד ${formatUntilDate(exp)} · ${devices}</span>`;
     }
 
@@ -2345,6 +2546,7 @@
         qrWrap.hidden = true;
       }
       paintCustomList();
+      paintDevicesBox();
       const settingsDlg = document.getElementById("licenseViewDlg");
       if (!settingsDlg.open) settingsDlg.showModal();
       document.getElementById("settingsTitle").focus({ preventScroll: true });
@@ -3394,6 +3596,8 @@
           sessionId: pwf.sessionId,
           heartbeatInterval: pwf.heartbeatInterval,
           maxDevices: parseMaxDevices(pwf.key),
+          devicesUsed: pwf.devicesUsed,
+          devicesLeft: pwf.devicesLeft,
         });
         if (pendingPairId) {
           const id = pendingPairId;
@@ -3401,6 +3605,11 @@
           await claimPair(id, { silent: true });
         }
         return true;
+      }
+      if (pwf.data?.error_code === "DEVICE_LIMIT") {
+        err.textContent = pwf.data.message || "אין מכשירים פנויים ברישיון";
+        await openDevicesDialog(licenseKey, formatSlotsLeft(0, pwf.data.max_devices));
+        return false;
       }
       const license = await verifyLicense(licenseKey);
       if (!license) {
@@ -3431,6 +3640,10 @@
       if (event.target === event.currentTarget) event.currentTarget.close();
     }
     document.getElementById("licenseViewDlg").addEventListener("click", dismissSheet);
+    document.getElementById("devicesDlg").addEventListener("click", dismissSheet);
+    document.getElementById("devicesDlgClose").addEventListener("click", () => {
+      document.getElementById("devicesDlg").close();
+    });
     document.getElementById("customOpenAdd").addEventListener("click", () => {
       openCustomDlg();
     });
@@ -3826,7 +4039,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=98").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=99").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
