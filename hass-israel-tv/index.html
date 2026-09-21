@@ -880,7 +880,8 @@
     .license-card {
       width: min(460px, calc(100% - 24px));
       padding: 0;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
     .license-card .lic-head {
       display: flex;
@@ -906,7 +907,7 @@
       color: var(--muted);
       font-size: 13px;
     }
-    .license-card .lic-body { padding: 4px 22px 22px; }
+    .license-card .lic-body { padding: 4px 22px 22px; min-width: 0; overflow-x: hidden; }
     .license-card .lic-meta {
       display: grid;
       gap: 8px;
@@ -1006,22 +1007,33 @@
       color: #ff8a8a;
       font-size: 13px;
     }
-    .custom-list { display: grid; gap: 8px; }
+    .custom-list {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+      overflow: hidden;
+    }
     .custom-item {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 10px 10px 12px;
+      min-width: 0;
+      padding: 10px;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 10px;
+      overflow: hidden;
     }
     .custom-item.editing { outline: 2px solid var(--accent); }
-    .custom-item div { min-width: 0; flex: 1; }
+    .custom-item .custom-meta {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
     .custom-item .custom-thumb {
       flex: 0 0 auto;
-      width: 38px;
-      height: 38px;
+      width: 42px;
+      height: 42px;
       display: grid;
       place-items: center;
       overflow: hidden;
@@ -1066,7 +1078,35 @@
       direction: ltr;
       text-align: left;
     }
-    .custom-item-btns { display: flex; flex-shrink: 0; gap: 6px; }
+    .custom-item-btns { display: flex; flex: 0 0 auto; gap: 6px; }
+    .custom-logo-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 12px;
+      padding: 10px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .custom-logo-preview {
+      flex: 0 0 auto;
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #0b1220;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .custom-logo-preview img { width: 100%; height: 100%; object-fit: contain; }
+    .custom-logo-fields { flex: 1; min-width: 0; }
+    .custom-logo-fields input { margin-bottom: 8px; }
+    .custom-logo-fields button { width: 100%; background: #243044; }
     .custom-item button {
       flex: 0 0 auto;
       background: #243044;
@@ -1395,15 +1435,22 @@
   </dialog>
   <dialog class="sheet" id="customDlg">
     <h3 id="customDlgTitle">הוספת ערוץ</h3>
-      <p style="color:var(--muted);margin:0 0 12px">ערוץ בודד, או קישור / קובץ m3u שיוסיף את כל הערוצים לקטגוריה</p>
+    <p style="color:var(--muted);margin:0 0 12px">ערוץ בודד, או קישור / קובץ m3u שיוסיף את כל הערוצים לקטגוריה</p>
     <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
     <input id="customUrl" type="url" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
-    <input id="customLogo" type="url" inputmode="url" placeholder="קישור ללוגו (לא חובה)" dir="ltr" spellcheck="false" autocomplete="off" />
-    <p class="err" id="customErr"></p>
     <input id="customFile" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl,text/plain" hidden />
+    <button type="button" class="ghost" id="customFileBtn" style="width:100%;margin:0 0 12px">ייבוא מקובץ m3u</button>
+    <div class="custom-logo-box">
+      <div class="custom-logo-preview" id="customLogoPreview">לוגו</div>
+      <div class="custom-logo-fields">
+        <input id="customLogo" type="url" inputmode="url" placeholder="קישור ללוגו (לא חובה)" dir="ltr" spellcheck="false" autocomplete="off" />
+        <input id="customLogoFile" type="file" accept="image/*" hidden />
+        <button type="button" class="ghost" id="customLogoBtn">בחירת תמונת לוגו</button>
+      </div>
+    </div>
+    <p class="err" id="customErr"></p>
     <div class="row">
       <button type="button" id="customAdd">שמירה</button>
-      <button type="button" class="ghost" id="customFileBtn">ייבוא מקובץ</button>
       <button type="button" class="ghost" id="customCancel">ביטול</button>
     </div>
   </dialog>
@@ -2917,6 +2964,12 @@
       return parsed.href;
     }
 
+    function normalizeCustomLogo(value) {
+      const raw = String(value || "").trim();
+      if (/^data:image\/(png|jpe?g|gif|webp);base64,/i.test(raw) && raw.length < 80000) return raw;
+      return normalizeCustomUrl(raw);
+    }
+
     async function probeCustomStream(url) {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 8000);
@@ -2978,9 +3031,15 @@
       const seen = new Set();
       let pending = null;
       let group = "";
+      let playlistLogo = "";
       for (const line of lines) {
         const row = line.trim();
         if (!row) continue;
+        if (/^#EXTM3U/i.test(row)) {
+          const attrs = parsePlaylistAttrs(row);
+          playlistLogo = resolvePlaylistUrl(attrs["tvg-logo"] || attrs.logo || "", base);
+          continue;
+        }
         if (/^#EXTINF/i.test(row)) {
           const attrs = parsePlaylistAttrs(row);
           const comma = row.indexOf(",");
@@ -3015,7 +3074,7 @@
         out.push({
           name: name.slice(0, 80),
           url,
-          logo: meta.logo || "",
+          logo: meta.logo || playlistLogo || "",
           group: String(meta.group || group || "").slice(0, 40),
         });
         pending = null;
@@ -3081,30 +3140,38 @@
       if (!isChannelPlaylist(text, children) || children.length < 2) return entries;
       return children.map((child) => ({
         ...child,
+        logo: child.logo || entry.logo || "",
         group: child.group || entry.group || entry.name,
       }));
     }
 
-    function applyPlaylistEntries(entries) {
+    function applyPlaylistEntries(entries, fallbackLogo = "") {
       const existing = loadCustomChannels();
       const known = new Set(existing.map((item) => item.url));
       let added = 0;
       let skipped = 0;
       let dropped = 0;
+      let updated = 0;
       for (const entry of entries) {
+        const logo = entry.logo || fallbackLogo || "";
+        const found = existing.find((item) => item.url === entry.url);
+        if (found) {
+          if (logo && !found.logo) {
+            found.logo = logo;
+            updated += 1;
+          }
+          skipped += 1;
+          continue;
+        }
         if (existing.length + added >= CUSTOM_LIMIT) {
           dropped += 1;
           continue;
         }
-        if (known.has(entry.url)) {
-          skipped += 1;
-          continue;
-        }
         known.add(entry.url);
-        existing.push(makeCustomChannel(entry));
+        existing.push(makeCustomChannel({ ...entry, logo }));
         added += 1;
       }
-      return { added, skipped, dropped, list: existing };
+      return { added, skipped, dropped, updated, list: existing };
     }
 
     function showImportedChannels(added, skipped, dropped) {
@@ -3122,17 +3189,26 @@
 
     async function importPlaylistEntries(entries) {
       const err = document.getElementById("customErr");
+      const fallback = readCustomLogo();
       let list = entries.length === 1 ? await expandNestedPlaylists(entries) : entries;
       if (!list.length) {
         err.textContent = "לא נמצאו ערוצים בפלייליסט. ודאו שזו רשימת ערוצים ולא קובץ שידור בודד.";
         return false;
       }
-      const result = applyPlaylistEntries(list);
-      if (!result.added) {
+      const result = applyPlaylistEntries(list, fallback);
+      if (!result.added && !result.updated) {
         err.textContent = result.skipped ? "כל הערוצים בקובץ כבר שמורים" : "לא נוספו ערוצים";
         return false;
       }
       saveCustomChannels(result.list);
+      if (!result.added && result.updated) {
+        closeCustomDlg();
+        rebuildCatalog();
+        render();
+        paintCustomList();
+        showToast(`עודכנו ${result.updated} לוגואים`);
+        return true;
+      }
       showImportedChannels(result.added, result.skipped, result.dropped);
       return true;
     }
@@ -3154,6 +3230,65 @@
     }
 
     let customEditId = "";
+    let customLogoData = "";
+
+    function readCustomLogo() {
+      return normalizeCustomLogo(document.getElementById("customLogo").value) || customLogoData || "";
+    }
+
+    function paintCustomLogoPreview(src) {
+      const box = document.getElementById("customLogoPreview");
+      if (!box) return;
+      const logo = normalizeCustomLogo(src);
+      if (!logo) {
+        box.replaceChildren();
+        box.textContent = "לוגו";
+        return;
+      }
+      const img = document.createElement("img");
+      img.alt = "";
+      img.referrerPolicy = "no-referrer";
+      img.addEventListener("error", () => {
+        box.replaceChildren();
+        box.textContent = "לוגו";
+      });
+      img.src = logo;
+      box.replaceChildren(img);
+    }
+
+    function shortStreamHost(url) {
+      try {
+        return new URL(url).host;
+      } catch {
+        return String(url || "").slice(0, 40);
+      }
+    }
+
+    async function logoFromImageFile(file) {
+      const blobUrl = URL.createObjectURL(file);
+      try {
+        const img = await new Promise((resolve, reject) => {
+          const node = new Image();
+          node.onload = () => resolve(node);
+          node.onerror = () => reject(new Error("bad-image"));
+          node.src = blobUrl;
+        });
+        const canvas = document.createElement("canvas");
+        const size = 128;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#0b1220";
+        ctx.fillRect(0, 0, size, size);
+        const scale = Math.min(size / img.width, size / img.height);
+        const w = img.width * scale;
+        const h = img.height * scale;
+        ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+        return canvas.toDataURL("image/jpeg", 0.74);
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+    }
 
     function closeCustomDlg() {
       resetCustomForm();
@@ -3170,12 +3305,14 @@
 
     function resetCustomForm() {
       customEditId = "";
+      customLogoData = "";
       document.getElementById("customName").value = "";
       document.getElementById("customUrl").value = "";
       document.getElementById("customLogo").value = "";
       document.getElementById("customErr").textContent = "";
       document.getElementById("customAdd").textContent = "שמירה";
       document.getElementById("customFileBtn").hidden = isTv;
+      paintCustomLogoPreview("");
     }
 
     function startEditCustom(channel) {
@@ -3183,10 +3320,12 @@
       document.getElementById("customDlgTitle").textContent = "עריכת ערוץ";
       document.getElementById("customName").value = channel.name;
       document.getElementById("customUrl").value = channel.url;
-      document.getElementById("customLogo").value = channel.logo || "";
+      customLogoData = String(channel.logo || "").startsWith("data:image/") ? channel.logo : "";
+      document.getElementById("customLogo").value = customLogoData ? "" : (channel.logo || "");
       document.getElementById("customErr").textContent = "";
       document.getElementById("customAdd").textContent = "שמור שינויים";
       document.getElementById("customFileBtn").hidden = true;
+      paintCustomLogoPreview(channel.logo || "");
       paintCustomList();
       const dlg = document.getElementById("customDlg");
       if (!dlg.open) dlg.showModal();
@@ -3227,10 +3366,12 @@
         thumb.className = "custom-thumb";
         paintLogo(thumb, channel);
         const meta = document.createElement("div");
+        meta.className = "custom-meta";
         const title = document.createElement("strong");
         title.textContent = channel.name;
         const link = document.createElement("span");
-        link.textContent = channel.url;
+        link.textContent = shortStreamHost(channel.url);
+        link.title = channel.url;
         meta.append(title, link);
         const btns = document.createElement("div");
         btns.className = "custom-item-btns";
@@ -3252,7 +3393,7 @@
       const err = document.getElementById("customErr");
       const name = document.getElementById("customName").value.trim();
       const url = normalizeCustomUrl(document.getElementById("customUrl").value);
-      const logo = normalizeCustomUrl(document.getElementById("customLogo").value);
+      const logo = readCustomLogo();
       err.textContent = "";
       if (!url) {
         err.textContent = "הזינו קישור http או https תקין";
@@ -3269,12 +3410,20 @@
           const grouped = name
             ? expanded.map((entry) => ({ ...entry, group: entry.group || name }))
             : expanded;
-          const result = applyPlaylistEntries(grouped);
-          if (!result.added) {
+          const result = applyPlaylistEntries(grouped, readCustomLogo());
+          if (!result.added && !result.updated) {
             err.textContent = result.skipped ? "כל הערוצים בפלייליסט כבר שמורים" : "לא נוספו ערוצים";
             return;
           }
           saveCustomChannels(result.list);
+          if (!result.added && result.updated) {
+            closeCustomDlg();
+            rebuildCatalog();
+            render();
+            paintCustomList();
+            showToast(`עודכנו ${result.updated} לוגואים`);
+            return;
+          }
           showImportedChannels(result.added, result.skipped, result.dropped);
           return;
         }
@@ -4084,6 +4233,27 @@
       event.target.value = "";
       if (file) await importPlaylistFile(file);
     });
+    document.getElementById("customLogo").addEventListener("input", () => {
+      customLogoData = "";
+      paintCustomLogoPreview(document.getElementById("customLogo").value);
+    });
+    document.getElementById("customLogoBtn").addEventListener("click", () => {
+      document.getElementById("customLogoFile").click();
+    });
+    document.getElementById("customLogoFile").addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file) return;
+      const err = document.getElementById("customErr");
+      try {
+        customLogoData = await logoFromImageFile(file);
+        document.getElementById("customLogo").value = "";
+        paintCustomLogoPreview(customLogoData);
+        err.textContent = "";
+      } catch {
+        err.textContent = "לא הצלחנו לקרוא את תמונת הלוגו";
+      }
+    });
     function bindKeyCopy(button, input) {
       button.addEventListener("click", async () => {
         const value = input.value.trim();
@@ -4445,7 +4615,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=111").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=112").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
