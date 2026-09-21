@@ -988,6 +988,29 @@
     }
     .custom-item.editing { outline: 2px solid var(--accent); }
     .custom-item div { min-width: 0; flex: 1; }
+    .custom-item .custom-thumb {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #0b1220;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .custom-item .custom-thumb img { width: 100%; height: 100%; object-fit: contain; }
+    .custom-group {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .custom-group:first-child { margin-top: 0; }
+    .custom-count { margin-inline-end: auto; color: var(--muted); font-size: 12px; }
     .custom-item strong { display: block; font-size: 14px; }
     .custom-item span {
       display: block;
@@ -1304,6 +1327,7 @@
       <div class="custom-box" id="customBox">
         <div class="custom-box-head">
           <h4>ערוצים שלי</h4>
+          <span class="custom-count" id="customCount"></span>
           <button type="button" class="custom-open-add" id="customOpenAdd">הוסף ערוץ</button>
         </div>
         <div class="custom-list" id="customList"></div>
@@ -1326,6 +1350,7 @@
     <p style="color:var(--muted);margin:0 0 12px">שם הערוץ וקישור m3u8, או ייבוא מקובץ פלייליסט</p>
     <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
     <input id="customUrl" type="url" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
+    <input id="customLogo" type="url" inputmode="url" placeholder="קישור ללוגו (לא חובה)" dir="ltr" spellcheck="false" autocomplete="off" />
     <p class="err" id="customErr"></p>
     <input id="customFile" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl,text/plain" hidden />
     <div class="row">
@@ -1440,7 +1465,7 @@
     const RECENT_LIMIT = 12;
     const CUSTOM_KEY = "israel-tv-custom";
     const CUSTOM_REV_KEY = "israel-tv-custom-rev";
-    const CUSTOM_LIMIT = 50;
+    const CUSTOM_LIMIT = 500;
 
     const CATEGORY_LABELS = { custom: "שלי", ...BASE_LABELS };
     let CHANNELS = [];
@@ -2763,8 +2788,16 @@
       } catch {}
     }
 
+    function sortCustom(list) {
+      const collator = new Intl.Collator("he");
+      return [...list].sort((a, b) => {
+        const byGroup = collator.compare(a.group || "", b.group || "");
+        return byGroup !== 0 ? byGroup : collator.compare(a.name || "", b.name || "");
+      });
+    }
+
     function rebuildCatalog() {
-      CHANNELS = [...loadCustomChannels(), ...BASE_CHANNELS];
+      CHANNELS = [...sortCustom(loadCustomChannels()), ...BASE_CHANNELS];
     }
 
     function normalizeCustomUrl(value) {
@@ -2793,30 +2826,55 @@
       }
     }
 
+    function parsePlaylistAttrs(row) {
+      const attrs = {};
+      const re = /([a-zA-Z0-9_-]+)="([^"]*)"/g;
+      let match;
+      while ((match = re.exec(row))) attrs[match[1].toLowerCase()] = match[2];
+      return attrs;
+    }
+
     function parsePlaylist(text) {
       const lines = String(text || "").split(/\r?\n/);
       const out = [];
-      let pending = "";
+      let pending = null;
+      let group = "";
       for (const line of lines) {
         const row = line.trim();
         if (!row) continue;
         if (/^#EXTINF/i.test(row)) {
-          pending = row.slice(row.indexOf(",") + 1).trim();
+          const attrs = parsePlaylistAttrs(row);
+          const comma = row.indexOf(",");
+          pending = {
+            name: (comma >= 0 ? row.slice(comma + 1).trim() : "") || attrs["tvg-name"] || "",
+            logo: normalizeCustomUrl(attrs["tvg-logo"] || ""),
+            group: String(attrs["group-title"] || "").trim(),
+          };
+          continue;
+        }
+        if (/^#EXTGRP:/i.test(row)) {
+          group = row.slice(row.indexOf(":") + 1).trim();
           continue;
         }
         if (row.startsWith("#")) continue;
         const url = normalizeCustomUrl(row);
         if (!url) {
-          pending = "";
+          pending = null;
           continue;
         }
-        let name = pending;
+        const meta = pending || {};
+        let name = meta.name || "";
         if (!name) {
           const file = url.split("?")[0].split("/").filter(Boolean).pop() || "";
           name = file.replace(/\.(m3u8?|ts)$/i, "") || "ערוץ";
         }
-        out.push({ name: name.slice(0, 80), url });
-        pending = "";
+        out.push({
+          name: name.slice(0, 80),
+          url,
+          logo: meta.logo || "",
+          group: String(meta.group || group || "").slice(0, 40),
+        });
+        pending = null;
       }
       return out;
     }
@@ -2827,15 +2885,19 @@
       const text = await file.text().catch(() => "");
       const entries = parsePlaylist(text);
       if (!entries.length) {
-        err.textContent = "לא נמצאו ערוצים בקובץ";
+        err.textContent = "לא נמצאו ערוצים בקובץ. ודאו שזו רשימת ערוצים ולא קובץ שידור בודד.";
         return;
       }
       const existing = loadCustomChannels();
       const known = new Set(existing.map((item) => item.url));
       let added = 0;
       let skipped = 0;
+      let dropped = 0;
       for (const entry of entries) {
-        if (existing.length + added >= CUSTOM_LIMIT) break;
+        if (existing.length + added >= CUSTOM_LIMIT) {
+          dropped += 1;
+          continue;
+        }
         if (known.has(entry.url)) {
           skipped += 1;
           continue;
@@ -2847,10 +2909,11 @@
           nameEn: entry.name,
           category: "custom",
           label: "שלי",
+          group: entry.group || "",
           path: "",
           url: entry.url,
           channel_type: "custom",
-          logo: "",
+          logo: entry.logo || "",
           updatedAt: Date.now(),
         });
         added += 1;
@@ -2861,10 +2924,14 @@
       }
       saveCustomChannels(existing);
       closeCustomDlg();
+      category = "custom";
       rebuildCatalog();
       render();
       paintCustomList();
-      showToast(added === 1 ? "נוסף ערוץ אחד מהקובץ" : `נוספו ${added} ערוצים מהקובץ`);
+      const extra = [];
+      if (skipped) extra.push(`${skipped} כבר היו`);
+      if (dropped) extra.push(`${dropped} מעל המכסה`);
+      showToast(`נוספו ${added} ערוצים${extra.length ? ` · ${extra.join(" · ")}` : ""}`);
     }
 
     let customEditId = "";
@@ -2886,6 +2953,7 @@
       customEditId = "";
       document.getElementById("customName").value = "";
       document.getElementById("customUrl").value = "";
+      document.getElementById("customLogo").value = "";
       document.getElementById("customErr").textContent = "";
       document.getElementById("customAdd").textContent = "שמירה";
       document.getElementById("customFileBtn").hidden = isTv;
@@ -2896,6 +2964,7 @@
       document.getElementById("customDlgTitle").textContent = "עריכת ערוץ";
       document.getElementById("customName").value = channel.name;
       document.getElementById("customUrl").value = channel.url;
+      document.getElementById("customLogo").value = channel.logo || "";
       document.getElementById("customErr").textContent = "";
       document.getElementById("customAdd").textContent = "שמור שינויים";
       document.getElementById("customFileBtn").hidden = true;
@@ -2916,12 +2985,28 @@
 
     function paintCustomList() {
       const listEl = document.getElementById("customList");
-      const items = loadCustomChannels();
+      const items = sortCustom(loadCustomChannels());
+      const countEl = document.getElementById("customCount");
       listEl.innerHTML = "";
+      if (countEl) countEl.textContent = items.length ? `${items.length} ערוצים` : "";
       if (!items.length) return;
+      let lastGroup = null;
       for (const channel of items) {
+        const group = channel.group || "";
+        if (group !== lastGroup) {
+          lastGroup = group;
+          if (group) {
+            const head = document.createElement("p");
+            head.className = "custom-group";
+            head.textContent = group;
+            listEl.append(head);
+          }
+        }
         const row = document.createElement("div");
         row.className = `custom-item${customEditId === channel.id ? " editing" : ""}`;
+        const thumb = document.createElement("div");
+        thumb.className = "custom-thumb";
+        paintLogo(thumb, channel);
         const meta = document.createElement("div");
         const title = document.createElement("strong");
         title.textContent = channel.name;
@@ -2939,7 +3024,7 @@
         del.textContent = "מחק";
         del.addEventListener("click", () => deleteCustomChannel(channel.id));
         btns.append(edit, del);
-        row.append(meta, btns);
+        row.append(thumb, meta, btns);
         listEl.append(row);
       }
     }
@@ -2948,6 +3033,7 @@
       const err = document.getElementById("customErr");
       const name = document.getElementById("customName").value.trim();
       const url = normalizeCustomUrl(document.getElementById("customUrl").value);
+      const logo = normalizeCustomUrl(document.getElementById("customLogo").value);
       err.textContent = "";
       if (!name) {
         err.textContent = "הזינו שם לערוץ";
@@ -2980,6 +3066,7 @@
         editing.name = name;
         editing.nameEn = name;
         editing.url = url;
+        editing.logo = logo;
         editing.updatedAt = Date.now();
         saveCustomChannels(existing);
         showToast("הערוץ עודכן");
@@ -2990,10 +3077,11 @@
           nameEn: name,
           category: "custom",
           label: "שלי",
+          group: "",
           path: "",
           url,
           channel_type: "custom",
-          logo: "",
+          logo,
           updatedAt: Date.now(),
         });
         saveCustomChannels(existing);
@@ -3026,6 +3114,20 @@
       const ids = loadRecent().filter((item) => item !== id);
       ids.unshift(id);
       localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, RECENT_LIMIT)));
+    }
+
+    function paintLogo(box, channel) {
+      const initials = String(channel.name || "").slice(0, 2);
+      box.textContent = initials;
+      if (!channel.logo) return;
+      const img = document.createElement("img");
+      img.alt = "";
+      img.loading = "lazy";
+      img.addEventListener("error", () => {
+        box.textContent = initials;
+      });
+      img.src = channel.logo;
+      box.replaceChildren(img);
     }
 
     function visibleChannels() {
@@ -3071,14 +3173,7 @@
       btn.className = `chip chip-logo${current?.id === channel.id ? " active" : ""}`;
       btn.title = channel.name;
       btn.setAttribute("aria-label", channel.name);
-      if (channel.logo) {
-        const img = document.createElement("img");
-        img.src = channel.logo;
-        img.alt = "";
-        btn.append(img);
-      } else {
-        btn.textContent = channel.name.slice(0, 2);
-      }
+      paintLogo(btn, channel);
       bindTap(btn, () => playChannel(channel));
       return btn;
     }
@@ -3122,12 +3217,15 @@
         card.dataset.id = channel.id;
         card.className = `card${current?.id === channel.id ? " active" : ""}`;
         card.innerHTML = `
-          <div class="logo">${channel.logo ? `<img src="${channel.logo}" alt="">` : channel.name.slice(0, 2)}</div>
+          <div class="logo"></div>
           <div class="title"></div>
           <div class="sub"></div>
         `;
+        paintLogo(card.querySelector(".logo"), channel);
         card.querySelector(".title").textContent = channel.name;
-        card.querySelector(".sub").textContent = channel.nameEn;
+        card.querySelector(".sub").textContent = channel.category === "custom"
+          ? (channel.group || "")
+          : channel.nameEn;
         bindTap(card, () => playChannel(channel));
         gridEl.append(card);
       }
@@ -4086,7 +4184,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=105").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=106").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
