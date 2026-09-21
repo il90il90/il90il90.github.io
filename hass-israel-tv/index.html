@@ -960,6 +960,7 @@
     dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
     dialog.sheet h3 { margin: 0 0 10px; }
     dialog.sheet h3:focus { outline: none; }
+    dialog.sheet input[hidden] { display: none !important; }
     dialog.sheet input:not([type="file"]), dialog.sheet textarea, dialog.sheet select {
       width: 100%;
       box-sizing: border-box;
@@ -1683,7 +1684,8 @@
   </dialog>
   <dialog class="sheet" id="customDlg">
     <h3 id="customDlgTitle">הוספת ערוץ</h3>
-    <p style="color:var(--muted);margin:0 0 12px">ערוץ בודד, או קישור / קובץ m3u שיוסיף את כל הערוצים לקטגוריה</p>
+    <p style="color:var(--muted);margin:0 0 12px">ערוץ בודד נכנס ל«שלי». רשימת m3u מקבלת את שם הקטגוריה שתבחרו — אפשר כמה רשימות.</p>
+    <input id="customFolder" type="text" maxlength="40" placeholder="שם הקטגוריה (למשל מצלמות)" autocomplete="off" />
     <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
     <input id="customUrl" type="text" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
     <label class="file-pick" id="customFileBtn">
@@ -1834,7 +1836,7 @@
     const CUSTOM_REV_KEY = "israel-tv-custom-rev";
     const CUSTOM_LIMIT = 500;
 
-    const CATEGORY_LABELS = { custom: "שלי", ...BASE_LABELS };
+    const CATEGORY_LABELS = { ...BASE_LABELS };
     let CHANNELS = [];
 
     const CATEGORY_ICONS = {
@@ -3436,11 +3438,63 @@
       }
     }
 
+    function customFolderId(folder) {
+      const name = String(folder || "").trim();
+      if (!name) return "custom";
+      const slug = name.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "_").replace(/^_+|_+$/g, "").slice(0, 32);
+      return slug ? `c_${slug}` : "custom";
+    }
+
+    function isCustomCat(id) {
+      return id === "custom" || String(id || "").startsWith("c_");
+    }
+
+    function normalizeCustomItem(item) {
+      const folder = String(item?.folder || "").trim().slice(0, 40);
+      return {
+        ...item,
+        folder,
+        category: customFolderId(folder),
+        label: folder || "שלי",
+      };
+    }
+
     function loadCustomChannels() {
       const owner = customOwner();
       if (!owner) return [];
       const list = loadAllCustom()[owner];
-      return Array.isArray(list) ? list.filter((item) => item?.id && item.url && item.name && !item.deleted) : [];
+      return Array.isArray(list)
+        ? list.filter((item) => item?.id && item.url && item.name && !item.deleted).map(normalizeCustomItem)
+        : [];
+    }
+
+    function listCustomFolders() {
+      const map = new Map();
+      for (const channel of CHANNELS) {
+        if (!String(channel.id || "").startsWith("custom_")) continue;
+        const folder = String(channel.folder || "").trim();
+        const id = customFolderId(folder);
+        if (!map.has(id)) map.set(id, folder || "שלי");
+      }
+      const collator = new Intl.Collator("he");
+      return [...map.entries()].sort((a, b) => {
+        if (a[0] === "custom") return 1;
+        if (b[0] === "custom") return -1;
+        return collator.compare(a[1], b[1]);
+      });
+    }
+
+    function playlistTitleFromFile(name) {
+      return String(name || "")
+        .replace(/\.(m3u8?|txt)$/i, "")
+        .replace(/\s*\(\d+\)\s*$/, "")
+        .replace(/[_-]+/g, " ")
+        .trim()
+        .slice(0, 40);
+    }
+
+    function readCustomFolder() {
+      return String(document.getElementById("customFolder")?.value || "").trim().slice(0, 40);
     }
 
     function getCustomRev() {
@@ -3550,6 +3604,8 @@
     function sortCustom(list) {
       const collator = new Intl.Collator("he");
       return [...list].sort((a, b) => {
+        const byFolder = collator.compare(a.folder || "", b.folder || "");
+        if (byFolder !== 0) return byFolder;
         const byGroup = collator.compare(a.group || "", b.group || "");
         return byGroup !== 0 ? byGroup : collator.compare(a.name || "", b.name || "");
       });
@@ -3753,12 +3809,14 @@
     }
 
     function makeCustomChannel(entry) {
+      const folder = String(entry.folder || "").trim().slice(0, 40);
       return {
         id: `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
         name: entry.name,
         nameEn: entry.name,
-        category: "custom",
-        label: "שלי",
+        category: customFolderId(folder),
+        label: folder || "שלי",
+        folder,
         group: entry.group || "",
         path: "",
         url: entry.url,
@@ -3782,22 +3840,31 @@
       }));
     }
 
-    function applyPlaylistEntries(entries, fallbackLogo = "") {
+    function applyPlaylistEntries(entries, fallbackLogo = "", folder = "") {
       const existing = loadCustomChannels();
       const known = new Set(existing.map((item) => item.url));
       let added = 0;
       let skipped = 0;
       let dropped = 0;
       let updated = 0;
+      const folderName = String(folder || "").trim().slice(0, 40);
       for (const entry of entries) {
         const logo = entry.logo || fallbackLogo || "";
         const found = existing.find((item) => item.url === entry.url);
         if (found) {
+          let changed = false;
+          if (folderName && found.folder !== folderName) {
+            found.folder = folderName;
+            found.category = customFolderId(folderName);
+            found.label = folderName;
+            changed = true;
+          }
           if (logo && !found.logo) {
             found.logo = logo;
-            updated += 1;
+            changed = true;
           }
-          skipped += 1;
+          if (changed) updated += 1;
+          else skipped += 1;
           continue;
         }
         if (existing.length + added >= CUSTOM_LIMIT) {
@@ -3805,16 +3872,16 @@
           continue;
         }
         known.add(entry.url);
-        existing.push(makeCustomChannel({ ...entry, logo }));
+        existing.push(makeCustomChannel({ ...entry, logo, folder: folderName || entry.folder || "" }));
         added += 1;
       }
       return { added, skipped, dropped, updated, list: existing };
     }
 
-    function showImportedChannels(added, skipped, dropped) {
+    function showImportedChannels(added, skipped, dropped, folder = "") {
       document.getElementById("licenseViewDlg")?.close();
       closeCustomDlg();
-      category = "custom";
+      category = customFolderId(folder);
       rebuildCatalog();
       render();
       paintCustomList();
@@ -3824,15 +3891,20 @@
       showToast(`נוספו ${added} ערוצים${extra.length ? ` · ${extra.join(" · ")}` : ""}`);
     }
 
-    async function importPlaylistEntries(entries) {
+    async function importPlaylistEntries(entries, folder = "") {
       const err = document.getElementById("customErr");
+      const folderName = String(folder || readCustomFolder() || "").trim();
+      if (!folderName) {
+        err.textContent = "הזינו שם לקטגוריה. הוא יופיע במקום «שלי».";
+        return false;
+      }
       const fallback = readCustomLogo();
       let list = entries.length === 1 ? await expandNestedPlaylists(entries) : entries;
       if (!list.length) {
         err.textContent = "לא נמצאו ערוצים בפלייליסט. ודאו שזו רשימת ערוצים ולא קובץ שידור בודד.";
         return false;
       }
-      const result = applyPlaylistEntries(list, fallback);
+      const result = applyPlaylistEntries(list, fallback, folderName);
       if (!result.added && !result.updated) {
         err.textContent = result.skipped ? "כל הערוצים בקובץ כבר שמורים" : "לא נוספו ערוצים";
         return false;
@@ -3840,13 +3912,14 @@
       saveCustomChannels(result.list);
       if (!result.added && result.updated) {
         closeCustomDlg();
+        category = customFolderId(folderName);
         rebuildCatalog();
         render();
         paintCustomList();
-        showToast(`עודכנו ${result.updated} לוגואים`);
+        showToast(`עודכנו ${result.updated} ערוצים`);
         return true;
       }
-      showImportedChannels(result.added, result.skipped, result.dropped);
+      showImportedChannels(result.added, result.skipped, result.dropped, folderName);
       return true;
     }
 
@@ -3905,6 +3978,12 @@
       }
       pendingPlaylist = { fileName: file.name || "playlist.m3u8", entries };
       const count = entries.length;
+      const folderEl = document.getElementById("customFolder");
+      if (folderEl && !folderEl.value.trim()) {
+        folderEl.value = playlistTitleFromFile(file.name);
+      }
+      document.getElementById("customDlgTitle").textContent = "הוספת רשימה";
+      document.getElementById("customName").hidden = true;
       setFilePreview("ready", file.name || "הקובץ נטען", count === 1 ? "נמצא ערוץ אחד" : `נמצאו ${count} ערוצים`);
       document.getElementById("customAdd").textContent = count === 1 ? "הוסף ערוץ" : `הוסף ${count} ערוצים`;
     }
@@ -3986,7 +4065,9 @@
     function resetCustomForm() {
       customEditId = "";
       customLogoData = "";
+      document.getElementById("customFolder").value = "";
       document.getElementById("customName").value = "";
+      document.getElementById("customName").hidden = false;
       document.getElementById("customUrl").value = "";
       document.getElementById("customLogo").value = "";
       document.getElementById("customErr").textContent = "";
@@ -3999,6 +4080,8 @@
     function startEditCustom(channel) {
       customEditId = channel.id;
       document.getElementById("customDlgTitle").textContent = "עריכת ערוץ";
+      document.getElementById("customFolder").value = channel.folder || "";
+      document.getElementById("customName").hidden = false;
       document.getElementById("customName").value = channel.name;
       document.getElementById("customUrl").value = channel.url;
       customLogoData = String(channel.logo || "").startsWith("data:image/") ? channel.logo : "";
@@ -4053,17 +4136,25 @@
       const clearBtn = document.getElementById("customClearAll");
       if (clearBtn) clearBtn.hidden = !items.length;
       if (!items.length) return;
+      let lastFolder = null;
       let lastGroup = null;
       for (const channel of items) {
+        const folder = channel.folder || "שלי";
+        if (folder !== lastFolder) {
+          lastFolder = folder;
+          lastGroup = null;
+          const head = document.createElement("p");
+          head.className = "custom-group";
+          head.textContent = folder;
+          listEl.append(head);
+        }
         const group = channel.group || "";
-        if (group !== lastGroup) {
+        if (group && group !== lastGroup) {
           lastGroup = group;
-          if (group) {
-            const head = document.createElement("p");
-            head.className = "custom-group";
-            head.textContent = group;
-            listEl.append(head);
-          }
+          const sub = document.createElement("p");
+          sub.className = "custom-group";
+          sub.textContent = group;
+          listEl.append(sub);
         }
         const row = document.createElement("div");
         row.className = `custom-item${customEditId === channel.id ? " editing" : ""}`;
@@ -4101,11 +4192,8 @@
       const logo = readCustomLogo();
       err.textContent = "";
       if (pendingPlaylist?.entries?.length) {
-        const grouped = name
-          ? pendingPlaylist.entries.map((entry) => ({ ...entry, group: entry.group || name }))
-          : pendingPlaylist.entries;
         document.getElementById("customAdd").disabled = true;
-        await importPlaylistEntries(grouped);
+        await importPlaylistEntries(pendingPlaylist.entries, readCustomFolder());
         document.getElementById("customAdd").disabled = false;
         return;
       }
@@ -4120,11 +4208,13 @@
         const text = await fetchPlaylistText(url);
         const parsed = text ? parsePlaylist(text, url) : [];
         if (text && isChannelPlaylist(text, parsed)) {
+          const folderName = readCustomFolder() || name;
+          if (!folderName) {
+            err.textContent = "הזינו שם לקטגוריה. הוא יופיע במקום «שלי».";
+            return;
+          }
           const expanded = parsed.length === 1 ? await expandNestedPlaylists(parsed) : parsed;
-          const grouped = name
-            ? expanded.map((entry) => ({ ...entry, group: entry.group || name }))
-            : expanded;
-          const result = applyPlaylistEntries(grouped, readCustomLogo());
+          const result = applyPlaylistEntries(expanded, readCustomLogo(), folderName);
           if (!result.added && !result.updated) {
             err.textContent = result.skipped ? "כל הערוצים בפלייליסט כבר שמורים" : "לא נוספו ערוצים";
             return;
@@ -4132,13 +4222,14 @@
           saveCustomChannels(result.list);
           if (!result.added && result.updated) {
             closeCustomDlg();
+            category = customFolderId(folderName);
             rebuildCatalog();
             render();
             paintCustomList();
-            showToast(`עודכנו ${result.updated} לוגואים`);
+            showToast(`עודכנו ${result.updated} ערוצים`);
             return;
           }
-          showImportedChannels(result.added, result.skipped, result.dropped);
+          showImportedChannels(result.added, result.skipped, result.dropped, folderName);
           return;
         }
       }
@@ -4167,22 +4258,26 @@
           }
         }
       }
+      const folder = readCustomFolder();
       if (editing) {
         editing.name = name;
         editing.nameEn = name;
         editing.url = url;
         editing.logo = logo;
+        editing.folder = folder;
+        editing.category = customFolderId(folder);
+        editing.label = folder || "שלי";
         editing.updatedAt = Date.now();
         saveCustomChannels(existing);
         showToast("הערוץ עודכן");
       } else {
-        existing.unshift(makeCustomChannel({ name, url, logo, group: "" }));
+        existing.unshift(makeCustomChannel({ name, url, logo, folder, group: "" }));
         saveCustomChannels(existing);
         showToast("הערוץ נוסף");
       }
       resetCustomForm();
       closeCustomDlg();
-      category = "custom";
+      category = customFolderId(folder);
       rebuildCatalog();
       render();
       paintCustomList();
@@ -4191,7 +4286,7 @@
     function matches(channel, query) {
       if (!query) return true;
       if (ALIASES[query] === channel.id) return true;
-      const hay = `${channel.id} ${channel.name} ${channel.nameEn} ${channel.label} ${channel.group || ""}`.toLowerCase();
+      const hay = `${channel.id} ${channel.name} ${channel.nameEn} ${channel.label} ${channel.folder || ""} ${channel.group || ""}`.toLowerCase();
       return hay.includes(query);
     }
 
@@ -4296,15 +4391,18 @@
         btn.type = "button";
         btn.className = `cat${category === id ? " active" : ""}`;
         const title = String(label || "").replace(/^[^\p{L}\p{N}]+/u, "").trim() || label;
-        btn.innerHTML = `${CATEGORY_ICONS[id] || ""}<span></span>`;
+        btn.innerHTML = `${CATEGORY_ICONS[id] || CATEGORY_ICONS.custom}<span></span>`;
         btn.querySelector("span").textContent = title;
         bindTap(btn, onTap);
         catsEl.append(btn);
       };
-      if (category === "custom" && !CHANNELS.some((channel) => channel.category === "custom")) {
+      if (isCustomCat(category) && !CHANNELS.some((channel) => customFolderId(channel.folder) === category)) {
         category = "all";
       }
       paintCat("all", "הכל", () => { category = "all"; render(); });
+      for (const [id, label] of listCustomFolders()) {
+        paintCat(id, label, () => { category = id; render(); });
+      }
       for (const [id, label] of Object.entries(CATEGORY_LABELS)) {
         if (!CHANNELS.some((channel) => channel.category === id)) continue;
         paintCat(id, label, () => { category = id; render(); });
@@ -4312,11 +4410,14 @@
 
       const list = visibleChannels();
       gridEl.innerHTML = "";
-      const showGroups = !query && (category === "custom" || category === "all");
+      const customView = isCustomCat(category);
+      const showGroups = !query && (customView || category === "all");
       let lastGroup = null;
       for (const channel of list) {
-        if (showGroups && channel.category === "custom") {
-          const group = channel.group || (category === "all" ? "שלי" : "");
+        if (showGroups && String(channel.id || "").startsWith("custom_")) {
+          const group = customView
+            ? (channel.group || "")
+            : (channel.folder || "שלי");
           if (group && group !== lastGroup) {
             lastGroup = group;
             const head = document.createElement("div");
@@ -4324,7 +4425,7 @@
             head.textContent = group;
             gridEl.append(head);
           }
-        } else if (lastGroup && channel.category !== "custom") {
+        } else if (lastGroup && !String(channel.id || "").startsWith("custom_")) {
           lastGroup = null;
         }
         const card = document.createElement("button");
@@ -4338,8 +4439,8 @@
         `;
         paintLogo(card.querySelector(".logo"), channel);
         card.querySelector(".title").textContent = channel.name;
-        card.querySelector(".sub").textContent = channel.category === "custom"
-          ? (channel.group || "")
+        card.querySelector(".sub").textContent = String(channel.id || "").startsWith("custom_")
+          ? (customView ? (channel.group || channel.folder || "") : (channel.folder || ""))
           : channel.nameEn;
         bindTap(card, () => {
           launchRtspIfNeeded(channel);
@@ -5373,7 +5474,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=129").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=130").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
