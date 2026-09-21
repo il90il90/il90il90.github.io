@@ -478,10 +478,11 @@
     .login-qr-icon svg { width: 20px; height: 20px; }
     .login-qr-icon.pair { display: none !important; }
     .login-qr-icon.phone-scan { display: grid !important; }
-    html.tv .login-qr-icon.pair,
-    html.pair-login .login-qr-icon.pair { display: grid !important; }
     html.tv .login-qr-icon.phone-scan,
     html.pair-login .login-qr-icon.phone-scan { display: none !important; }
+    .login-pair-on-tv { display: none; }
+    html.tv .login-pair-on-tv,
+    html.pair-login .login-pair-on-tv { display: block; }
     .login input {
       width: 100%;
       height: 46px;
@@ -520,7 +521,6 @@
     }
     html.tv .scan-btn, html.tv #scanDlg { display: none !important; }
     .pair-box { text-align: center; margin: 0 0 8px; }
-    #pairShowDlg { width: min(420px, calc(100% - 24px)); text-align: center; }
     html.tv #loginLead, html.pair-login #loginLead { display: none; }
     html.tv #loginType, html.pair-login #loginType:not(.open) { display: none; }
     html.pair-login #loginType.open,
@@ -1076,14 +1076,16 @@
     <form class="login" id="loginForm">
       <div class="login-head">
         <h2>כניסה</h2>
-        <button type="button" class="login-qr-icon pair" id="loginQrBtn" title="ברקוד חיבור למסך" aria-label="ברקוד חיבור למסך">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 8h8v8H8z"/></svg>
-        </button>
-        <button type="button" class="login-qr-icon phone-scan" id="scanBtn" title="סריקת ברקוד" aria-label="סריקת ברקוד">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 8h8v8H8z"/></svg>
-        </button>
       </div>
       <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
+      <div class="pair-box login-pair-on-tv" id="loginPairBox" tabindex="0">
+        <p class="pair-help">סרקו את הברקוד מהטלפון שבו כבר התחברתם — כך המסך מתחבר לאותו רישיון.</p>
+        <div class="qr-card login-qr">
+          <div id="pairQr" class="qr-target"></div>
+        </div>
+        <p class="pair-code" id="pairCode" hidden></p>
+        <p class="pair-wait" id="pairWait">מכינים ברקוד…</p>
+      </div>
       <p class="err" id="loginErr"></p>
       <button type="button" class="license-tile" id="loginManualBtn">
         <span class="license-tile-icon" aria-hidden="true">
@@ -1096,7 +1098,12 @@
         <span class="license-tile-go" aria-hidden="true">‹</span>
       </button>
       <div class="license-panel" id="loginType">
-      <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון" inputmode="text" />
+      <div class="login-field-row">
+        <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון" inputmode="text" />
+        <button type="button" class="login-qr-icon phone-scan" id="scanBtn" title="סריקת ברקוד" aria-label="סריקת ברקוד">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 8h8v8H8z"/></svg>
+        </button>
+      </div>
       <div class="login-btns">
         <button type="submit">כניסה</button>
       </div>
@@ -1324,20 +1331,6 @@
     </ol>
     <div class="row">
       <button type="button" class="ghost" id="pairHelpClose">סגור</button>
-    </div>
-  </dialog>
-  <dialog class="sheet" id="pairShowDlg">
-    <h3>חיבור למסך</h3>
-    <div class="pair-box" id="pairBox" tabindex="0">
-      <p class="pair-help">מהטלפון, כשהאפליקציה כבר מחוברת לרישיון, סריקת הברקוד מחברת את המסך.</p>
-      <div class="qr-card login-qr">
-        <div id="pairQr" class="qr-target"></div>
-      </div>
-      <p class="pair-code" id="pairCode" hidden></p>
-      <p class="pair-wait" id="pairWait">מכינים ברקוד…</p>
-    </div>
-    <div class="row">
-      <button type="button" class="ghost" id="pairShowClose">סגור</button>
     </div>
   </dialog>
   <dialog class="sheet" id="pairDlg">
@@ -1689,7 +1682,7 @@
     function parseLicensePayload(text) {
       const raw = String(text || "").trim();
       if (!raw) return "";
-      if (parsePairId(raw)) return "";
+      if (!looksLikeLicenseKey(raw) && parsePairId(raw)) return "";
       try {
         const url = new URL(raw);
         const fromQuery = url.searchParams.get("k") || url.searchParams.get("lic");
@@ -1721,6 +1714,14 @@
       return String(value || "").toUpperCase().replace(/[^0-9A-Z]/g, "").slice(0, 12);
     }
 
+    function compactKeyChars(text) {
+      return String(text || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+    }
+
+    function looksLikeLicenseKey(text) {
+      return compactKeyChars(text).length === 20;
+    }
+
     function parsePairId(text) {
       const raw = String(text || "").trim();
       if (!raw) return "";
@@ -1732,7 +1733,8 @@
         if (hash.startsWith("pair=")) return normalizePairId(decodeURIComponent(hash.slice(5)));
       } catch {}
       if (/^pair=/i.test(raw)) return normalizePairId(raw.slice(5));
-      const compact = normalizePairId(raw);
+      if (looksLikeLicenseKey(raw)) return "";
+      const compact = compactKeyChars(raw);
       if (compact.length >= 8 && compact.length <= 12) return compact;
       return "";
     }
@@ -1985,17 +1987,6 @@
       licenseInput.tabIndex = 0;
       licenseInput.removeAttribute("readonly");
       licenseInput.focus();
-    });
-    document.getElementById("loginQrBtn").addEventListener("click", () => {
-      const dlg = document.getElementById("pairShowDlg");
-      if (!dlg.open) dlg.showModal();
-      if (!currentPairId) startScreenPairing();
-    });
-    document.getElementById("pairShowClose").addEventListener("click", () => {
-      document.getElementById("pairShowDlg").close();
-    });
-    document.getElementById("pairShowDlg").addEventListener("click", (event) => {
-      if (event.target === event.currentTarget) event.currentTarget.close();
     });
 
     const scanDlg = document.getElementById("scanDlg");
@@ -3349,10 +3340,12 @@
     }
 
     async function loginWithLicense(raw) {
-      const pairFromField = parsePairId(raw);
-      if (pairFromField) {
-        document.getElementById("loginErr").textContent = "זה ברקוד חיבור למסך. סרקו אותו מהטלפון שבו אתם כבר מחוברים";
-        return false;
+      if (!looksLikeLicenseKey(raw)) {
+        const pairFromField = parsePairId(raw);
+        if (pairFromField) {
+          document.getElementById("loginErr").textContent = "זה ברקוד חיבור למסך. סרקו אותו מהטלפון שבו אתם כבר מחוברים";
+          return false;
+        }
       }
       const value = parseLicensePayload(raw);
       const err = document.getElementById("loginErr");
@@ -3638,7 +3631,7 @@
 
     document.getElementById("iosHint")?.remove();
 
-    const TV_FOCUSABLE = "button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), .theater[tabindex], #pairBox[tabindex]";
+    const TV_FOCUSABLE = "button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), .theater[tabindex], #loginPairBox[tabindex]";
 
     function tvVisible(el) {
       if (!el || el.hidden) return false;
@@ -3671,7 +3664,7 @@
       const items = tvFocusables();
       const preferred = items.find((el) => el.classList.contains("card") && el.classList.contains("active"))
         || items.find((el) => el.classList.contains("cat"))
-        || items.find((el) => el.id === "loginQrBtn")
+        || items.find((el) => el.id === "loginPairBox")
         || items.find((el) => el.id === "loginManualBtn")
         || items[0];
       preferred?.focus({ preventScroll: true });
@@ -3827,13 +3820,13 @@
       } else {
         requestAnimationFrame(() => {
           window.scrollTo(0, 0);
-          document.getElementById("loginQrBtn")?.focus({ preventScroll: true });
+          document.getElementById("loginPairBox")?.focus({ preventScroll: true });
         });
       }
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=97").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=98").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
