@@ -1531,6 +1531,7 @@
   </main>
   <div id="toast" role="status" aria-live="polite"></div>
   </div>
+  <input id="customFile" type="file" accept=".m3u,.m3u8,.txt,text/plain,application/vnd.apple.mpegurl,audio/x-mpegurl,application/octet-stream,*/*" hidden />
   <dialog class="sheet license-card" id="licenseViewDlg">
     <div class="lic-head">
       <div class="lic-icon" aria-hidden="true">
@@ -1623,9 +1624,8 @@
     <h3 id="customDlgTitle">הוספת ערוץ</h3>
     <p style="color:var(--muted);margin:0 0 12px">ערוץ בודד, או קישור / קובץ m3u שיוסיף את כל הערוצים לקטגוריה</p>
     <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
-    <input id="customUrl" type="url" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
-    <input id="customFile" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl,text/plain" hidden />
-    <button type="button" class="ghost" id="customFileBtn" style="width:100%;margin:0 0 12px">ייבוא מקובץ m3u</button>
+    <input id="customUrl" type="text" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
+    <button type="button" class="ghost" id="customFileBtn" style="width:100%;margin:0 0 12px">ייבוא מקובץ m3u / m3u8</button>
     <div class="custom-logo-box">
       <div class="custom-logo-preview" id="customLogoPreview">לוגו</div>
       <div class="custom-logo-fields">
@@ -3468,13 +3468,25 @@
     }
 
     function resolvePlaylistUrl(value, base) {
-      const raw = stripPlaylistUrl(value);
+      let raw = stripPlaylistUrl(value);
+      if (!raw) {
+        const found = String(value || "").match(/https?:\/\/[^\s|"'<>]+/i);
+        raw = found ? found[0] : "";
+      }
       if (!raw) return "";
+      if (raw.startsWith("//")) raw = `https:${raw}`;
       try {
         const parsed = new URL(raw);
         if (parsed.protocol === "https:" || parsed.protocol === "http:") return parsed.href;
         return "";
       } catch {}
+      const embedded = raw.match(/https?:\/\/[^\s|"'<>]+/i);
+      if (embedded) {
+        try {
+          const parsed = new URL(embedded[0]);
+          if (parsed.protocol === "https:" || parsed.protocol === "http:") return parsed.href;
+        } catch {}
+      }
       if (!base) return "";
       try {
         const parsed = new URL(raw, base);
@@ -3694,18 +3706,18 @@
 
     async function importPlaylistFile(file) {
       const err = document.getElementById("customErr");
-      err.textContent = "";
+      err.textContent = "קוראים את הקובץ…";
       const text = await readPlaylistFileText(file);
       const entries = parsePlaylist(text);
-      if (!entries.length) {
-        err.textContent = "לא נמצאו ערוצים בקובץ. ודאו שזו רשימת ערוצים ולא קובץ שידור בודד.";
+      if (entries.length) {
+        await importPlaylistEntries(entries);
         return;
       }
-      if (playlistKind(text) === "stream" && entries.length <= 1) {
-        err.textContent = "הקובץ הזה הוא שידור בודד, לא רשימת ערוצים. הוסיפו אותו כקישור.";
+      if (!String(text || "").trim()) {
+        err.textContent = "לא הצלחנו לקרוא את הקובץ. נסו קובץ m3u או m3u8 אחר.";
         return;
       }
-      await importPlaylistEntries(entries);
+      err.textContent = "לא נמצאו ערוצים עם קישור http בקובץ. ודאו שזו רשימת ערוצים.";
     }
 
     let customEditId = "";
@@ -3899,7 +3911,7 @@
       const logo = readCustomLogo();
       err.textContent = "";
       if (!url) {
-        err.textContent = "הזינו קישור http או https תקין";
+        err.textContent = "הזינו קישור, או לחצו ייבוא מקובץ m3u / m3u8";
         return;
       }
       const existing = loadCustomChannels();
@@ -5146,7 +5158,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=124").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=125").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
