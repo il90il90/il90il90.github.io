@@ -749,6 +749,10 @@
       margin: 0 !important;
       text-align: center;
     }
+    .key-slots input[type="date"] {
+      width: 158px !important;
+      text-align: right;
+    }
     .key-slots button {
       height: 40px;
       padding: 0 12px;
@@ -2376,6 +2380,25 @@
           runKeyAction(key, "devices", null, next);
         });
         slots.append(slotsLabel, slotsInput, slotsSave);
+        const expiry = document.createElement("div");
+        expiry.className = "key-slots";
+        const expiryLabel = document.createElement("label");
+        expiryLabel.textContent = "תאריך תפוגה";
+        const expiryInput = document.createElement("input");
+        expiryInput.type = "date";
+        expiryInput.value = dateInputValue(key);
+        const expirySave = document.createElement("button");
+        expirySave.type = "button";
+        expirySave.textContent = "עדכון";
+        expirySave.addEventListener("click", () => {
+          const next = israelEndOfDayIso(expiryInput.value);
+          if (!next) {
+            showToast("בחרו תאריך תפוגה");
+            return;
+          }
+          runKeyAction(key, "expiry", null, null, next);
+        });
+        expiry.append(expiryLabel, expiryInput, expirySave);
         const actions = document.createElement("div");
         actions.className = "key-actions";
         const banned = key.status === "banned";
@@ -2394,7 +2417,7 @@
           btn.addEventListener("click", () => runKeyAction(key, act));
           actions.append(btn);
         }
-        card.append(head, token, devices, slots, actions);
+        card.append(head, token, devices, slots, expiry, actions);
         list.append(card);
       }
     }
@@ -2413,7 +2436,24 @@
       renderAdminKeys();
     }
 
-    async function runKeyAction(key, keyAction, device, maxDevices) {
+    function dateInputValue(key) {
+      if (!key?.expires_at) return "";
+      const stamp = Date.parse(key.expires_at);
+      if (!Number.isFinite(stamp)) return "";
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jerusalem",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(stamp));
+    }
+
+    function israelEndOfDayIso(dateStr) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(dateStr || ""))) return "";
+      return `${dateStr}T23:59:59+03:00`;
+    }
+
+    async function runKeyAction(key, keyAction, device, maxDevices, expiresAt) {
       const prompts = {
         ban: `לחסום את הרישיון של ${key.note || key.license_key}?`,
         pause: `להשהות את הרישיון של ${key.note || key.license_key}?`,
@@ -2432,6 +2472,7 @@
         license_key: key.license_key,
         hwid: device?.hwid || "",
         max_devices: maxDevices,
+        expires_at: expiresAt || "",
       });
       if (!res.ok) {
         card?.querySelectorAll("button").forEach((btn) => { btn.disabled = false; });
@@ -2447,6 +2488,7 @@
         "reset-hwid": "המכשירים אופסו",
         kick: "המכשיר נותק",
         devices: `עודכן ל־${res.data?.max_devices || maxDevices} מכשירים`,
+        expiry: "תאריך התפוגה עודכן",
       };
       if (keyAction === "delete") {
         adminKeysCache = adminKeysCache.filter((item) => item.license_key !== key.license_key);
@@ -3109,7 +3151,15 @@
           }),
         });
         const data = await res.json().catch(() => ({}));
-        if (data?.success) return true;
+        if (data?.success) {
+          const stamp = Date.parse(data.expires_at);
+          if (Number.isFinite(stamp)) {
+            const next = { ...session, licenseExp: Math.floor(stamp / 1000), exp: Math.floor(stamp / 1000) };
+            writeSession(next);
+            refreshExpiry(next);
+          }
+          return true;
+        }
         const code = String(data?.error_code || "").toUpperCase();
         if (code === "DEVICE_REMOVED") showToast("המכשיר נותק מהרישיון");
         return !["BANNED", "PAUSED", "EXPIRED", "SESSION_EXPIRED", "SESSION_MISMATCH", "INVALID_KEY", "DEVICE_REMOVED"].includes(code);
@@ -5550,7 +5600,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=135").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=136").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
