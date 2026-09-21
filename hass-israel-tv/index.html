@@ -1323,12 +1323,14 @@
   </dialog>
   <dialog class="sheet" id="customDlg">
     <h3 id="customDlgTitle">הוספת ערוץ</h3>
-    <p style="color:var(--muted);margin:0 0 12px">שם הערוץ וקישור m3u8</p>
+    <p style="color:var(--muted);margin:0 0 12px">שם הערוץ וקישור m3u8, או ייבוא מקובץ פלייליסט</p>
     <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
     <input id="customUrl" type="url" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
     <p class="err" id="customErr"></p>
+    <input id="customFile" type="file" accept=".m3u,.m3u8,audio/x-mpegurl,application/vnd.apple.mpegurl,text/plain" hidden />
     <div class="row">
       <button type="button" id="customAdd">שמירה</button>
+      <button type="button" class="ghost" id="customFileBtn">ייבוא מקובץ</button>
       <button type="button" class="ghost" id="customCancel">ביטול</button>
     </div>
   </dialog>
@@ -2791,6 +2793,80 @@
       }
     }
 
+    function parsePlaylist(text) {
+      const lines = String(text || "").split(/\r?\n/);
+      const out = [];
+      let pending = "";
+      for (const line of lines) {
+        const row = line.trim();
+        if (!row) continue;
+        if (/^#EXTINF/i.test(row)) {
+          pending = row.slice(row.indexOf(",") + 1).trim();
+          continue;
+        }
+        if (row.startsWith("#")) continue;
+        const url = normalizeCustomUrl(row);
+        if (!url) {
+          pending = "";
+          continue;
+        }
+        let name = pending;
+        if (!name) {
+          const file = url.split("?")[0].split("/").filter(Boolean).pop() || "";
+          name = file.replace(/\.(m3u8?|ts)$/i, "") || "ערוץ";
+        }
+        out.push({ name: name.slice(0, 80), url });
+        pending = "";
+      }
+      return out;
+    }
+
+    async function importPlaylistFile(file) {
+      const err = document.getElementById("customErr");
+      err.textContent = "";
+      const text = await file.text().catch(() => "");
+      const entries = parsePlaylist(text);
+      if (!entries.length) {
+        err.textContent = "לא נמצאו ערוצים בקובץ";
+        return;
+      }
+      const existing = loadCustomChannels();
+      const known = new Set(existing.map((item) => item.url));
+      let added = 0;
+      let skipped = 0;
+      for (const entry of entries) {
+        if (existing.length + added >= CUSTOM_LIMIT) break;
+        if (known.has(entry.url)) {
+          skipped += 1;
+          continue;
+        }
+        known.add(entry.url);
+        existing.push({
+          id: `custom_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+          name: entry.name,
+          nameEn: entry.name,
+          category: "custom",
+          label: "שלי",
+          path: "",
+          url: entry.url,
+          channel_type: "custom",
+          logo: "",
+          updatedAt: Date.now(),
+        });
+        added += 1;
+      }
+      if (!added) {
+        err.textContent = skipped ? "כל הערוצים בקובץ כבר שמורים" : "לא נוספו ערוצים";
+        return;
+      }
+      saveCustomChannels(existing);
+      closeCustomDlg();
+      rebuildCatalog();
+      render();
+      paintCustomList();
+      showToast(added === 1 ? "נוסף ערוץ אחד מהקובץ" : `נוספו ${added} ערוצים מהקובץ`);
+    }
+
     let customEditId = "";
 
     function closeCustomDlg() {
@@ -2812,6 +2888,7 @@
       document.getElementById("customUrl").value = "";
       document.getElementById("customErr").textContent = "";
       document.getElementById("customAdd").textContent = "שמירה";
+      document.getElementById("customFileBtn").hidden = isTv;
     }
 
     function startEditCustom(channel) {
@@ -2821,6 +2898,7 @@
       document.getElementById("customUrl").value = channel.url;
       document.getElementById("customErr").textContent = "";
       document.getElementById("customAdd").textContent = "שמור שינויים";
+      document.getElementById("customFileBtn").hidden = true;
       paintCustomList();
       const dlg = document.getElementById("customDlg");
       if (!dlg.open) dlg.showModal();
@@ -3631,6 +3709,14 @@
         saveCustomChannel();
       }
     });
+    document.getElementById("customFileBtn").addEventListener("click", () => {
+      document.getElementById("customFile").click();
+    });
+    document.getElementById("customFile").addEventListener("change", async (event) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (file) await importPlaylistFile(file);
+    });
     function bindKeyCopy(button, input) {
       button.addEventListener("click", async () => {
         const value = input.value.trim();
@@ -4000,7 +4086,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=101").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=102").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
