@@ -245,8 +245,26 @@
     .idle { background: radial-gradient(circle at 50% 20%, #1a2740 0%, #070b12 70%); }
     .idle strong { font-size: 22px; }
     .idle p, .status p { margin: 0; color: var(--muted); }
-    .status { background: rgba(0, 0, 0, 0.45); }
+    .status { background: rgba(7, 11, 18, 0.82); gap: 14px; }
     .status.hidden, .idle.hidden { display: none; }
+    .status-logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      object-fit: contain;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .status-spinner {
+      display: none;
+      width: 36px;
+      height: 36px;
+      border: 3px solid #2a3a52;
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: login-spin 0.7s linear infinite;
+    }
+    .status.is-loading .status-spinner { display: block; }
+    .status.is-error .status-spinner { display: none; }
     .dot {
       width: 8px; height: 8px; border-radius: 50%;
       background: var(--live); box-shadow: 0 0 0 6px rgba(255, 77, 77, 0.15);
@@ -1217,6 +1235,9 @@
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 4px; }
     html.tv .stage { max-height: 52vh; }
     html.tv .now-logo { height: 44px; }
+    html.tv .status-logo { width: 96px; height: 96px; border-radius: 22px; }
+    html.tv .status-spinner { width: 44px; height: 44px; border-width: 4px; }
+    html.tv .status p { font-size: 18px; }
     html.tv button:focus, html.tv a:focus, html.tv input:focus, html.tv select:focus, html.tv textarea:focus, html.tv .theater:focus {
       outline: 3px solid var(--accent-2);
       outline-offset: 4px;
@@ -1309,7 +1330,11 @@
         <strong>משודר בטלוויזיה</strong>
         <p id="castBannerName">בחרו ערוץ כדי לשלוח ל-Cast</p>
       </div>
-      <div class="status hidden" id="status"><p></p></div>
+      <div class="status hidden" id="status">
+        <img class="status-logo" src="favicon.png" alt="Israel TV" />
+        <div class="status-spinner" aria-hidden="true"></div>
+        <p></p>
+      </div>
     </section>
 
     <div class="now">
@@ -2804,14 +2829,24 @@
       return `https://${CDN}/_cat/${jwt}/${path.replace(/^\/+/, "")}`;
     }
 
-    function setStatus(text) {
-      if (!text) {
-        status.classList.add("hidden");
-        status.querySelector("p").textContent = "";
+    function setStatus(text, loading = false) {
+      const line = status.querySelector("p");
+      if (loading) {
+        status.classList.add("is-loading");
+        status.classList.remove("hidden", "is-error");
+        line.textContent = text || "נטען…";
         return;
       }
+      status.classList.remove("is-loading");
+      if (!text) {
+        status.classList.add("hidden");
+        status.classList.remove("is-error");
+        line.textContent = "";
+        return;
+      }
+      status.classList.add("is-error");
       status.classList.remove("hidden");
-      status.querySelector("p").textContent = text;
+      line.textContent = text;
     }
 
     function customOwner() {
@@ -3641,6 +3676,8 @@
     video.addEventListener("loadeddata", syncVideoFrame);
     video.addEventListener("resize", syncVideoFrame);
     video.addEventListener("playing", () => setStatus(""));
+    video.addEventListener("waiting", () => setStatus("נטען…", true));
+    video.addEventListener("stalled", () => setStatus("נטען…", true));
 
     function primePlayback() {
       video.autoplay = true;
@@ -3654,7 +3691,6 @@
     function startPlayback() {
       video.autoplay = true;
       video.playsInline = true;
-      setStatus("");
       const tryPlay = (muted) => {
         video.muted = muted;
         return video.play().then(() => {
@@ -3938,7 +3974,7 @@
       showStage(true);
       setNowLogo(channel);
       setMediaSession(channel);
-      setStatus("");
+      setStatus("נטען…", true);
       history.replaceState(history.state, "", `#${channel.id}`);
       syncActive();
       refreshRecent();
@@ -4615,7 +4651,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=112").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=113").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
