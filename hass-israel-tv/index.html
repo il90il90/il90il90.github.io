@@ -643,45 +643,69 @@
     .device-item button:disabled { opacity: 0.55; cursor: default; }
     .device-empty { margin: 0; color: var(--muted); font-size: 13px; }
     #keysDlg {
-      width: min(640px, calc(100% - 16px));
-      max-height: min(92vh, 860px);
+      width: min(560px, calc(100% - 12px));
+      max-height: min(92vh, 820px);
+      padding: 14px 14px 12px;
+    }
+    #keysDlg h3 {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+    #keysDlg h3 .keys-meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
     }
     .keys-toolbar {
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
       gap: 8px;
-      margin: 0 0 12px;
+      margin: 0 0 10px;
     }
-    .keys-toolbar input { flex: 1 1 180px; margin: 0 !important; }
-    .keys-meta { margin: 0 0 12px; color: var(--muted); font-size: 13px; font-weight: 700; }
-    .keys-list { display: grid; gap: 12px; }
+    #keysDlg .keys-toolbar input:not([type="file"]) {
+      flex: 1 1 auto;
+      width: auto;
+      margin: 0 !important;
+      height: 38px;
+      padding: 0 12px !important;
+    }
+    .keys-toolbar button { height: 38px; padding: 0 12px; }
+    .keys-list { display: grid; gap: 8px; }
     .key-card {
-      padding: 14px;
+      display: grid;
+      gap: 8px;
+      padding: 10px 10px 8px;
       background: var(--bg-soft);
       border: 1px solid var(--line);
-      border-radius: 14px;
+      border-radius: 12px;
       min-width: 0;
     }
     .key-card-head {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      margin: 0 0 8px;
+      gap: 8px;
+      min-width: 0;
     }
+    .key-card-head > div { min-width: 0; }
     .key-card-head strong {
       display: block;
-      font-size: 16px;
+      font-size: 15px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .key-card-head small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .key-card-head small { display: block; margin-top: 1px; color: var(--muted); font-size: 11px; font-weight: 650; }
     .key-status {
       flex: 0 0 auto;
       border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 12px;
+      padding: 3px 8px;
+      font-size: 11px;
       font-weight: 800;
       background: #243044;
       color: #cfe2ff;
@@ -692,8 +716,7 @@
     .key-token {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin: 0 0 10px;
+      gap: 6px;
       min-width: 0;
     }
     .key-token code {
@@ -705,60 +728,84 @@
       direction: ltr;
       text-align: left;
       font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-      font-size: 13px;
+      font-size: 12px;
       background: #0b1220;
       border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 8px 10px;
+      border-radius: 8px;
+      padding: 6px 8px;
     }
     .key-token button {
       flex: 0 0 auto;
-      height: 36px;
-      padding: 0 12px;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      display: grid;
+      place-items: center;
       background: #243044;
     }
-    .key-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 10px 0 0;
+    .key-token button svg { width: 16px; height: 16px; display: block; }
+    .key-card .devices-list { gap: 4px; }
+    .key-card .device-item {
+      padding: 6px 8px;
+      background: var(--card);
+      border-radius: 8px;
     }
-    .key-actions button {
-      flex: 1 1 auto;
-      min-width: 88px;
-      background: #243044;
-      font-size: 13px;
-      font-weight: 800;
+    .key-card .device-item strong { font-size: 13px; }
+    .key-card .device-item small { font-size: 11px; }
+    .key-card .device-item button {
+      height: 28px;
+      padding: 0 10px;
+      font-size: 12px;
     }
-    .key-actions button.danger { background: #3a2230; color: #ff9d9d; }
-    .key-card .device-item { background: var(--card); }
-    .key-slots {
+    .key-fields {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: 8px;
-      margin: 10px 0 0;
+      gap: 6px;
     }
-    .key-slots label {
+    .key-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+    .key-field label {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
+      white-space: nowrap;
     }
-    .key-slots input {
-      width: 72px !important;
+    #keysDlg .key-fields input:not([type="file"]) {
+      width: auto;
       margin: 0 !important;
-      text-align: center;
+      height: 34px !important;
+      padding: 0 8px !important;
+      font-size: 13px !important;
     }
-    .key-slots input[type="date"] {
-      width: 158px !important;
-      text-align: right;
-    }
-    .key-slots button {
-      height: 40px;
+    #keysDlg .key-fields input[type="number"] { width: 56px !important; text-align: center; }
+    #keysDlg .key-fields input[type="date"] { width: 132px !important; }
+    .key-fields .key-save {
+      height: 34px;
       padding: 0 12px;
       background: #243044;
+      font-size: 13px;
       font-weight: 800;
     }
+    .key-actions {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 4px;
+    }
+    .key-actions button {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 34px;
+      padding: 0 6px;
+      background: #243044;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .key-actions button.danger { background: #3a2230; color: #ff9d9d; }
     .pair-box { text-align: center; margin: 0 0 8px; }
     html.tv #loginLead, html.pair-login #loginLead { display: none; }
     html.tv #loginType, html.pair-login #loginType:not(.open) { display: none; }
@@ -1735,12 +1782,11 @@
     </div>
   </dialog>
   <dialog class="sheet" id="keysDlg">
-    <h3>כל הרישיונות</h3>
+    <h3>כל הרישיונות<span class="keys-meta" id="keysMeta">טוען…</span></h3>
     <div class="keys-toolbar">
-      <input id="keysSearch" type="search" placeholder="חיפוש לפי שם, טוקן או סטטוס" autocomplete="off" />
+      <input id="keysSearch" type="search" placeholder="חיפוש שם, טוקן או סטטוס" autocomplete="off" />
       <button type="button" class="ghost" id="keysRefresh">רענון</button>
     </div>
-    <p class="keys-meta" id="keysMeta">טוען…</p>
     <div class="keys-list" id="keysList"></div>
     <div class="row">
       <button type="button" class="ghost" id="keysClose">סגור</button>
@@ -2276,11 +2322,13 @@
     function formatKeyExpiry(key) {
       if (key?.expires_at) {
         const stamp = Date.parse(key.expires_at);
-        if (Number.isFinite(stamp)) return `עד ${formatUntilDate(Math.floor(stamp / 1000))}`;
+        if (Number.isFinite(stamp)) {
+          return new Date(stamp).toLocaleDateString("he-IL", { day: "numeric", month: "numeric", year: "numeric" });
+        }
       }
       const days = Number(key?.days_remaining);
-      if (Number.isFinite(days) && days > 0) return `נותרו ${days} ימים`;
-      return "בלי תאריך תפוגה";
+      if (Number.isFinite(days) && days > 0) return `${days} ימים`;
+      return "בלי תפוגה";
     }
 
     function keyMatchesSearch(key, query) {
@@ -2316,7 +2364,7 @@
         const name = document.createElement("strong");
         name.textContent = key.note || "בלי שם";
         const info = document.createElement("small");
-        info.textContent = `${formatKeyExpiry(key)} · ${key.devices_used || 0}/${key.max_devices || 1} מחוברים`;
+        info.textContent = `${formatKeyExpiry(key)} · ${key.devices_used || 0}/${key.max_devices || 1}`;
         title.append(name, info);
         const badge = document.createElement("span");
         badge.className = `key-status ${key.status || ""}`;
@@ -2328,77 +2376,70 @@
         code.textContent = key.license_key;
         const copy = document.createElement("button");
         copy.type = "button";
-        copy.textContent = "העתק";
+        copy.title = "העתק";
+        copy.setAttribute("aria-label", "העתק");
+        copy.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
         copy.addEventListener("click", async () => {
           try { await navigator.clipboard.writeText(key.license_key); } catch {}
           showToast("הטוקן הועתק");
         });
         token.append(code, copy);
+        const people = Array.isArray(key.devices) ? key.devices : [];
         const devices = document.createElement("div");
         devices.className = "devices-list";
-        const people = Array.isArray(key.devices) ? key.devices : [];
-        if (!people.length) {
-          const empty = document.createElement("p");
-          empty.className = "device-empty";
-          empty.textContent = "אף אחד לא מחובר עכשיו";
-          devices.append(empty);
-        } else {
-          for (const device of people) {
-            const row = document.createElement("div");
-            row.className = "device-item";
-            const dot = document.createElement("span");
-            dot.className = `device-dot${device.online ? " online" : ""}`;
-            const metaBox = document.createElement("div");
-            const who = document.createElement("strong");
-            who.textContent = device.name || "מכשיר";
-            const when = document.createElement("small");
-            when.textContent = `${device.online ? "מחובר" : "לא מחובר"} · ${formatLastSeen(device.last_seen)}`;
-            metaBox.append(who, when);
-            const kick = document.createElement("button");
-            kick.type = "button";
-            kick.textContent = "נתק";
-            kick.addEventListener("click", () => runKeyAction(key, "kick", device));
-            row.append(dot, metaBox, kick);
-            devices.append(row);
-          }
+        for (const device of people) {
+          const row = document.createElement("div");
+          row.className = "device-item";
+          const dot = document.createElement("span");
+          dot.className = `device-dot${device.online ? " online" : ""}`;
+          const metaBox = document.createElement("div");
+          const who = document.createElement("strong");
+          who.textContent = device.name || "מכשיר";
+          const when = document.createElement("small");
+          when.textContent = `${device.online ? "מחובר" : "לא מחובר"} · ${formatLastSeen(device.last_seen)}`;
+          metaBox.append(who, when);
+          const kick = document.createElement("button");
+          kick.type = "button";
+          kick.textContent = "נתק";
+          kick.addEventListener("click", () => runKeyAction(key, "kick", device));
+          row.append(dot, metaBox, kick);
+          devices.append(row);
         }
-        const slots = document.createElement("div");
-        slots.className = "key-slots";
+        const fields = document.createElement("div");
+        fields.className = "key-fields";
+        const slotsField = document.createElement("div");
+        slotsField.className = "key-field";
         const slotsLabel = document.createElement("label");
-        slotsLabel.textContent = "מכשירים ברישיון";
+        slotsLabel.textContent = "מכשירים";
         const slotsInput = document.createElement("input");
         slotsInput.type = "number";
         slotsInput.min = "1";
         slotsInput.max = "100";
         slotsInput.value = String(Math.max(1, Number(key.max_devices) || 1));
-        const slotsSave = document.createElement("button");
-        slotsSave.type = "button";
-        slotsSave.textContent = "עדכון";
-        slotsSave.addEventListener("click", () => {
-          const next = Math.min(100, Math.max(1, Number(slotsInput.value) || 1));
-          slotsInput.value = String(next);
-          runKeyAction(key, "devices", null, next);
-        });
-        slots.append(slotsLabel, slotsInput, slotsSave);
-        const expiry = document.createElement("div");
-        expiry.className = "key-slots";
+        slotsField.append(slotsLabel, slotsInput);
+        const expiryField = document.createElement("div");
+        expiryField.className = "key-field";
         const expiryLabel = document.createElement("label");
-        expiryLabel.textContent = "תאריך תפוגה";
+        expiryLabel.textContent = "תפוגה";
         const expiryInput = document.createElement("input");
         expiryInput.type = "date";
         expiryInput.value = dateInputValue(key);
-        const expirySave = document.createElement("button");
-        expirySave.type = "button";
-        expirySave.textContent = "עדכון";
-        expirySave.addEventListener("click", () => {
-          const next = israelEndOfDayIso(expiryInput.value);
-          if (!next) {
+        expiryField.append(expiryLabel, expiryInput);
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "key-save";
+        save.textContent = "עדכן";
+        save.addEventListener("click", () => {
+          const nextSlots = Math.min(100, Math.max(1, Number(slotsInput.value) || 1));
+          const nextDate = israelEndOfDayIso(expiryInput.value);
+          slotsInput.value = String(nextSlots);
+          if (!nextDate) {
             showToast("בחרו תאריך תפוגה");
             return;
           }
-          runKeyAction(key, "expiry", null, null, next);
+          runKeyAction(key, "update", null, nextSlots, nextDate);
         });
-        expiry.append(expiryLabel, expiryInput, expirySave);
+        fields.append(slotsField, expiryField, save);
         const actions = document.createElement("div");
         actions.className = "key-actions";
         const banned = key.status === "banned";
@@ -2406,7 +2447,7 @@
         const buttons = [
           [banned ? "בטל חסימה" : "חסום", banned ? "unban" : "ban", !banned],
           [paused ? "הפעל" : "השהה", paused ? "resume" : "pause", false],
-          ["איפוס מכשירים", "reset-hwid", false],
+          ["איפוס", "reset-hwid", false],
           ["מחק", "delete", true],
         ];
         for (const [label, act, danger] of buttons) {
@@ -2417,7 +2458,9 @@
           btn.addEventListener("click", () => runKeyAction(key, act));
           actions.append(btn);
         }
-        card.append(head, token, devices, slots, expiry, actions);
+        card.append(head, token);
+        if (people.length) card.append(devices);
+        card.append(fields, actions);
         list.append(card);
       }
     }
@@ -2489,6 +2532,7 @@
         kick: "המכשיר נותק",
         devices: `עודכן ל־${res.data?.max_devices || maxDevices} מכשירים`,
         expiry: "תאריך התפוגה עודכן",
+        update: "הרישיון עודכן",
       };
       if (keyAction === "delete") {
         adminKeysCache = adminKeysCache.filter((item) => item.license_key !== key.license_key);
@@ -5600,7 +5644,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=137").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=138").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
