@@ -989,12 +989,18 @@
       margin: 0 0 4px;
     }
     .custom-box h4 { margin: 0; font-size: 15px; }
-    dialog.sheet .custom-open-add {
+    .custom-box-actions { display: flex; flex-shrink: 0; gap: 6px; }
+    dialog.sheet .custom-open-add,
+    dialog.sheet .custom-clear-all {
       flex: 0 0 auto;
       min-height: 36px;
       padding: 0 14px;
       font-size: 13px;
       font-weight: 800;
+    }
+    dialog.sheet .custom-clear-all {
+      background: #3a2230;
+      color: #ff9d9d;
     }
     .custom-box input {
       width: 100%;
@@ -1441,7 +1447,10 @@
         <div class="custom-box-head">
           <h4>ערוצים שלי</h4>
           <span class="custom-count" id="customCount"></span>
-          <button type="button" class="custom-open-add" id="customOpenAdd">הוסף ערוץ</button>
+          <div class="custom-box-actions">
+            <button type="button" class="custom-clear-all" id="customClearAll" hidden>מחק הכל</button>
+            <button type="button" class="custom-open-add" id="customOpenAdd">הוסף ערוץ</button>
+          </div>
         </div>
         <div class="custom-list" id="customList"></div>
       </div>
@@ -1477,6 +1486,14 @@
     <div class="row">
       <button type="button" id="customAdd">שמירה</button>
       <button type="button" class="ghost" id="customCancel">ביטול</button>
+    </div>
+  </dialog>
+  <dialog class="sheet" id="customClearDlg">
+    <h3>מחיקת כל הערוצים</h3>
+    <p style="color:var(--muted);margin:0 0 16px" id="customClearText">למחוק את כל הערוצים שנוספו מקובץ או ידנית? הפעולה לא ניתנת לביטול.</p>
+    <div class="row">
+      <button type="button" class="custom-clear-all" id="customClearYes">מחק הכל</button>
+      <button type="button" class="ghost" id="customClearNo">ביטול</button>
     </div>
   </dialog>
   <dialog class="sheet" id="installDlg">
@@ -3376,12 +3393,36 @@
       showToast("הערוץ נמחק");
     }
 
+    function openClearCustomDlg() {
+      const items = loadCustomChannels();
+      if (!items.length) return;
+      document.getElementById("customClearText").textContent =
+        `למחוק את כל ${items.length} הערוצים שנוספו מקובץ או ידנית? הפעולה לא ניתנת לביטול.`;
+      document.getElementById("customClearDlg").showModal();
+    }
+
+    function deleteAllCustomChannels() {
+      const items = loadCustomChannels();
+      if (!items.length) return;
+      const ids = new Set(items.map((item) => item.id));
+      saveCustomChannels([]);
+      if (current && ids.has(current.id)) goHome();
+      if (customEditId) closeCustomDlg();
+      document.getElementById("customClearDlg").close();
+      rebuildCatalog();
+      render();
+      paintCustomList();
+      showToast("כל הערוצים נמחקו");
+    }
+
     function paintCustomList() {
       const listEl = document.getElementById("customList");
       const items = sortCustom(loadCustomChannels());
       const countEl = document.getElementById("customCount");
       listEl.innerHTML = "";
       if (countEl) countEl.textContent = items.length ? `${items.length} ערוצים` : "";
+      const clearBtn = document.getElementById("customClearAll");
+      if (clearBtn) clearBtn.hidden = !items.length;
       if (!items.length) return;
       let lastGroup = null;
       for (const channel of items) {
@@ -4238,6 +4279,16 @@
     document.getElementById("customOpenAdd").addEventListener("click", () => {
       openCustomDlg();
     });
+    document.getElementById("customClearAll").addEventListener("click", () => {
+      openClearCustomDlg();
+    });
+    document.getElementById("customClearYes").addEventListener("click", () => {
+      deleteAllCustomChannels();
+    });
+    document.getElementById("customClearNo").addEventListener("click", () => {
+      document.getElementById("customClearDlg").close();
+    });
+    document.getElementById("customClearDlg").addEventListener("click", dismissSheet);
     document.getElementById("customAdd").addEventListener("click", () => {
       saveCustomChannel();
     });
@@ -4651,7 +4702,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=114").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=115").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
