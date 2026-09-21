@@ -1156,6 +1156,10 @@
           <span>תוקף</span>
           <strong id="viewUntil"></strong>
         </div>
+        <div class="lic-row" id="viewDevicesRow">
+          <span>מכשירים</span>
+          <strong id="viewDevices"></strong>
+        </div>
       </div>
       <div class="lic-key" id="viewLicenseWrap">
         <span>מפתח רישיון</span>
@@ -1302,7 +1306,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=88";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=89";
     import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -2193,6 +2197,17 @@
       return payload;
     }
 
+    function parseMaxDevices(key) {
+      const n = Number(key?.max_devices ?? key?.device_limit ?? key?.max_hwid);
+      if (!Number.isFinite(n) || n < 1) return 1;
+      return Math.min(100, Math.round(n));
+    }
+
+    function formatDevices(count) {
+      const n = Math.max(1, Number(count) || 1);
+      return n === 1 ? "מכשיר אחד" : `${n} מכשירים`;
+    }
+
     function refreshExpiry(session) {
       const el = document.getElementById("expiry");
       if (session.role === "admin") {
@@ -2209,7 +2224,8 @@
       }
       el.hidden = false;
       el.className = `expiry${left <= 3600 ? " danger" : left <= 86400 ? " warn" : ""}`;
-      el.innerHTML = `<span class="expiry-main">${formatRemaining(exp)}</span><span class="expiry-until"> · עד ${formatUntilDate(exp)}</span>`;
+      const devices = formatDevices(session.maxDevices);
+      el.innerHTML = `<span class="expiry-main">${formatRemaining(exp)}</span><span class="expiry-until"> · עד ${formatUntilDate(exp)} · ${devices}</span>`;
     }
 
     function openLicenseView(options = {}) {
@@ -2227,6 +2243,14 @@
       document.getElementById("viewUntil").innerHTML = session.role === "admin"
         ? "מנהל"
         : `<span>${formatRemaining(exp)}</span><span>עד ${formatUntil(exp)}</span>`;
+      const devicesRow = document.getElementById("viewDevicesRow");
+      if (session.role === "admin") {
+        devicesRow.hidden = false;
+        document.getElementById("viewDevices").textContent = "ללא הגבלה";
+      } else {
+        devicesRow.hidden = false;
+        document.getElementById("viewDevices").textContent = formatDevices(session.maxDevices);
+      }
       const wrap = document.getElementById("viewLicenseWrap");
       document.getElementById("viewLicense").value = license;
       wrap.hidden = !license;
@@ -3286,6 +3310,7 @@
           note: licenseKey,
           sessionId: pwf.sessionId,
           heartbeatInterval: pwf.heartbeatInterval,
+          maxDevices: parseMaxDevices(pwf.key),
         });
         if (pendingPairId) {
           const id = pendingPairId;
@@ -3300,7 +3325,7 @@
         return false;
       }
       stopScreenPairing();
-      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: licenseKey, note: license.n });
+      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: licenseKey, note: license.n, maxDevices: 1 });
       if (pendingPairId) {
         const id = pendingPairId;
         pendingPairId = "";
@@ -3441,6 +3466,7 @@
           licenseExp: exp,
           sessionId: pwf.sessionId || session.sessionId,
           heartbeatInterval: pwf.heartbeatInterval || session.heartbeatInterval,
+          maxDevices: parseMaxDevices(pwf.key),
         };
       } catch {
         return session;
@@ -3717,7 +3743,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=88").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=89").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
