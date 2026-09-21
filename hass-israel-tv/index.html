@@ -2295,20 +2295,21 @@
     }
 
     let liveBeatTimer = 0;
+    let appLocked = false;
     function stopLiveSession() {
       if (liveBeatTimer) window.clearInterval(liveBeatTimer);
       liveBeatTimer = 0;
     }
 
     async function pulseLiveSession(session) {
-      if (!session?.sessionId || !session.license) return true;
+      if (!session?.license || session.role !== "user") return true;
       try {
         const res = await fetch(PWF_CHECK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "heartbeat",
-            session_id: session.sessionId,
+            session_id: session.sessionId || "",
             license_key: session.license,
             hwid: deviceHwid(),
             device_name: deviceLabel(),
@@ -2326,27 +2327,15 @@
 
     async function startLiveSession(session) {
       stopLiveSession();
-      if (session?.role !== "user" || !session.license) return session;
-      let next = session;
-      if (!next.sessionId) {
-        try {
-          const pwf = await verifyPwfLicense(next.license, next.email || "");
-          if (!pwf.ok) return next;
-          next = {
-            ...next,
-            sessionId: pwf.sessionId,
-            heartbeatInterval: pwf.heartbeatInterval,
-          };
-          writeSession(next);
-        } catch {
-          return next;
-        }
-      }
-      if (!next.sessionId) return next;
-      const interval = Math.max(15, Number(next.heartbeatInterval) || 30) * 1000;
+      if (appLocked || session?.role !== "user" || !session.license) return session;
+      const interval = isTv ? 5000 : 8000;
       const beat = async () => {
+        if (appLocked) {
+          stopLiveSession();
+          return;
+        }
         const current = readSession();
-        if (!current?.sessionId) {
+        if (!current?.license) {
           stopLiveSession();
           return;
         }
@@ -2355,7 +2344,7 @@
       };
       liveBeatTimer = window.setInterval(beat, interval);
       beat();
-      return next;
+      return session;
     }
 
     function endLiveSession(session) {
@@ -2593,6 +2582,7 @@
     }
 
     function unlockApp(session) {
+      if (appLocked || !session) return;
       writeSession(session);
       rebuildCatalog();
       document.documentElement.dataset.session = "1";
@@ -2620,14 +2610,29 @@
     }
 
     function lockApp() {
+      if (appLocked) return;
+      appLocked = true;
+      stopLiveSession();
       endLiveSession(readSession());
       document.documentElement.dataset.session = "0";
       document.documentElement.dataset.admin = "0";
       clearSession();
+      const app = document.getElementById("app");
+      const gate = document.getElementById("gate");
+      if (app) app.hidden = true;
+      if (gate) gate.hidden = false;
       if (hls) {
         hls.destroy();
         hls = undefined;
       }
+      try {
+        const video = document.querySelector("video");
+        if (video) {
+          video.pause();
+          video.removeAttribute("src");
+          video.load();
+        }
+      } catch {}
       location.hash = "";
       location.reload();
     }
@@ -3918,7 +3923,14 @@
       await loginWithLicense(document.getElementById("licenseInput").value);
     });
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") pullProfile().catch(() => {});
+      if (document.visibilityState !== "visible") return;
+      const session = readSession();
+      if (session?.role === "user") {
+        pulseLiveSession(session).then((ok) => {
+          if (!ok) lockApp();
+        }).catch(() => {});
+      }
+      pullProfile().catch(() => {});
     });
     document.getElementById("settingsBtn").addEventListener("click", () => openLicenseView());
     document.getElementById("viewLicClose").addEventListener("click", () => {
@@ -4048,21 +4060,12 @@
 
     async function repairSession(session) {
       if (session.role !== "user" || !session.license) return session;
-      try {
-        const pwf = await verifyPwfLicense(session.license, session.email || "");
-        if (!pwf.ok) return session;
-        const exp = parsePwfExp(pwf.key);
-        return {
-          ...session,
-          exp,
-          licenseExp: exp,
-          sessionId: pwf.sessionId || session.sessionId,
-          heartbeatInterval: pwf.heartbeatInterval || session.heartbeatInterval,
-          maxDevices: parseMaxDevices(pwf.key),
-        };
-      } catch {
-        return session;
+      const ok = await pulseLiveSession(session);
+      if (!ok) {
+        lockApp();
+        return null;
       }
+      return session;
     }
 
     const linkedPair = consumePairLink();
@@ -4071,6 +4074,7 @@
     if (existing) {
       unlockApp(existing);
       repairSession(existing).then((session) => {
+        if (!session || appLocked) return;
         writeSession(session);
         refreshExpiry(session);
         startLiveSession(session);
@@ -4335,7 +4339,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=107").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=108").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
