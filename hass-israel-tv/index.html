@@ -1161,14 +1161,6 @@
       </div>
     </div>
   </dialog>
-  <dialog class="sheet" id="exitDlg">
-    <h3>יציאה מהאפליקציה</h3>
-    <p style="color:var(--muted);margin:0 0 14px">לסגור את Israel TV?</p>
-    <div class="row">
-      <button type="button" class="ghost" id="exitNo">ביטול</button>
-      <button type="button" id="exitYes">יציאה</button>
-    </div>
-  </dialog>
   <dialog class="sheet" id="installDlg">
     <h3>התקנת האפליקציה</h3>
     <p style="color:var(--muted);margin:0 0 14px">להתקין את Israel TV במסך הבית?</p>
@@ -1246,7 +1238,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=76";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=77";
     import { PWF_CHECK_URL } from "./pwf.js?v=12";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -3515,26 +3507,10 @@
         focusTvDefault();
         return true;
       }
-      document.getElementById("exitDlg").showModal();
-      requestAnimationFrame(() => document.getElementById("exitNo").focus());
-      return true;
+      return false;
     }
 
     window.__tvBack = tvBack;
-    function confirmTvExit() {
-      document.getElementById("exitDlg").close();
-      try {
-        if (window.IsraelTV && typeof window.IsraelTV.exitApp === "function") {
-          window.IsraelTV.exitApp();
-          return;
-        }
-      } catch {}
-    }
-    document.getElementById("exitYes").addEventListener("click", confirmTvExit);
-    document.getElementById("exitNo").addEventListener("click", () => {
-      document.getElementById("exitDlg").close();
-      focusTvDefault();
-    });
 
     searchBtn?.addEventListener("click", openTvSearch);
     searchInput.addEventListener("keydown", (event) => {
@@ -3595,7 +3571,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=76").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=77").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
