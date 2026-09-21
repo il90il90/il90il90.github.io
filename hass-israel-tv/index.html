@@ -247,13 +247,6 @@
     .idle p, .status p { margin: 0; color: var(--muted); }
     .status { background: rgba(7, 11, 18, 0.82); gap: 14px; }
     .status.hidden, .idle.hidden { display: none; }
-    .status-logo {
-      width: 72px;
-      height: 72px;
-      border-radius: 18px;
-      object-fit: contain;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
     .status-spinner {
       display: none;
       width: 36px;
@@ -1278,7 +1271,6 @@
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 4px; }
     html.tv .stage { max-height: 52vh; }
     html.tv .now-logo { height: 44px; }
-    html.tv .status-logo { width: 96px; height: 96px; border-radius: 22px; }
     html.tv .status-spinner { width: 44px; height: 44px; border-width: 4px; }
     html.tv .status p { font-size: 18px; }
     html.tv button:focus, html.tv a:focus, html.tv input:focus, html.tv select:focus, html.tv textarea:focus, html.tv .theater:focus {
@@ -1374,7 +1366,6 @@
         <p id="castBannerName">בחרו ערוץ כדי לשלוח ל-Cast</p>
       </div>
       <div class="status hidden" id="status">
-        <img class="status-logo" src="favicon.png" alt="Israel TV" />
         <div class="status-spinner" aria-hidden="true"></div>
         <p></p>
       </div>
@@ -4741,7 +4732,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=116").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=117").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
