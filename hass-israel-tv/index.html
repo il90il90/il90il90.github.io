@@ -11,8 +11,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
   <link rel="manifest" href="manifest.webmanifest?v=4" />
-  <link rel="icon" href="favicon.png?v=2" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2" />
+  <link rel="icon" href="favicon.png?v=3" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3" />
   <script>
     try {
       const session = JSON.parse(localStorage.getItem("israel-tv-auth") || "null");
@@ -89,7 +89,7 @@
       min-width: max-content;
       cursor: pointer;
     }
-    .brand img { width: 36px; height: 36px; border-radius: 10px; }
+    .brand img { width: 36px; height: 36px; border-radius: 10px; background: #0d5994; object-fit: cover; }
     .brand h1 { margin: 0; font-size: 18px; letter-spacing: 0.02em; white-space: nowrap; }
     .brand span { display: none; }
     .expiry {
@@ -1514,7 +1514,7 @@
   <div id="app" hidden>
   <header class="top">
     <button type="button" class="brand" id="homeBtn" title="מסך ראשי" aria-label="מסך ראשי">
-      <img src="favicon.png" alt="" />
+      <img src="favicon.png?v=3" alt="" />
       <div>
         <h1>Israel TV</h1>
         <span>צפייה ישירה</span>
@@ -1526,9 +1526,6 @@
       <button type="button" class="icon-btn" id="keysBtn" hidden title="כל הרישיונות" aria-label="כל הרישיונות">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
       </button>
-      <button type="button" class="icon-btn" id="settingsBtn" title="הגדרות וערוצים שלי" aria-label="הגדרות וערוצים שלי">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .7.4 1.3 1.1 1.5H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg>
-      </button>
     </div>
     <div class="header-actions">
       <button type="button" class="icon-btn install" id="installBtn" hidden title="התקן אפליקציה" aria-label="התקן אפליקציה">
@@ -1536,6 +1533,9 @@
       </button>
       <button type="button" class="icon-btn tv-only" id="searchBtn" title="חיפוש" aria-label="חיפוש">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="settingsBtn" title="הגדרות וערוצים שלי" aria-label="הגדרות וערוצים שלי">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .7.4 1.3 1.1 1.5H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg>
       </button>
       <button type="button" class="icon-btn" id="logoutBtn" title="יציאה" aria-label="יציאה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h4"/><path d="m14 8 4 4-4 4"/><path d="M18 12H9"/></svg>
@@ -5532,7 +5532,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=132").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=134").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
