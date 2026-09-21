@@ -1430,7 +1430,7 @@
           <strong id="viewUntil"></strong>
         </div>
         <div class="lic-row" id="viewDevicesRow">
-          <span>מכשירים</span>
+          <span>רישיונות</span>
           <strong id="viewDevices"></strong>
         </div>
       </div>
@@ -2593,7 +2593,7 @@
 
     function formatDevices(count) {
       const n = Math.max(1, Number(count) || 1);
-      return `${n} מכשירים`;
+      return n === 1 ? "1 רישיון" : `${n} רישיונות`;
     }
 
     function canShareLicense(session) {
@@ -2734,7 +2734,7 @@
       el.className = `expiry${left <= 3600 ? " danger" : left <= 86400 ? " warn" : ""}`;
       const max = Math.max(1, Number(session.maxDevices) || 1);
       const devices = Number.isFinite(Number(session.devicesUsed)) && session.devicesUsed
-        ? `${session.devicesUsed}/${max} מכשירים`
+        ? `${session.devicesUsed}/${max} רישיונות`
         : formatDevices(max);
       el.innerHTML = `<span class="expiry-main">${formatRemaining(exp)}</span><span class="expiry-until"> · עד ${formatUntilDate(exp)} · ${devices}</span>`;
     }
@@ -4732,7 +4732,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=117").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=118").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
