@@ -1398,7 +1398,7 @@
     <h3>חיבור למסך</h3>
     <p style="color:var(--muted);margin:0 0 12px">כך מעדכנים את הטלוויזיה עם הרישיון מהטלפון:</p>
     <ol class="pair-steps">
-      <li>במסך מתקינים את אפליקציית Israel TV מ־<a href="https://il90il90.github.io/hass-israel-tv/israel-tv-tv.apk" download>הורדה לטלוויזיה</a>.</li>
+      <li>במסך מתקינים את אפליקציית Israel TV מ־<a href="https://github.com/il90il90/hass-israel-tv-release/releases/latest/download/israel-tv-tv.apk" download>הורדה לטלוויזיה</a>.</li>
       <li>פותחים את האפליקציה בטלוויזיה — הברקוד מופיע במסך הכניסה.</li>
       <li>בטלפון, בהגדרות, סריקת הברקוד או הזנת הקוד מחברת את המסך.</li>
       <li>הטלוויזיה נכנסת לאותו רישיון כמו בטלפון, כולל הערוצים שלכם.</li>
@@ -1445,7 +1445,6 @@
     const AUTH_KEY = "israel-tv-auth";
     const HWID_KEY = "israel-tv-hwid";
     const LICENSE_SECRET = "israel-tv-license-hs256";
-    const ADMIN_HASH = "b99bb8b4781899110c51a70a5875e7264324c25160ade0f8564e319f6fbf769d";
     const BROADPEAK_KEY = "0123456789ABCDEF0123456789ABCDEF";
     const DEFAULT_CTI = "50629300e9872d0a6c94a48089a07763";
     const JWT_TTL_SEC = 86400;
@@ -3568,26 +3567,19 @@
         err.textContent = "הזינו רישיון";
         return false;
       }
-      if (await sha256Hex(value) === ADMIN_HASH) {
-        window.__adminPass = value;
-        let adminToken = "";
-        try {
-          const boot = await fetch(PWF_CHECK_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "admin-session", admin: value }),
-          });
-          const data = await boot.json().catch(() => ({}));
-          if (data?.success && data.token) adminToken = data.token;
-        } catch {}
-        stopScreenPairing();
-        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, adminToken });
-        if (pendingPairId) {
-          const id = pendingPairId;
-          pendingPairId = "";
-          await claimPair(id, { silent: true });
+      if (!looksLikeLicenseKey(value)) {
+        const admin = await pwfAction({ action: "admin-session", admin: value });
+        if (admin.ok && admin.data.token) {
+          window.__adminPass = value;
+          stopScreenPairing();
+          unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, adminToken: admin.data.token });
+          if (pendingPairId) {
+            const id = pendingPairId;
+            pendingPairId = "";
+            await claimPair(id, { silent: true });
+          }
+          return true;
         }
-        return true;
       }
       let pwf;
       try {
@@ -4051,7 +4043,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=99").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=100").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
