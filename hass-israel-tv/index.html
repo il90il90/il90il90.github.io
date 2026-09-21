@@ -670,7 +670,6 @@
       padding: 10px;
       font-size: 16px;
     }
-    dialog.sheet input[hidden], dialog.sheet .lic-label[hidden] { display: none !important; }
     dialog.sheet .row { display: flex; gap: 8px; }
     dialog.sheet button {
       border: 0;
@@ -1222,8 +1221,6 @@
   </dialog>
   <dialog class="sheet" id="licenseDlg">
     <h3>יצירת רישיון</h3>
-    <label class="lic-label" id="licAdminLabel" for="licAdminPass">סיסמת מנהל</label>
-    <input id="licAdminPass" type="password" autocomplete="current-password" placeholder="סיסמת מנהל" />
     <input id="licNote" type="text" placeholder="שם / הערה (לא חובה)" />
     <div class="presets">
       <button type="button" data-sec="3600">שעה</button>
@@ -1305,7 +1302,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=86";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=87";
     import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1512,21 +1509,7 @@
       localStorage.removeItem(AUTH_KEY);
     }
 
-    function adminTokenValid(token) {
-      const exp = Number(String(token || "").split(".")[0]);
-      return Number.isFinite(exp) && exp > nowSec() + 60;
-    }
-
-    function syncLicAdminField() {
-      const needPass = !window.__adminPass && !adminTokenValid((readSession() || {}).adminToken);
-      document.getElementById("licAdminLabel").hidden = !needPass;
-      document.getElementById("licAdminPass").hidden = !needPass;
-      if (needPass) document.getElementById("licAdminPass").value = "";
-    }
-
     async function refreshAdminToken() {
-      const typed = document.getElementById("licAdminPass")?.value || "";
-      if (typed) window.__adminPass = typed;
       if (!window.__adminPass) return (readSession() || {}).adminToken || "";
       try {
         const res = await fetch(PWF_CHECK_URL, {
@@ -1539,7 +1522,6 @@
           const session = { ...(readSession() || {}), role: "admin", adminToken: data.token };
           if (!session.exp) session.exp = nowSec() + 3650 * 86400;
           writeSession(session);
-          syncLicAdminField();
           return data.token;
         }
       } catch {}
@@ -1547,41 +1529,24 @@
     }
 
     async function createLicense(note, seconds) {
-      const postCreate = async (token) => {
-        const session = readSession() || {};
-        const res = await fetch(PWF_CHECK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "create",
-            admin: window.__adminPass || document.getElementById("licAdminPass")?.value || "",
-            token: token || session.adminToken || "",
-            note,
-            seconds,
-            amount: Number(document.getElementById("licAmount").value) || 1,
-            unit: Number(document.getElementById("licUnit").value) || 86400,
-            max_devices: Number(document.getElementById("licDevices").value) || 1,
-          }),
-        });
-        const data = await res.json().catch(() => ({}));
-        return { res, data };
-      };
-      let token = await refreshAdminToken();
-      let { res, data } = await postCreate(token);
-      if ((!data?.success || !data.license_key) && res.status === 403 && (window.__adminPass || document.getElementById("licAdminPass")?.value)) {
-        token = await refreshAdminToken();
-        ({ res, data } = await postCreate(token));
-      }
+      const session = readSession() || {};
+      const token = await refreshAdminToken() || session.adminToken || "";
+      const res = await fetch(PWF_CHECK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          admin: window.__adminPass || "",
+          token,
+          note,
+          seconds,
+          amount: Number(document.getElementById("licAmount").value) || 1,
+          unit: Number(document.getElementById("licUnit").value) || 86400,
+          max_devices: Number(document.getElementById("licDevices").value) || 1,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
       if (!data?.success || !data.license_key) {
-        if (res.status === 403) {
-          syncLicAdminField();
-          document.getElementById("licAdminLabel").hidden = false;
-          document.getElementById("licAdminPass").hidden = false;
-          const typed = document.getElementById("licAdminPass")?.value;
-          throw new Error(typed
-            ? "סיסמת המנהל לא נכונה"
-            : "הזינו את סיסמת המנהל כדי ליצור רישיון");
-        }
         throw new Error(data?.message || "לא הצלחנו ליצור רישיון");
       }
       return data;
@@ -3406,16 +3371,12 @@
       document.getElementById("licOut").value = "";
       document.getElementById("licOutWrap").hidden = true;
       document.getElementById("licQrWrap").hidden = true;
-      syncLicAdminField();
     }
 
     document.getElementById("licenseBtn").addEventListener("click", () => {
       if (readSession()?.role !== "admin") return;
       resetLicenseForm();
       document.getElementById("licenseDlg").showModal();
-      if (!document.getElementById("licAdminPass").hidden) {
-        document.getElementById("licAdminPass").focus();
-      }
     });
     document.getElementById("licenseDlg").addEventListener("click", (event) => {
       if (event.target === event.currentTarget) event.currentTarget.close();
@@ -3756,7 +3717,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=86").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=87").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
