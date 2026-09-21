@@ -437,6 +437,7 @@
     }
     #gate[hidden] { display: none !important; }
     .login {
+      position: relative;
       width: min(420px, 100%);
       background: var(--card);
       border: 1px solid var(--line);
@@ -444,6 +445,35 @@
       padding: 28px 22px 22px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     }
+    .login-busy {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 14px;
+      background: rgba(10, 16, 26, 0.78);
+      border-radius: inherit;
+      backdrop-filter: blur(8px);
+    }
+    .login-busy[hidden] { display: none !important; }
+    .login-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #2a3a52;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: login-spin 0.7s linear infinite;
+    }
+    .login-busy strong {
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 800;
+    }
+    @keyframes login-spin { to { transform: rotate(360deg); } }
+    html.tv .login-spinner { width: 56px; height: 56px; border-width: 4px; }
+    html.tv .login-busy strong { font-size: 20px; }
     .login-head {
       display: flex;
       align-items: center;
@@ -1191,6 +1221,10 @@
         <button type="submit">כניסה</button>
       </div>
       </div>
+      <div class="login-busy" id="loginBusy" hidden>
+        <div class="login-spinner" aria-hidden="true"></div>
+        <strong id="loginBusyText">מתחברים…</strong>
+      </div>
     </form>
   </div>
   <div id="app" hidden>
@@ -1835,9 +1869,10 @@
       } catch {}
       if (/^pair=/i.test(raw)) return normalizePairId(raw.slice(5));
       if (looksLikeLicenseKey(raw)) return "";
+      if (/[^0-9A-Za-z\s-]/.test(raw)) return "";
       const compact = compactKeyChars(raw);
-      if (compact.length >= 8 && compact.length <= 12) return compact;
-      return "";
+      if (compact.length !== 9) return "";
+      return compact;
     }
 
     function pairingQrPayload(pairId) {
@@ -1979,6 +2014,7 @@
       if (currentPairId !== pairId || readSession()) return;
       if (status.data?.status === "ready") {
         document.getElementById("pairWait").textContent = "מתחברים…";
+        setLoginBusy(true, "מתחברים…");
         await applyPairedSession(status.data);
         return;
       }
@@ -1998,6 +2034,7 @@
         licenseInput.value = data.license_key;
         return loginWithLicense(data.license_key);
       }
+      setLoginBusy(false);
       document.getElementById("loginErr").textContent = "החיבור מהטלפון לא הצליח";
       return false;
     }
@@ -3841,6 +3878,21 @@
       if (start) playChannel(start);
     }
 
+    function setLoginBusy(busy, text) {
+      const overlay = document.getElementById("loginBusy");
+      const form = document.getElementById("loginForm");
+      const label = document.getElementById("loginBusyText");
+      if (label && text) label.textContent = text;
+      if (overlay) overlay.hidden = !busy;
+      if (form) {
+        form.setAttribute("aria-busy", busy ? "true" : "false");
+        form.querySelectorAll("input, button").forEach((el) => {
+          if (el.closest(".login-busy")) return;
+          el.disabled = busy;
+        });
+      }
+    }
+
     async function loginWithLicense(raw) {
       if (!looksLikeLicenseKey(raw)) {
         const pairFromField = parsePairId(raw);
@@ -3856,6 +3908,8 @@
         err.textContent = "הזינו רישיון";
         return false;
       }
+      setLoginBusy(true, "מתחברים…");
+      try {
       if (!looksLikeLicenseKey(value)) {
         const admin = await pwfAction({ action: "admin-session", admin: value });
         if (admin.ok && admin.data.token) {
@@ -3917,6 +3971,9 @@
         await claimPair(id, { silent: true });
       }
       return true;
+      } finally {
+        if (document.documentElement.dataset.session !== "1") setLoginBusy(false);
+      }
     }
     document.getElementById("loginForm").addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -4339,7 +4396,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=108").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=110").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
