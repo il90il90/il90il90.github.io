@@ -577,26 +577,34 @@
     }
     .devices-head {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
       margin: 0 0 10px;
     }
     .devices-head h4 { margin: 0; font-size: 15px; }
-    .devices-left { color: var(--muted); font-size: 13px; font-weight: 700; }
+    .devices-left { color: var(--muted); font-size: 13px; font-weight: 700; line-height: 1.35; }
     .devices-left.full { color: #ffb27a; }
     .devices-list { display: grid; gap: 8px; }
     .device-item {
-      display: flex;
+      display: grid;
+      grid-template-columns: 8px minmax(0, 1fr) auto;
       align-items: center;
       gap: 10px;
+      min-width: 0;
       padding: 10px 12px;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 10px;
     }
-    .device-item > div { flex: 1; min-width: 0; }
-    .device-item strong { display: block; font-size: 14px; word-break: break-word; }
+    .device-item > div { min-width: 0; }
+    .device-item strong {
+      display: block;
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .device-item small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
     .device-dot {
       flex: 0 0 8px;
@@ -738,7 +746,7 @@
     .pair-steps li { margin: 0 0 10px; }
     .pair-steps a { color: var(--accent-2); font-weight: 700; }
     .pair-phone p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
-    .pair-phone .pair-row { display: flex; gap: 8px; }
+    .pair-phone .pair-row { display: flex; align-items: stretch; gap: 8px; min-width: 0; }
     .pair-phone input {
       flex: 1;
       min-width: 0;
@@ -749,7 +757,12 @@
       padding: 10px 12px;
       font-size: 15px;
     }
-    .pair-phone button { min-height: 44px; font-weight: 700; }
+    .pair-phone .pair-row button {
+      flex: 0 0 auto;
+      min-width: 72px;
+      min-height: 44px;
+      font-weight: 700;
+    }
     .pair-phone .scan-btn {
       display: inline-flex;
       align-items: center;
@@ -834,6 +847,7 @@
     }
     dialog.sheet .row { display: flex; gap: 8px; }
     dialog.sheet button {
+      flex: 0 0 auto;
       border: 0;
       border-radius: 10px;
       padding: 10px 12px;
@@ -983,18 +997,29 @@
     }
     .custom-box-head {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      margin: 0 0 12px;
+    }
+    .custom-box-title {
+      display: flex;
+      align-items: baseline;
       justify-content: space-between;
       gap: 8px;
-      margin: 0 0 4px;
+      min-width: 0;
     }
     .custom-box h4 { margin: 0; font-size: 15px; }
-    .custom-box-actions { display: flex; flex-shrink: 0; gap: 6px; }
+    .custom-box-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
     dialog.sheet .custom-open-add,
     dialog.sheet .custom-clear-all {
-      flex: 0 0 auto;
-      min-height: 36px;
-      padding: 0 14px;
+      flex: 1 1 130px;
+      min-height: 38px;
+      padding: 0 10px;
       font-size: 13px;
       font-weight: 800;
     }
@@ -1038,9 +1063,13 @@
       overflow: hidden;
     }
     .custom-item {
-      display: flex;
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      grid-template-areas:
+        "thumb meta"
+        "btns btns";
       align-items: center;
-      gap: 10px;
+      gap: 8px 10px;
       min-width: 0;
       padding: 10px;
       background: var(--card);
@@ -1049,11 +1078,9 @@
       overflow: hidden;
     }
     .custom-item.editing { outline: 2px solid var(--accent); }
-    .custom-item .custom-meta {
-      min-width: 0;
-      flex: 1 1 auto;
-      overflow: hidden;
-    }
+    .custom-item .custom-thumb { grid-area: thumb; }
+    .custom-item .custom-meta { grid-area: meta; min-width: 0; overflow: hidden; }
+    .custom-item .custom-item-btns { grid-area: btns; }
     .custom-item .custom-thumb {
       flex: 0 0 auto;
       width: 42px;
@@ -1090,8 +1117,14 @@
       margin-top: 0;
       padding-top: 0;
     }
-    .custom-count { margin-inline-end: auto; color: var(--muted); font-size: 12px; }
-    .custom-item strong { display: block; font-size: 14px; }
+    .custom-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .custom-item strong {
+      display: block;
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     .custom-item span {
       display: block;
       color: var(--muted);
@@ -1102,7 +1135,7 @@
       direction: ltr;
       text-align: left;
     }
-    .custom-item-btns { display: flex; flex: 0 0 auto; gap: 6px; }
+    .custom-item-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .custom-logo-box {
       display: flex;
       align-items: center;
@@ -1132,10 +1165,10 @@
     .custom-logo-fields input { margin-bottom: 8px; }
     .custom-logo-fields button { width: 100%; background: #243044; }
     .custom-item button {
-      flex: 0 0 auto;
+      width: 100%;
       background: #243044;
       padding: 8px 10px;
-      min-width: 44px;
+      min-height: 36px;
     }
     @media (max-width: 720px) {
       header.top {
@@ -1171,6 +1204,10 @@
       }
       .chips::-webkit-scrollbar, .cats::-webkit-scrollbar { display: none; }
       .chip, .cat { flex: 0 0 auto; min-height: 40px; }
+      .license-card { width: calc(100% - 16px); }
+      .license-card .lic-head { padding: 16px 14px 12px; }
+      .license-card .lic-body { padding: 4px 14px 16px; }
+      .custom-box, .devices-box, .pair-phone { padding: 12px; }
       .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
       .logo { width: 52px; height: 52px; border-radius: 12px; }
       .card { padding: 10px 6px 12px; }
@@ -1445,8 +1482,10 @@
       </div>
       <div class="custom-box" id="customBox">
         <div class="custom-box-head">
-          <h4>ערוצים שלי</h4>
-          <span class="custom-count" id="customCount"></span>
+          <div class="custom-box-title">
+            <h4>ערוצים שלי</h4>
+            <span class="custom-count" id="customCount"></span>
+          </div>
           <div class="custom-box-actions">
             <button type="button" class="custom-clear-all" id="customClearAll" hidden>מחק הכל</button>
             <button type="button" class="custom-open-add" id="customOpenAdd">הוסף ערוץ</button>
@@ -4702,7 +4741,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=115").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=116").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
