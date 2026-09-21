@@ -1132,8 +1132,8 @@
         </div>
       </div>
       <div class="pair-phone" id="pairPhoneBox">
-        <h4>חיבור טלוויזיה</h4>
-        <p>במסך מופיע ברקוד. סרקו אותו מהטלפון, או הזינו את הקוד שמופיע מתחתיו.</p>
+        <h4>חיבור למסך</h4>
+        <p>לחבר את הטלוויזיה לרישיון שלכם?</p>
         <div class="pair-row">
           <input id="pairCodeInput" type="text" maxlength="16" placeholder="קוד מהמסך" dir="ltr" spellcheck="false" autocomplete="off" />
           <button type="button" id="pairCodeGo">חבר</button>
@@ -1238,8 +1238,8 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=78";
-    import { PWF_CHECK_URL } from "./pwf.js?v=12";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=79";
+    import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
     const HWID_KEY = "israel-tv-hwid";
@@ -1508,6 +1508,12 @@
         return "אין חיבור לשרת האימות. רעננו את העמוד ונסו שוב.";
       }
       if (detail.toLowerCase().includes("app secret")) return "אימות הרישיון נכשל";
+      if (code === "MISSING_FIELDS" || /license_key required/i.test(detail)) {
+        return "חסר רישיון בטלפון. היכנסו עם הרישיון ואז חברו את המסך.";
+      }
+      if (/^[a-z0-9_ ]+$/i.test(detail) && detail.length < 48) {
+        return "לא הצלחנו לחבר את המסך. נסו שוב.";
+      }
       return detail || "רישיון לא תקין או שפג תוקפו";
     }
 
@@ -1742,13 +1748,18 @@
       const session = readSession();
       const body = { action: "pair-claim", pair_id: pairId };
       if (!session) return body;
+      const license = session.license || session.note || "";
+      if (license && session.role !== "admin") body.license_key = license;
       if (session.role === "admin") {
         if (session.adminToken) body.token = session.adminToken;
         if (window.__adminPass) body.admin = window.__adminPass;
-      } else if (session.license) {
-        body.license_key = session.license;
       }
       return body;
+    }
+
+    function pairErrorMessage(data) {
+      if (!data?.message && !data?.error_code && !data?.detail) return "לא הצלחנו לחבר את המסך";
+      return pwfErrorMessage(data);
     }
 
     async function claimPair(pairId, { silent = false } = {}) {
@@ -1760,9 +1771,21 @@
         if (!silent) showToast("התחברו ואז נחבר את המסך");
         return false;
       }
-      const claimed = await pwfAction(pairClaimBody(id));
+      const body = pairClaimBody(id);
+      if (!body.license_key && !body.token && !body.admin) {
+        const message = session.role === "admin"
+          ? "התחברו שוב כמנהל ואז חברו את המסך."
+          : "חסר רישיון בטלפון. היכנסו עם הרישיון ואז חברו את המסך.";
+        if (!silent) {
+          const err = document.getElementById("pairErr");
+          if (err) err.textContent = message;
+          else showToast(message);
+        }
+        return false;
+      }
+      const claimed = await pwfAction(body);
       if (!claimed.ok) {
-        const message = claimed.data?.message || "לא הצלחנו לחבר את המסך";
+        const message = pairErrorMessage(claimed.data);
         if (!silent) {
           const err = document.getElementById("pairErr");
           if (err) err.textContent = message;
@@ -3580,7 +3603,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=78").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=79").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
