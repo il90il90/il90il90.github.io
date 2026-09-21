@@ -945,6 +945,7 @@
     }
     dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
     dialog.sheet h3 { margin: 0 0 10px; }
+    dialog.sheet h3:focus { outline: none; }
     dialog.sheet input, dialog.sheet textarea, dialog.sheet select {
       width: 100%;
       box-sizing: border-box;
@@ -1837,6 +1838,60 @@
     }
     const searchInput = document.getElementById("q");
     const searchBtn = document.getElementById("searchBtn");
+
+    function isTextField(el) {
+      if (!el || el.disabled) return false;
+      if (el.tagName === "TEXTAREA" || el.tagName === "SELECT") return true;
+      if (el.tagName !== "INPUT") return false;
+      return !["button", "submit", "checkbox", "radio", "file", "hidden", "reset"].includes(String(el.type || "text").toLowerCase());
+    }
+
+    function dismissKeyboard() {
+      const el = document.activeElement;
+      if (isTextField(el)) el.blur();
+    }
+
+    function openSheet(dlg) {
+      if (!dlg) return;
+      dlg.dataset.ready = "";
+      const title = dlg.querySelector("h3");
+      if (title && !title.hasAttribute("tabindex")) title.tabIndex = -1;
+      if (!dlg.open) dlg.showModal();
+      title?.focus({ preventScroll: true });
+      if (isTextField(document.activeElement)) {
+        document.activeElement.blur();
+        title?.focus({ preventScroll: true });
+      }
+      requestAnimationFrame(() => {
+        if (isTextField(document.activeElement)) {
+          document.activeElement.blur();
+          title?.focus({ preventScroll: true });
+        }
+      });
+      window.setTimeout(() => { dlg.dataset.ready = "1"; }, 350);
+    }
+
+    document.addEventListener("pointerdown", (event) => {
+      const field = event.target.closest?.("input, textarea, select");
+      if (field) field.dataset.userFocus = "1";
+      const dlg = event.target.closest?.("dialog");
+      if (dlg) dlg.dataset.ready = "1";
+    }, true);
+
+    document.querySelectorAll("dialog.sheet").forEach((dlg) => {
+      dlg.addEventListener("close", () => {
+        dlg.dataset.ready = "";
+        dismissKeyboard();
+      });
+    });
+    if (!isTv) {
+      dismissKeyboard();
+      window.addEventListener("pageshow", () => {
+        if (isTextField(document.activeElement) && document.activeElement.dataset.userFocus !== "1") {
+          dismissKeyboard();
+        }
+      });
+    }
     if (isTv) {
       video.controls = false;
       theater.tabIndex = 0;
@@ -2563,7 +2618,7 @@
       }
       claimingPairId = id;
       document.getElementById("pairErr").textContent = "";
-      document.getElementById("pairDlg").showModal();
+      openSheet(document.getElementById("pairDlg"));
     }
 
     const licenseInput = document.getElementById("licenseInput");
@@ -2705,13 +2760,13 @@
       scanHint.textContent = purpose === "pair"
         ? "כוונו את המצלמה לברקוד שעל המסך"
         : "כוונו את המצלמה לברקוד";
-      scanDlg.showModal();
+      openSheet(scanDlg);
       startScan();
     }
     document.getElementById("scanBtn").addEventListener("click", () => openScan("login"));
     document.getElementById("pairScanBtn").addEventListener("click", () => openScan("pair"));
     document.getElementById("pairHelpBtn").addEventListener("click", () => {
-      document.getElementById("pairHelpDlg").showModal();
+      openSheet(document.getElementById("pairHelpDlg"));
     });
     document.getElementById("pairHelpClose").addEventListener("click", () => {
       document.getElementById("pairHelpDlg").close();
@@ -3044,7 +3099,7 @@
       const listEl = document.getElementById("devicesDlgList");
       leftEl.textContent = message || "בודקים…";
       listEl.replaceChildren();
-      if (!dlg.open) dlg.showModal();
+      if (!dlg.open) openSheet(dlg);
       const res = await fetchDevices(license);
       if (!res.ok) {
         leftEl.textContent = "לא הצלחנו לטעון את רשימת המכשירים";
@@ -3115,8 +3170,8 @@
       paintCustomList();
       paintDevicesBox();
       const settingsDlg = document.getElementById("licenseViewDlg");
-      if (!settingsDlg.open) settingsDlg.showModal();
-      document.getElementById("settingsTitle").focus({ preventScroll: true });
+      if (!settingsDlg.open) openSheet(settingsDlg);
+      else document.getElementById("settingsTitle").focus({ preventScroll: true });
       if (options.editId) {
         const channel = loadCustomChannels().find((item) => item.id === options.editId);
         if (channel) startEditCustom(channel);
@@ -3133,6 +3188,7 @@
       document.getElementById("app").hidden = false;
       document.getElementById("licenseBtn").hidden = session.role !== "admin";
       document.getElementById("keysBtn").hidden = isTv || session.role !== "admin";
+      if (!isTv) dismissKeyboard();
       refreshExpiry(session);
       if (!window.__expiryClock) {
         window.__expiryClock = setInterval(() => {
@@ -3723,7 +3779,7 @@
       resetCustomForm();
       document.getElementById("customDlgTitle").textContent = "הוספת ערוץ";
       document.getElementById("customAdd").textContent = "שמירה";
-      document.getElementById("customDlg").showModal();
+      openSheet(document.getElementById("customDlg"));
     }
 
     function resetCustomForm() {
@@ -3751,7 +3807,7 @@
       paintCustomLogoPreview(channel.logo || "");
       paintCustomList();
       const dlg = document.getElementById("customDlg");
-      if (!dlg.open) dlg.showModal();
+      if (!dlg.open) openSheet(dlg);
     }
 
     function deleteCustomChannel(id) {
@@ -3769,7 +3825,7 @@
       if (!items.length) return;
       document.getElementById("customClearText").textContent =
         `למחוק את כל ${items.length} הערוצים שנוספו מקובץ או ידנית? הפעולה לא ניתנת לביטול.`;
-      document.getElementById("customClearDlg").showModal();
+      openSheet(document.getElementById("customClearDlg"));
     }
 
     function deleteAllCustomChannels() {
@@ -4739,12 +4795,12 @@
     document.getElementById("licenseBtn").addEventListener("click", () => {
       if (readSession()?.role !== "admin") return;
       resetLicenseForm();
-      document.getElementById("licenseDlg").showModal();
+      openSheet(document.getElementById("licenseDlg"));
     });
     document.getElementById("keysBtn").addEventListener("click", () => {
       if (readSession()?.role !== "admin") return;
       const dlg = document.getElementById("keysDlg");
-      if (!dlg.open) dlg.showModal();
+      if (!dlg.open) openSheet(dlg);
       loadAdminKeys();
     });
     document.getElementById("keysClose").addEventListener("click", () => {
@@ -4877,7 +4933,7 @@
         syncInstallButton();
         return;
       }
-      installDlg.showModal();
+      openSheet(installDlg);
     });
     document.getElementById("installNo").addEventListener("click", () => {
       installDlg.close();
@@ -5087,7 +5143,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=122").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=123").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
