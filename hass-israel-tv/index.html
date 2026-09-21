@@ -2289,7 +2289,7 @@
       stopLiveSession();
       if (session?.role !== "user" || !session.license) return session;
       let next = session;
-      if (!next.sessionId && !(next.sessionRetryAt && Date.now() < next.sessionRetryAt)) {
+      if (!next.sessionId) {
         try {
           const pwf = await verifyPwfLicense(next.license, next.email || "");
           if (!pwf.ok) return next;
@@ -2297,7 +2297,6 @@
             ...next,
             sessionId: pwf.sessionId,
             heartbeatInterval: pwf.heartbeatInterval,
-            sessionRetryAt: pwf.sessionId ? 0 : Date.now() + 15 * 60000,
           };
           writeSession(next);
         } catch {
@@ -2577,7 +2576,7 @@
       }
       bootPlayer();
       startLiveSession(session);
-      pullProfile({ force: true }).catch(() => {});
+      pullProfile().catch(() => {});
       if (isTv) {
         requestAnimationFrame(() => focusTvDefault());
       }
@@ -2737,13 +2736,9 @@
       }, 400);
     }
 
-    let lastProfilePull = 0;
-
-    async function pullProfile(options = {}) {
+    async function pullProfile() {
       const session = readSession();
       if (!session || (session.role !== "admin" && !session.license)) return;
-      if (!options.force && Date.now() - lastProfilePull < 60000) return;
-      lastProfilePull = Date.now();
       try {
         const res = await fetch(PWF_CHECK_URL, {
           method: "POST",
@@ -4093,7 +4088,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=103").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=104").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
