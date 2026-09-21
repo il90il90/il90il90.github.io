@@ -1959,6 +1959,11 @@
         openBtn.removeAttribute("target");
         return;
       }
+      if (isRtspUrl(url)) {
+        openBtn.href = url;
+        openBtn.removeAttribute("target");
+        return;
+      }
       if (isAndroid) {
         openBtn.href = androidChooserUrl(url);
         openBtn.removeAttribute("target");
@@ -3481,6 +3486,24 @@
       CHANNELS = [...sortCustom(loadCustomChannels()), ...BASE_CHANNELS];
     }
 
+    function isAllowedStreamUrl(url) {
+      try {
+        const protocol = new URL(url).protocol;
+        return protocol === "http:" || protocol === "https:" || protocol === "rtsp:" || protocol === "rtsps:";
+      } catch {
+        return false;
+      }
+    }
+
+    function isRtspUrl(url) {
+      try {
+        const protocol = new URL(url).protocol;
+        return protocol === "rtsp:" || protocol === "rtsps:";
+      } catch {
+        return /^rtsps?:\/\//i.test(String(url || ""));
+      }
+    }
+
     function normalizeCustomUrl(value) {
       const raw = String(value || "").trim();
       let parsed;
@@ -3489,7 +3512,7 @@
       } catch {
         return "";
       }
-      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+      if (!isAllowedStreamUrl(parsed.href)) return "";
       return parsed.href;
     }
 
@@ -3520,27 +3543,27 @@
     function resolvePlaylistUrl(value, base) {
       let raw = stripPlaylistUrl(value);
       if (!raw) {
-        const found = String(value || "").match(/https?:\/\/[^\s|"'<>]+/i);
+        const found = String(value || "").match(/(?:https?|rtsps?):\/\/[^\s|"'<>]+/i);
         raw = found ? found[0] : "";
       }
       if (!raw) return "";
       if (raw.startsWith("//")) raw = `https:${raw}`;
       try {
         const parsed = new URL(raw);
-        if (parsed.protocol === "https:" || parsed.protocol === "http:") return parsed.href;
+        if (isAllowedStreamUrl(parsed.href)) return parsed.href;
         return "";
       } catch {}
-      const embedded = raw.match(/https?:\/\/[^\s|"'<>]+/i);
+      const embedded = raw.match(/(?:https?|rtsps?):\/\/[^\s|"'<>]+/i);
       if (embedded) {
         try {
           const parsed = new URL(embedded[0]);
-          if (parsed.protocol === "https:" || parsed.protocol === "http:") return parsed.href;
+          if (isAllowedStreamUrl(parsed.href)) return parsed.href;
         } catch {}
       }
       if (!base) return "";
       try {
         const parsed = new URL(raw, base);
-        if (parsed.protocol === "https:" || parsed.protocol === "http:") return parsed.href;
+        if (isAllowedStreamUrl(parsed.href)) return parsed.href;
       } catch {}
       return "";
     }
@@ -3804,7 +3827,7 @@
           err.textContent = "לא הצלחנו לקרוא את הקובץ. נסו קובץ m3u או m3u8 אחר.";
           return;
         }
-        err.textContent = "לא נמצאו ערוצים עם קישור http בקובץ. ודאו שזו רשימת ערוצים.";
+        err.textContent = "לא נמצאו ערוצים עם קישור http או rtsp בקובץ.";
         return;
       }
       pendingPlaylist = { fileName: file.name || "playlist.m3u8", entries };
@@ -4059,12 +4082,16 @@
         return;
       }
       if (!editing || editing.url !== url) {
-        err.textContent = "בודקים שהשידור נטען…";
-        try {
-          await probeCustomStream(url);
-        } catch {
-          err.textContent = "הקישור לא נטען כ־m3u8 בדפדפן. בדקו CORS או שהקובץ תקין.";
-          return;
+        if (isRtspUrl(url)) {
+          /* cameras are opened in VLC, not probed in the browser */
+        } else {
+          err.textContent = "בודקים שהשידור נטען…";
+          try {
+            await probeCustomStream(url);
+          } catch {
+            err.textContent = "הקישור לא נטען כ־m3u8 בדפדפן. בדקו CORS או שהקובץ תקין.";
+            return;
+          }
         }
       }
       if (editing) {
@@ -4569,6 +4596,11 @@
         if (!currentUrl) throw new Error("no-url");
         if (requestId !== playSeq) return;
         setOpenButton(currentUrl);
+        if (isRtspUrl(currentUrl)) {
+          stopLocalPlayback();
+          setStatus("מצלמה ברשת הביתית. לחצו פתיחה כדי לצפות ב-VLC.");
+          return;
+        }
         if (getCastSession()) {
           stopLocalPlayback();
           await loadCastMedia(currentUrl, channel);
@@ -5260,7 +5292,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=127").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=128").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
