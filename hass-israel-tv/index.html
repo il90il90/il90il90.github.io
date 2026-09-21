@@ -818,10 +818,22 @@
       border: 1px solid var(--line);
       border-radius: 12px;
     }
-    .custom-box h4 {
+    .custom-box-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
       margin: 0 0 4px;
-      font-size: 15px;
     }
+    .custom-box h4 { margin: 0; font-size: 15px; }
+    dialog.sheet .custom-open-add {
+      flex: 0 0 auto;
+      min-height: 36px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    #customForm[hidden] { display: none !important; }
     .custom-box .custom-help {
       margin: 0 0 8px;
       color: var(--muted);
@@ -1176,15 +1188,20 @@
         </button>
       </div>
       <div class="custom-box" id="customBox">
-        <h4>ערוצים שלי</h4>
+        <div class="custom-box-head">
+          <h4>ערוצים שלי</h4>
+          <button type="button" class="custom-open-add" id="customOpenAdd">הוסף ערוץ</button>
+        </div>
         <p class="custom-help">כאן מוסיפים, עורכים ומוחקים קישורי m3u8. הם נשמרים על הרישיון ומסתנכרנים בין כל המכשירים.</p>
         <p class="custom-sync" id="customSync">נשמר על הרישיון</p>
-        <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
-        <input id="customUrl" type="url" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
-        <p class="custom-err" id="customErr"></p>
-        <div class="custom-actions">
-          <button type="button" class="custom-add" id="customAdd">הוסף ערוץ</button>
-          <button type="button" class="ghost custom-cancel" id="customCancel" hidden>ביטול</button>
+        <div id="customForm" hidden>
+          <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
+          <input id="customUrl" type="url" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
+          <p class="custom-err" id="customErr"></p>
+          <div class="custom-actions">
+            <button type="button" class="custom-add" id="customAdd">שמירה</button>
+            <button type="button" class="ghost custom-cancel" id="customCancel">ביטול</button>
+          </div>
         </div>
         <div class="custom-list" id="customList"></div>
       </div>
@@ -1284,7 +1301,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=83";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=84";
     import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -2035,13 +2052,7 @@
       document.getElementById("pairHelpDlg").close();
     });
     document.getElementById("pairHelpDlg").addEventListener("click", (event) => {
-      const box = event.currentTarget.getBoundingClientRect();
-      const inside =
-        event.clientX >= box.left &&
-        event.clientX <= box.right &&
-        event.clientY >= box.top &&
-        event.clientY <= box.bottom;
-      if (!inside) event.currentTarget.close();
+      if (event.target === event.currentTarget) event.currentTarget.close();
     });
     document.getElementById("pairCodeGo").addEventListener("click", () => {
       const pairId = parsePairId(document.getElementById("pairCodeInput").value);
@@ -2057,26 +2068,14 @@
     });
     document.getElementById("pairNo").addEventListener("click", () => document.getElementById("pairDlg").close());
     document.getElementById("pairDlg").addEventListener("click", (event) => {
-      const box = event.currentTarget.getBoundingClientRect();
-      const inside =
-        event.clientX >= box.left &&
-        event.clientX <= box.right &&
-        event.clientY >= box.top &&
-        event.clientY <= box.bottom;
-      if (!inside) event.currentTarget.close();
+      if (event.target === event.currentTarget) event.currentTarget.close();
     });
     document.getElementById("scanClose").addEventListener("click", () => scanDlg.close());
     document.getElementById("scanFileBtn").addEventListener("click", () => scanFile.click());
     scanFile.addEventListener("change", () => scanImageFile(scanFile.files?.[0]));
     scanDlg.addEventListener("close", stopScan);
     scanDlg.addEventListener("click", (event) => {
-      const box = event.currentTarget.getBoundingClientRect();
-      const inside =
-        event.clientX >= box.left &&
-        event.clientX <= box.right &&
-        event.clientY >= box.top &&
-        event.clientY <= box.bottom;
-      if (!inside) event.currentTarget.close();
+      if (event.target === event.currentTarget) event.currentTarget.close();
     });
 
     function deviceHwid() {
@@ -2251,17 +2250,18 @@
         qrWrap.hidden = true;
       }
       const editId = options.editId || "";
-      const focusCustom = options.focusCustom === true || Boolean(editId);
       if (editId) {
         const channel = loadCustomChannels().find((item) => item.id === editId);
         if (channel) startEditCustom(channel);
-        else resetCustomForm();
+        else hideCustomForm();
+      } else if (options.focusCustom) {
+        showCustomForm();
       } else {
-        resetCustomForm();
+        hideCustomForm();
       }
       paintCustomList();
       document.getElementById("licenseViewDlg").showModal();
-      if (focusCustom) {
+      if (options.focusCustom || editId) {
         requestAnimationFrame(() => {
           document.getElementById("customBox")?.scrollIntoView({ block: "start" });
           document.getElementById("customName").focus();
@@ -2532,29 +2532,42 @@
 
     let customEditId = "";
 
+    function showCustomForm() {
+      resetCustomForm();
+      document.getElementById("customForm").hidden = false;
+      document.getElementById("customOpenAdd").hidden = true;
+    }
+
+    function hideCustomForm() {
+      resetCustomForm();
+      document.getElementById("customForm").hidden = true;
+      document.getElementById("customOpenAdd").hidden = false;
+    }
+
     function resetCustomForm() {
       customEditId = "";
       document.getElementById("customName").value = "";
       document.getElementById("customUrl").value = "";
       document.getElementById("customErr").textContent = "";
-      document.getElementById("customAdd").textContent = "הוסף ערוץ";
-      document.getElementById("customCancel").hidden = true;
+      document.getElementById("customAdd").textContent = "שמירה";
     }
 
     function startEditCustom(channel) {
       customEditId = channel.id;
+      document.getElementById("customForm").hidden = false;
+      document.getElementById("customOpenAdd").hidden = true;
       document.getElementById("customName").value = channel.name;
       document.getElementById("customUrl").value = channel.url;
       document.getElementById("customErr").textContent = "";
       document.getElementById("customAdd").textContent = "שמור שינויים";
-      document.getElementById("customCancel").hidden = false;
       paintCustomList();
+      document.getElementById("customName").focus();
     }
 
     function deleteCustomChannel(id) {
       saveCustomChannels(loadCustomChannels().filter((item) => item.id !== id));
       if (current?.id === id) goHome();
-      if (customEditId === id) resetCustomForm();
+      if (customEditId === id) hideCustomForm();
       rebuildCatalog();
       render();
       paintCustomList();
@@ -2568,7 +2581,7 @@
       if (!items.length) {
         const empty = document.createElement("p");
         empty.className = "custom-empty";
-        empty.textContent = "עדיין אין ערוצים. הוסיפו את הראשון למעלה.";
+        empty.textContent = "עדיין אין ערוצים. הוסיפו ערוץ מהכפתור למעלה.";
         listEl.append(empty);
         return;
       }
@@ -2653,6 +2666,7 @@
         showToast("הערוץ נוסף");
       }
       resetCustomForm();
+      hideCustomForm();
       rebuildCatalog();
       render();
       paintCustomList();
@@ -2768,16 +2782,6 @@
 
       const list = visibleChannels();
       gridEl.innerHTML = "";
-      if (!query && (category === "all" || category === "custom")) {
-        const addCard = document.createElement("button");
-        addCard.type = "button";
-        addCard.className = "card card-add";
-        addCard.innerHTML = `<div class="logo">+</div><div class="title"></div><div class="sub"></div>`;
-        addCard.querySelector(".title").textContent = "הוסף ערוץ";
-        addCard.querySelector(".sub").textContent = "קישור m3u8 שלי";
-        bindTap(addCard, () => openLicenseView({ focusCustom: true }));
-        gridEl.append(addCard);
-      }
       for (const channel of list) {
         const card = document.createElement("button");
         card.type = "button";
@@ -3330,24 +3334,23 @@
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "visible") pullProfile().catch(() => {});
     });
-    document.getElementById("settingsBtn").addEventListener("click", () => openLicenseView({ focusCustom: true }));
+    document.getElementById("settingsBtn").addEventListener("click", () => openLicenseView());
     document.getElementById("viewLicClose").addEventListener("click", () => {
       document.getElementById("licenseViewDlg").close();
     });
-    document.getElementById("licenseViewDlg").addEventListener("click", (event) => {
-      const box = event.currentTarget.getBoundingClientRect();
-      const inside =
-        event.clientX >= box.left &&
-        event.clientX <= box.right &&
-        event.clientY >= box.top &&
-        event.clientY <= box.bottom;
-      if (!inside) event.currentTarget.close();
+    function dismissSheet(event) {
+      if (event.target === event.currentTarget) event.currentTarget.close();
+    }
+    document.getElementById("licenseViewDlg").addEventListener("click", dismissSheet);
+    document.getElementById("customOpenAdd").addEventListener("click", () => {
+      showCustomForm();
+      document.getElementById("customName").focus();
     });
     document.getElementById("customAdd").addEventListener("click", () => {
       saveCustomChannel();
     });
     document.getElementById("customCancel").addEventListener("click", () => {
-      resetCustomForm();
+      hideCustomForm();
       paintCustomList();
     });
     document.getElementById("customName").addEventListener("keydown", (event) => {
@@ -3392,13 +3395,7 @@
       document.getElementById("licenseDlg").showModal();
     });
     document.getElementById("licenseDlg").addEventListener("click", (event) => {
-      const box = event.currentTarget.getBoundingClientRect();
-      const inside =
-        event.clientX >= box.left &&
-        event.clientX <= box.right &&
-        event.clientY >= box.top &&
-        event.clientY <= box.bottom;
-      if (!inside) event.currentTarget.close();
+      if (event.target === event.currentTarget) event.currentTarget.close();
     });
     function selectedLicenseSeconds() {
       const amount = Number(document.getElementById("licAmount").value) || 1;
@@ -3736,7 +3733,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=83").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=84").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
