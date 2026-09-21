@@ -1030,7 +1030,7 @@
       </button>
     </div>
     <div class="header-actions">
-      <button type="button" class="icon-btn install" id="installBtn" title="התקן אפליקציה" aria-label="התקן אפליקציה">
+      <button type="button" class="icon-btn install" id="installBtn" hidden title="התקן אפליקציה" aria-label="התקן אפליקציה">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 8v6"/><path d="M9 11h6"/></svg>
       </button>
       <button type="button" class="icon-btn tv-only" id="searchBtn" title="חיפוש" aria-label="חיפוש">
@@ -1238,7 +1238,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=77";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=78";
     import { PWF_CHECK_URL } from "./pwf.js?v=12";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -3354,11 +3354,19 @@
     let deferredPrompt;
 
     function isInstalledApp() {
-      return standaloneMedia.matches || window.navigator.standalone === true;
+      const modes = ["standalone", "fullscreen", "minimal-ui"];
+      if (modes.some((mode) => window.matchMedia(`(display-mode: ${mode})`).matches)) return true;
+      if (window.navigator.standalone === true) return true;
+      if (isTv || /IsraelTV-AndroidTV/i.test(navigator.userAgent || "")) return true;
+      try {
+        if (window.IsraelTV && typeof window.IsraelTV.exitApp === "function") return true;
+      } catch {}
+      return false;
     }
 
     function syncInstallButton() {
-      installBtn.hidden = isInstalledApp();
+      installBtn.hidden = isTv || isInstalledApp() || !deferredPrompt;
+      if (installBtn.hidden && installDlg.open) installDlg.close();
     }
 
     syncInstallButton();
@@ -3372,6 +3380,7 @@
 
     window.addEventListener("appinstalled", () => {
       deferredPrompt = undefined;
+      syncInstallButton();
     });
 
     installBtn.addEventListener("click", () => {
@@ -3571,7 +3580,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=77").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=78").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
