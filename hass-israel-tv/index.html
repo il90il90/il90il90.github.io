@@ -734,7 +734,7 @@
       border-radius: 8px;
       padding: 6px 8px;
     }
-    .key-token button {
+    #keysDlg .key-token button {
       flex: 0 0 auto;
       width: 34px;
       height: 34px;
@@ -742,6 +742,7 @@
       display: grid;
       place-items: center;
       background: #243044;
+      color: inherit;
     }
     .key-token button svg { width: 16px; height: 16px; display: block; }
     .key-card .devices-list { gap: 4px; }
@@ -752,9 +753,11 @@
     }
     .key-card .device-item strong { font-size: 13px; }
     .key-card .device-item small { font-size: 11px; }
-    .key-card .device-item button {
+    #keysDlg .key-card .device-item button {
       height: 28px;
       padding: 0 10px;
+      background: #3a2230;
+      color: #ff9d9d;
       font-size: 12px;
     }
     .key-fields {
@@ -784,10 +787,11 @@
     }
     #keysDlg .key-fields input[type="number"] { width: 56px !important; text-align: center; }
     #keysDlg .key-fields input[type="date"] { width: 132px !important; }
-    .key-fields .key-save {
+    #keysDlg .key-fields .key-save {
       height: 34px;
       padding: 0 12px;
       background: #243044;
+      color: inherit;
       font-size: 13px;
       font-weight: 800;
     }
@@ -796,16 +800,17 @@
       flex-wrap: nowrap;
       gap: 4px;
     }
-    .key-actions button {
+    #keysDlg .key-actions button {
       flex: 1 1 0;
       min-width: 0;
       height: 34px;
       padding: 0 6px;
       background: #243044;
+      color: inherit;
       font-size: 12px;
       font-weight: 800;
     }
-    .key-actions button.danger { background: #3a2230; color: #ff9d9d; }
+    #keysDlg .key-actions button.danger { background: #3a2230; color: #ff9d9d; }
     .pair-box { text-align: center; margin: 0 0 8px; }
     html.tv #loginLead, html.pair-login #loginLead { display: none; }
     html.tv #loginType, html.pair-login #loginType:not(.open) { display: none; }
