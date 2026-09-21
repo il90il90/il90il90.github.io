@@ -1238,7 +1238,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=79";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=80";
     import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -2792,7 +2792,7 @@
       setOpenButton("");
       document.getElementById("q").value = "";
       category = "all";
-      history.replaceState(null, "", location.pathname + location.search);
+      history.replaceState(history.state, "", location.pathname + location.search);
       syncCastUi();
       render();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -2997,7 +2997,7 @@
       setNowLogo(channel);
       setMediaSession(channel);
       setStatus("");
-      history.replaceState(null, "", `#${channel.id}`);
+      history.replaceState(history.state, "", `#${channel.id}`);
       syncActive();
       refreshRecent();
       try {
@@ -3527,22 +3527,39 @@
       const dialog = document.querySelector("dialog[open]");
       if (dialog) {
         dialog.close();
-        focusTvDefault();
+        if (isTv) focusTvDefault();
         return true;
       }
-      if (searchInput.classList.contains("tv-search-open")) {
+      if (isTv && searchInput.classList.contains("tv-search-open")) {
         closeTvSearch();
+        return true;
+      }
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
         return true;
       }
       if (current || !stage.hidden) {
         goHome();
-        focusTvDefault();
+        if (isTv) focusTvDefault();
         return true;
       }
       return false;
     }
 
     window.__tvBack = tvBack;
+
+    if (!isTv && isInstalledApp()) {
+      const armPhoneBack = () => history.pushState({ israelTv: 1 }, "");
+      armPhoneBack();
+      window.addEventListener("popstate", () => {
+        if (tvBack()) {
+          armPhoneBack();
+          return;
+        }
+        try { window.close(); } catch {}
+        history.back();
+      });
+    }
 
     searchBtn?.addEventListener("click", openTvSearch);
     searchInput.addEventListener("keydown", (event) => {
@@ -3603,7 +3620,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=79").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=80").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
