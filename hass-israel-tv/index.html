@@ -946,7 +946,7 @@
     dialog.sheet::backdrop { background: rgba(0, 0, 0, 0.55); }
     dialog.sheet h3 { margin: 0 0 10px; }
     dialog.sheet h3:focus { outline: none; }
-    dialog.sheet input, dialog.sheet textarea, dialog.sheet select {
+    dialog.sheet input:not([type="file"]), dialog.sheet textarea, dialog.sheet select {
       width: 100%;
       box-sizing: border-box;
       margin: 0 0 10px;
@@ -1282,6 +1282,30 @@
       padding: 8px 10px;
       min-height: 36px;
     }
+    .file-pick {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      min-height: 44px;
+      margin: 0 0 12px;
+      border-radius: 10px;
+      background: #243044;
+      color: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .file-pick[hidden] { display: none !important; }
+    .file-pick input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
     @media (max-width: 720px) {
       header.top {
         flex-wrap: wrap;
@@ -1531,7 +1555,6 @@
   </main>
   <div id="toast" role="status" aria-live="polite"></div>
   </div>
-  <input id="customFile" type="file" accept=".m3u,.m3u8,.txt,text/plain,application/vnd.apple.mpegurl,audio/x-mpegurl,application/octet-stream,*/*" hidden />
   <dialog class="sheet license-card" id="licenseViewDlg">
     <div class="lic-head">
       <div class="lic-icon" aria-hidden="true">
@@ -1625,7 +1648,10 @@
     <p style="color:var(--muted);margin:0 0 12px">ערוץ בודד, או קישור / קובץ m3u שיוסיף את כל הערוצים לקטגוריה</p>
     <input id="customName" type="text" maxlength="80" placeholder="שם הערוץ" autocomplete="off" />
     <input id="customUrl" type="text" inputmode="url" placeholder="https://example.com/live.m3u8" dir="ltr" spellcheck="false" autocomplete="off" />
-    <button type="button" class="ghost" id="customFileBtn" style="width:100%;margin:0 0 12px">ייבוא מקובץ m3u / m3u8</button>
+    <label class="file-pick" id="customFileBtn">
+      ייבוא מקובץ m3u / m3u8
+      <input id="customFile" type="file" accept=".m3u,.m3u8,.txt,text/*" />
+    </label>
     <div class="custom-logo-box">
       <div class="custom-logo-preview" id="customLogoPreview">לוגו</div>
       <div class="custom-logo-fields">
@@ -3911,7 +3937,7 @@
       const logo = readCustomLogo();
       err.textContent = "";
       if (!url) {
-        err.textContent = "הזינו קישור, או לחצו ייבוא מקובץ m3u / m3u8";
+        err.textContent = "לייבוא קובץ לחצו «ייבוא מקובץ». לשמירת ערוץ בודד הזינו קישור http או https.";
         return;
       }
       const existing = loadCustomChannels();
@@ -4754,13 +4780,12 @@
         saveCustomChannel();
       }
     });
-    document.getElementById("customFileBtn").addEventListener("click", () => {
-      document.getElementById("customFile").click();
-    });
     document.getElementById("customFile").addEventListener("change", async (event) => {
       const file = event.target.files?.[0];
       event.target.value = "";
-      if (file) await importPlaylistFile(file);
+      if (!file) return;
+      document.getElementById("customUrl").value = "";
+      await importPlaylistFile(file);
     });
     document.getElementById("customLogo").addEventListener("input", () => {
       customLogoData = "";
@@ -5158,7 +5183,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=125").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=126").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
