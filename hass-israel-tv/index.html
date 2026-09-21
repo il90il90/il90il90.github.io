@@ -96,24 +96,27 @@
       appearance: none;
       font: inherit;
       display: inline-flex;
-      flex-direction: row;
+      flex-direction: column;
       align-items: center;
+      justify-content: center;
       flex-shrink: 0;
-      gap: 6px;
+      gap: 1px;
+      min-height: 36px;
       background: rgba(61, 139, 255, 0.14);
       color: #cfe2ff;
       border: 1px solid #2d4f80;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 12px;
+      border-radius: 10px;
+      padding: 3px 8px;
+      font-size: 10px;
       font-weight: 700;
-      line-height: 1;
+      line-height: 1.15;
       text-align: center;
       white-space: nowrap;
       cursor: default;
       pointer-events: none;
     }
-    .expiry span { display: inline; }
+    .expiry .expiry-main { font-size: 11px; }
+    .expiry .expiry-until { font-size: 9px; font-weight: 600; opacity: 0.88; }
     .expiry.warn { background: rgba(245, 196, 81, 0.14); color: #f5c451; border-color: #6d5a24; }
     .expiry.danger { background: rgba(255, 77, 77, 0.12); color: #ff8a8a; border-color: #6d2a2a; }
     .expiry[hidden] { display: none !important; }
@@ -1353,10 +1356,11 @@
       .brand { gap: 6px; }
       .brand img { width: 28px; height: 28px; border-radius: 8px; }
       .brand h1 { font-size: 14px; }
-      .expiry { padding: 5px 8px; font-size: 10px; }
+      .expiry { padding: 3px 7px; min-height: 32px; }
+      .expiry .expiry-main { font-size: 10px; }
+      .expiry .expiry-until { font-size: 8px; }
       .header-search { flex-basis: 100%; }
       .search { height: 36px; padding: 0 12px; }
-      .expiry .expiry-until { display: none; }
       .icon-btn { width: 36px; height: 36px; }
       .count { display: none; }
       main { padding: 10px 12px 0; }
@@ -1409,6 +1413,9 @@
     html.tv .catalog { padding-bottom: 48px; }
     html.tv .brand img { width: 44px; height: 44px; }
     html.tv .brand h1 { font-size: 22px; }
+    html.tv .expiry { min-height: 44px; padding: 4px 10px; }
+    html.tv .expiry .expiry-main { font-size: 13px; }
+    html.tv .expiry .expiry-until { font-size: 11px; }
     html.tv .icon-btn, html.tv .actions button, html.tv .actions a {
       width: 52px;
       height: 52px;
@@ -3296,11 +3303,7 @@
       }
       el.hidden = false;
       el.className = `expiry${left <= 3600 ? " danger" : left <= 86400 ? " warn" : ""}`;
-      const max = Math.max(1, Number(session.maxDevices) || 1);
-      const devices = Number.isFinite(Number(session.devicesUsed)) && session.devicesUsed
-        ? `${session.devicesUsed}/${max} רישיונות`
-        : formatDevices(max);
-      el.innerHTML = `<span class="expiry-main">${formatRemaining(exp)}</span><span class="expiry-until"> · עד ${formatUntilDate(exp)} · ${devices}</span>`;
+      el.innerHTML = `<span class="expiry-main">${formatRemaining(exp)}</span><span class="expiry-until">עד ${formatUntilDate(exp)}</span>`;
     }
 
     function openLicenseView(options = {}) {
@@ -5529,7 +5532,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=131").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=132").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
