@@ -1,9 +1,8 @@
-const CACHE = "israel-tv-v90";
+const CACHE = "israel-tv-v96";
 const SHELL = [
   "./",
   "./index.html",
   "./channels.js",
-  "./pwf.js",
   "./qrcode.min.js",
   "./jsqr.min.js",
   "./manifest.webmanifest",
@@ -34,6 +33,11 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  if (url.pathname.endsWith("pwf.js")) {
+    event.respondWith(fetch(request, { cache: "no-store" }));
+    return;
+  }
 
   const fresh = request.mode === "navigate"
     || url.pathname.endsWith("/")
