@@ -2416,11 +2416,16 @@
     async function runKeyAction(key, keyAction, device, maxDevices) {
       const prompts = {
         ban: `לחסום את הרישיון של ${key.note || key.license_key}?`,
+        pause: `להשהות את הרישיון של ${key.note || key.license_key}?`,
         delete: `למחוק את הרישיון של ${key.note || key.license_key}? הפעולה לא ניתנת לביטול.`,
         "reset-hwid": `לאפס את כל המכשירים של ${key.note || key.license_key}?`,
         kick: `לנתק את ${device?.name || "המכשיר"}?`,
       };
       if (prompts[keyAction] && !window.confirm(prompts[keyAction])) return;
+      const card = [...document.querySelectorAll("#keysList .key-card")].find((el) => (
+        el.querySelector("code")?.textContent === key.license_key
+      ));
+      card?.querySelectorAll("button").forEach((btn) => { btn.disabled = true; });
       const res = await adminAction({
         action: "admin-key",
         key_action: keyAction,
@@ -2429,12 +2434,25 @@
         max_devices: maxDevices,
       });
       if (!res.ok) {
+        card?.querySelectorAll("button").forEach((btn) => { btn.disabled = false; });
         showToast(res.data?.message || "הפעולה נכשלה");
         return;
       }
-      showToast(keyAction === "devices"
-        ? `עודכן ל־${res.data?.max_devices || maxDevices} מכשירים`
-        : "עודכן");
+      const done = {
+        delete: "הרישיון נמחק",
+        ban: "הרישיון נחסם",
+        unban: "החסימה בוטלה",
+        pause: "הרישיון הושהה",
+        resume: "הרישיון הופעל",
+        "reset-hwid": "המכשירים אופסו",
+        kick: "המכשיר נותק",
+        devices: `עודכן ל־${res.data?.max_devices || maxDevices} מכשירים`,
+      };
+      if (keyAction === "delete") {
+        adminKeysCache = adminKeysCache.filter((item) => item.license_key !== key.license_key);
+        renderAdminKeys();
+      }
+      showToast(done[keyAction] || "עודכן");
       await loadAdminKeys();
     }
 
@@ -5532,7 +5550,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=134").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=135").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
