@@ -1297,6 +1297,29 @@
       cursor: pointer;
     }
     .file-pick[hidden] { display: none !important; }
+    .file-preview {
+      display: none;
+      margin: 0 0 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #0b1220;
+    }
+    .file-preview[hidden] { display: none !important; }
+    .file-preview.show { display: block; }
+    .file-preview strong { display: block; font-size: 15px; }
+    .file-preview small { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .file-preview.loading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .file-preview.loading .status-spinner {
+      display: block;
+      width: 22px;
+      height: 22px;
+      border-width: 2px;
+    }
     .file-pick input {
       position: absolute;
       inset: 0;
@@ -1652,6 +1675,7 @@
       ייבוא מקובץ m3u / m3u8
       <input id="customFile" type="file" accept=".m3u,.m3u8,.txt,text/*" />
     </label>
+    <div class="file-preview" id="customFilePreview" hidden></div>
     <div class="custom-logo-box">
       <div class="custom-logo-preview" id="customLogoPreview">לוגו</div>
       <div class="custom-logo-fields">
@@ -3730,20 +3754,63 @@
       return true;
     }
 
+    let pendingPlaylist = null;
+
+    function setFilePreview(mode, title, detail) {
+      const box = document.getElementById("customFilePreview");
+      if (!box) return;
+      box.hidden = !mode;
+      box.className = `file-preview${mode ? " show" : ""}${mode === "loading" ? " loading" : ""}`;
+      if (!mode) {
+        box.replaceChildren();
+        return;
+      }
+      if (mode === "loading") {
+        const spin = document.createElement("div");
+        spin.className = "status-spinner";
+        spin.setAttribute("aria-hidden", "true");
+        const text = document.createElement("strong");
+        text.textContent = title || "קוראים את הקובץ…";
+        box.replaceChildren(spin, text);
+        return;
+      }
+      const name = document.createElement("strong");
+      name.textContent = title || "";
+      const info = document.createElement("small");
+      info.textContent = detail || "";
+      box.replaceChildren(name, info);
+    }
+
+    function clearPendingPlaylist() {
+      pendingPlaylist = null;
+      setFilePreview("");
+      const add = document.getElementById("customAdd");
+      if (add && !customEditId) add.textContent = "שמירה";
+    }
+
     async function importPlaylistFile(file) {
       const err = document.getElementById("customErr");
-      err.textContent = "קוראים את הקובץ…";
+      err.textContent = "";
+      clearPendingPlaylist();
+      setFilePreview("loading", "קוראים את הקובץ…");
+      document.getElementById("customAdd").disabled = true;
       const text = await readPlaylistFileText(file);
-      const entries = parsePlaylist(text);
-      if (entries.length) {
-        await importPlaylistEntries(entries);
+      let entries = parsePlaylist(text);
+      if (entries.length === 1) entries = await expandNestedPlaylists(entries);
+      document.getElementById("customAdd").disabled = false;
+      if (!entries.length) {
+        setFilePreview("");
+        if (!String(text || "").trim()) {
+          err.textContent = "לא הצלחנו לקרוא את הקובץ. נסו קובץ m3u או m3u8 אחר.";
+          return;
+        }
+        err.textContent = "לא נמצאו ערוצים עם קישור http בקובץ. ודאו שזו רשימת ערוצים.";
         return;
       }
-      if (!String(text || "").trim()) {
-        err.textContent = "לא הצלחנו לקרוא את הקובץ. נסו קובץ m3u או m3u8 אחר.";
-        return;
-      }
-      err.textContent = "לא נמצאו ערוצים עם קישור http בקובץ. ודאו שזו רשימת ערוצים.";
+      pendingPlaylist = { fileName: file.name || "playlist.m3u8", entries };
+      const count = entries.length;
+      setFilePreview("ready", file.name || "הקובץ נטען", count === 1 ? "נמצא ערוץ אחד" : `נמצאו ${count} ערוצים`);
+      document.getElementById("customAdd").textContent = count === 1 ? "הוסף ערוץ" : `הוסף ${count} ערוצים`;
     }
 
     let customEditId = "";
@@ -3827,9 +3894,10 @@
       document.getElementById("customUrl").value = "";
       document.getElementById("customLogo").value = "";
       document.getElementById("customErr").textContent = "";
-      document.getElementById("customAdd").textContent = "שמירה";
+      document.getElementById("customAdd").disabled = false;
       document.getElementById("customFileBtn").hidden = isTv;
       paintCustomLogoPreview("");
+      clearPendingPlaylist();
     }
 
     function startEditCustom(channel) {
@@ -3936,8 +4004,17 @@
       const url = normalizeCustomUrl(document.getElementById("customUrl").value);
       const logo = readCustomLogo();
       err.textContent = "";
+      if (pendingPlaylist?.entries?.length) {
+        const grouped = name
+          ? pendingPlaylist.entries.map((entry) => ({ ...entry, group: entry.group || name }))
+          : pendingPlaylist.entries;
+        document.getElementById("customAdd").disabled = true;
+        await importPlaylistEntries(grouped);
+        document.getElementById("customAdd").disabled = false;
+        return;
+      }
       if (!url) {
-        err.textContent = "לייבוא קובץ לחצו «ייבוא מקובץ». לשמירת ערוץ בודד הזינו קישור http או https.";
+        err.textContent = "בחרו קובץ m3u / m3u8 למעלה, או הזינו קישור לערוץ בודד.";
         return;
       }
       const existing = loadCustomChannels();
@@ -5183,7 +5260,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=126").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=127").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
