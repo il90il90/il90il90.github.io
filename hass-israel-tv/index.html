@@ -578,7 +578,7 @@
       border-radius: 10px;
     }
     .device-item > div { flex: 1; min-width: 0; }
-    .device-item strong { display: block; font-size: 14px; }
+    .device-item strong { display: block; font-size: 14px; word-break: break-word; }
     .device-item small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
     .device-dot {
       flex: 0 0 8px;
@@ -1503,6 +1503,7 @@
 
     const AUTH_KEY = "israel-tv-auth";
     const HWID_KEY = "israel-tv-hwid";
+    const DEVICE_NAME_KEY = "israel-tv-device-name";
     const LICENSE_SECRET = "israel-tv-license-hs256";
     const BROADPEAK_KEY = "0123456789ABCDEF0123456789ABCDEF";
     const DEFAULT_CTI = "50629300e9872d0a6c94a48089a07763";
@@ -2297,15 +2298,62 @@
       return id;
     }
 
-    function deviceLabel() {
+    function nativeDeviceName() {
+      try {
+        if (window.IsraelTV && typeof window.IsraelTV.getDeviceName === "function") {
+          return String(window.IsraelTV.getDeviceName() || "").trim();
+        }
+      } catch {}
+      return "";
+    }
+
+    function androidModelFromUa(ua) {
+      const match = String(ua || "").match(/Android [^;]*;\s*([^);]+)/i);
+      if (!match) return "";
+      const model = match[1].replace(/\s*Build\/.*$/i, "").trim();
+      if (!model || /^(Mobile|wv|Linux|U|K|arm(?:v\d+)?(?:_64)?|Android(?:\s+\d+)?)$/i.test(model)) return "";
+      return model.replace(/\s+/g, " ").slice(0, 60);
+    }
+
+    function withModel(kind, model) {
+      const name = String(model || "").replace(/\s+/g, " ").trim();
+      if (!name) return kind;
+      if (name.toLowerCase().includes(kind.toLowerCase())) return name.slice(0, 80);
+      return `${kind} · ${name}`.slice(0, 80);
+    }
+
+    function inferDeviceLabel() {
+      const native = nativeDeviceName();
       const ua = navigator.userAgent || "";
-      if (isTv || /IsraelTV-AndroidTV|Android TV|GoogleTV|BRAVIA|SHIELD|AFT/i.test(ua)) return "טלוויזיה";
+      const androidModel = androidModelFromUa(ua);
+      const tv = isTv || /IsraelTV-AndroidTV|Android TV|GoogleTV|BRAVIA|SHIELD|AFT|SmartTV|MIBOX|BeyondTV/i.test(ua);
+      if (tv) return withModel("טלוויזיה", native || androidModel);
       if (/iPad/i.test(ua)) return "אייפד";
       if (/iPhone|iPod/i.test(ua)) return "אייפון";
-      if (/Android/i.test(ua)) return "טלפון אנדרואיד";
+      if (/Android/i.test(ua)) return withModel("טלפון", androidModel);
       if (/Macintosh/i.test(ua)) return "מחשב Mac";
       if (/Windows/i.test(ua)) return "מחשב Windows";
       return "מכשיר";
+    }
+
+    function deviceLabel() {
+      try {
+        const cached = localStorage.getItem(DEVICE_NAME_KEY);
+        if (cached) return cached;
+      } catch {}
+      return inferDeviceLabel();
+    }
+
+    async function refreshDeviceLabel() {
+      let name = inferDeviceLabel();
+      try {
+        if (navigator.userAgentData?.getHighEntropyValues) {
+          const hints = await navigator.userAgentData.getHighEntropyValues(["model"]);
+          if (hints?.model) name = withModel(name.split(" · ")[0], hints.model);
+        }
+      } catch {}
+      try { localStorage.setItem(DEVICE_NAME_KEY, name); } catch {}
+      return name;
     }
 
     async function verifyPwfLicense(code, email) {
@@ -2365,6 +2413,7 @@
     async function startLiveSession(session) {
       stopLiveSession();
       if (appLocked || session?.role !== "user" || !session.license) return session;
+      await refreshDeviceLabel();
       const interval = isTv ? 5000 : 8000;
       const beat = async () => {
         if (appLocked) {
@@ -4396,7 +4445,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=110").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=111").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
