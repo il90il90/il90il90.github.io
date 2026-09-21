@@ -1306,7 +1306,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=89";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=90";
     import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1861,6 +1861,10 @@
         if (!silent) showToast("התחברו ואז נחבר את המסך");
         return false;
       }
+      if (!canShareLicense(session)) {
+        if (!silent) showToast("הרישיון הזה למכשיר אחד, בלי חיבור למסך נוסף");
+        return false;
+      }
       const body = pairClaimBody(id);
       if (!body.license_key && !body.token && !body.admin) {
         const message = session.role === "admin"
@@ -1890,6 +1894,11 @@
     function askClaimPair(pairId) {
       const id = normalizePairId(pairId);
       if (!id) return;
+      const session = readSession();
+      if (session && !canShareLicense(session)) {
+        showToast("הרישיון הזה למכשיר אחד, בלי חיבור למסך נוסף");
+        return;
+      }
       claimingPairId = id;
       document.getElementById("pairErr").textContent = "";
       document.getElementById("pairDlg").showModal();
@@ -2208,6 +2217,12 @@
       return n === 1 ? "מכשיר אחד" : `${n} מכשירים`;
     }
 
+    function canShareLicense(session) {
+      if (!session) return false;
+      if (session.role === "admin") return true;
+      return Number(session.maxDevices) >= 2;
+    }
+
     function refreshExpiry(session) {
       const el = document.getElementById("expiry");
       if (session.role === "admin") {
@@ -2254,9 +2269,10 @@
       const wrap = document.getElementById("viewLicenseWrap");
       document.getElementById("viewLicense").value = license;
       wrap.hidden = !license;
-      document.getElementById("pairPhoneBox").hidden = isTv;
+      const share = canShareLicense(session);
+      document.getElementById("pairPhoneBox").hidden = isTv || !share;
       const qrWrap = document.getElementById("viewLicQrWrap");
-      if (license) {
+      if (share && license) {
         paintQr(document.getElementById("viewLicQr"), license)
           .then((ok) => { qrWrap.hidden = !ok; })
           .catch(() => { qrWrap.hidden = true; });
@@ -3743,7 +3759,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=89").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=90").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
