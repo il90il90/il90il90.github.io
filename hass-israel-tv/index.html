@@ -245,7 +245,10 @@
     .idle { background: radial-gradient(circle at 50% 20%, #1a2740 0%, #070b12 70%); }
     .idle strong { font-size: 22px; }
     .idle p, .status p { margin: 0; color: var(--muted); }
-    .status { background: rgba(7, 11, 18, 0.82); gap: 14px; }
+    .status { background: #070b12; gap: 14px; z-index: 3; }
+    .theater.is-buffering video::-webkit-media-controls {
+      display: none !important;
+    }
     .status.hidden, .idle.hidden { display: none; }
     .status-spinner {
       display: none;
@@ -2878,13 +2881,16 @@
 
     function setStatus(text, loading = false) {
       const line = status.querySelector("p");
+      theater.classList.toggle("is-buffering", Boolean(loading));
       if (loading) {
+        if (!isTv) video.controls = false;
         status.classList.add("is-loading");
         status.classList.remove("hidden", "is-error");
         line.textContent = text || "נטען…";
         return;
       }
       status.classList.remove("is-loading");
+      if (!isTv) video.controls = true;
       if (!text) {
         status.classList.add("hidden");
         status.classList.remove("is-error");
@@ -4732,7 +4738,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=118").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=119").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
