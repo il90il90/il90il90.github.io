@@ -625,6 +625,96 @@
     }
     .device-item button:disabled { opacity: 0.55; cursor: default; }
     .device-empty { margin: 0; color: var(--muted); font-size: 13px; }
+    #keysDlg {
+      width: min(640px, calc(100% - 16px));
+      max-height: min(92vh, 860px);
+    }
+    .keys-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    .keys-toolbar input { flex: 1 1 180px; margin: 0 !important; }
+    .keys-meta { margin: 0 0 12px; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .keys-list { display: grid; gap: 12px; }
+    .key-card {
+      padding: 14px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      min-width: 0;
+    }
+    .key-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 8px;
+    }
+    .key-card-head strong {
+      display: block;
+      font-size: 16px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .key-card-head small { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+    .key-status {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #243044;
+      color: #cfe2ff;
+    }
+    .key-status.active, .key-status.unused { background: rgba(69, 212, 131, 0.16); color: #7de3a8; }
+    .key-status.paused { background: rgba(245, 196, 81, 0.16); color: #f5c451; }
+    .key-status.banned, .key-status.expired { background: rgba(255, 77, 77, 0.14); color: #ff9d9d; }
+    .key-token {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 10px;
+      min-width: 0;
+    }
+    .key-token code {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      direction: ltr;
+      text-align: left;
+      font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+      font-size: 13px;
+      background: #0b1220;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+    .key-token button {
+      flex: 0 0 auto;
+      height: 36px;
+      padding: 0 12px;
+      background: #243044;
+    }
+    .key-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0 0;
+    }
+    .key-actions button {
+      flex: 1 1 auto;
+      min-width: 88px;
+      background: #243044;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .key-actions button.danger { background: #3a2230; color: #ff9d9d; }
+    .key-card .device-item { background: var(--card); }
     .pair-box { text-align: center; margin: 0 0 8px; }
     html.tv #loginLead, html.pair-login #loginLead { display: none; }
     html.tv #loginType, html.pair-login #loginType:not(.open) { display: none; }
@@ -809,8 +899,10 @@
       cursor: pointer;
     }
     .icon-btn[hidden] { display: none !important; }
-    #licenseBtn { display: none !important; }
-    html[data-admin="1"] #licenseBtn:not([hidden]) { display: grid !important; }
+    #licenseBtn, #keysBtn { display: none !important; }
+    html[data-admin="1"] #licenseBtn:not([hidden]),
+    html[data-admin="1"] #keysBtn:not([hidden]) { display: grid !important; }
+    html.tv #keysBtn { display: none !important; }
     dialog.sheet {
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -1338,6 +1430,9 @@
     <div class="header-account">
       <span class="expiry" id="expiry" hidden></span>
       <button type="button" class="icon-btn" id="licenseBtn" hidden title="יצירת רישיון" aria-label="יצירת רישיון">🔑</button>
+      <button type="button" class="icon-btn" id="keysBtn" hidden title="כל הרישיונות" aria-label="כל הרישיונות">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
+      </button>
       <button type="button" class="icon-btn" id="settingsBtn" title="הגדרות וערוצים שלי" aria-label="הגדרות וערוצים שלי">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .7.4 1.3 1.1 1.5H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.4 1z"/></svg>
       </button>
@@ -1535,6 +1630,18 @@
     <div class="row">
       <button type="button" id="installYes">התקן</button>
       <button type="button" class="ghost" id="installNo">לא עכשיו</button>
+    </div>
+  </dialog>
+  <dialog class="sheet" id="keysDlg">
+    <h3>כל הרישיונות</h3>
+    <div class="keys-toolbar">
+      <input id="keysSearch" type="search" placeholder="חיפוש לפי שם, טוקן או סטטוס" autocomplete="off" />
+      <button type="button" class="ghost" id="keysRefresh">רענון</button>
+    </div>
+    <p class="keys-meta" id="keysMeta">טוען…</p>
+    <div class="keys-list" id="keysList"></div>
+    <div class="row">
+      <button type="button" class="ghost" id="keysClose">סגור</button>
     </div>
   </dialog>
   <dialog class="sheet" id="licenseDlg">
@@ -1868,6 +1975,189 @@
         throw new Error(data?.message || "לא הצלחנו ליצור רישיון");
       }
       return data;
+    }
+
+    async function adminAction(body) {
+      const session = readSession() || {};
+      const token = await refreshAdminToken() || session.adminToken || "";
+      const abort = new AbortController();
+      const timer = window.setTimeout(() => abort.abort(), 45000);
+      try {
+        const res = await fetch(PWF_CHECK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...body,
+            admin: window.__adminPass || "",
+            token,
+          }),
+          signal: abort.signal,
+        });
+        const data = await res.json().catch(() => ({}));
+        return { ok: res.ok && data?.success === true, status: res.status, data };
+      } catch {
+        return { ok: false, status: 0, data: { message: "לא הצלחנו להתחבר לשרת" } };
+      } finally {
+        window.clearTimeout(timer);
+      }
+    }
+
+    function keyStatusLabel(status) {
+      const value = String(status || "").toLowerCase();
+      if (value === "active") return "פעיל";
+      if (value === "unused") return "לא בשימוש";
+      if (value === "paused") return "מושהה";
+      if (value === "banned") return "חסום";
+      if (value === "expired") return "פג תוקף";
+      return value || "לא ידוע";
+    }
+
+    function formatKeyExpiry(key) {
+      if (key?.expires_at) {
+        const stamp = Date.parse(key.expires_at);
+        if (Number.isFinite(stamp)) return `עד ${formatUntilDate(Math.floor(stamp / 1000))}`;
+      }
+      const days = Number(key?.days_remaining);
+      if (Number.isFinite(days) && days > 0) return `נותרו ${days} ימים`;
+      return "בלי תאריך תפוגה";
+    }
+
+    function keyMatchesSearch(key, query) {
+      if (!query) return true;
+      const hay = [
+        key.note,
+        key.license_key,
+        key.status,
+        keyStatusLabel(key.status),
+        key.email,
+        ...(key.devices || []).map((item) => item.name),
+      ].join(" ").toLowerCase();
+      return hay.includes(query);
+    }
+
+    let adminKeysCache = [];
+
+    function renderAdminKeys() {
+      const list = document.getElementById("keysList");
+      const meta = document.getElementById("keysMeta");
+      const query = document.getElementById("keysSearch").value.trim().toLowerCase();
+      const rows = adminKeysCache.filter((key) => keyMatchesSearch(key, query));
+      meta.textContent = rows.length
+        ? `${rows.length} מתוך ${adminKeysCache.length} רישיונות`
+        : adminKeysCache.length ? "אין תוצאות לחיפוש" : "אין רישיונות עדיין";
+      list.replaceChildren();
+      for (const key of rows) {
+        const card = document.createElement("article");
+        card.className = "key-card";
+        const head = document.createElement("div");
+        head.className = "key-card-head";
+        const title = document.createElement("div");
+        const name = document.createElement("strong");
+        name.textContent = key.note || "בלי שם";
+        const info = document.createElement("small");
+        info.textContent = `${formatKeyExpiry(key)} · ${key.devices_used || 0}/${key.max_devices || 1} מחוברים`;
+        title.append(name, info);
+        const badge = document.createElement("span");
+        badge.className = `key-status ${key.status || ""}`;
+        badge.textContent = keyStatusLabel(key.status);
+        head.append(title, badge);
+        const token = document.createElement("div");
+        token.className = "key-token";
+        const code = document.createElement("code");
+        code.textContent = key.license_key;
+        const copy = document.createElement("button");
+        copy.type = "button";
+        copy.textContent = "העתק";
+        copy.addEventListener("click", async () => {
+          try { await navigator.clipboard.writeText(key.license_key); } catch {}
+          showToast("הטוקן הועתק");
+        });
+        token.append(code, copy);
+        const devices = document.createElement("div");
+        devices.className = "devices-list";
+        const people = Array.isArray(key.devices) ? key.devices : [];
+        if (!people.length) {
+          const empty = document.createElement("p");
+          empty.className = "device-empty";
+          empty.textContent = "אף אחד לא מחובר עכשיו";
+          devices.append(empty);
+        } else {
+          for (const device of people) {
+            const row = document.createElement("div");
+            row.className = "device-item";
+            const dot = document.createElement("span");
+            dot.className = `device-dot${device.online ? " online" : ""}`;
+            const metaBox = document.createElement("div");
+            const who = document.createElement("strong");
+            who.textContent = device.name || "מכשיר";
+            const when = document.createElement("small");
+            when.textContent = `${device.online ? "מחובר" : "לא מחובר"} · ${formatLastSeen(device.last_seen)}`;
+            metaBox.append(who, when);
+            const kick = document.createElement("button");
+            kick.type = "button";
+            kick.textContent = "נתק";
+            kick.addEventListener("click", () => runKeyAction(key, "kick", device));
+            row.append(dot, metaBox, kick);
+            devices.append(row);
+          }
+        }
+        const actions = document.createElement("div");
+        actions.className = "key-actions";
+        const banned = key.status === "banned";
+        const paused = key.status === "paused";
+        const buttons = [
+          [banned ? "בטל חסימה" : "חסום", banned ? "unban" : "ban", !banned],
+          [paused ? "הפעל" : "השהה", paused ? "resume" : "pause", false],
+          ["איפוס מכשירים", "reset-hwid", false],
+          ["מחק", "delete", true],
+        ];
+        for (const [label, act, danger] of buttons) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = label;
+          if (danger) btn.className = "danger";
+          btn.addEventListener("click", () => runKeyAction(key, act));
+          actions.append(btn);
+        }
+        card.append(head, token, devices, actions);
+        list.append(card);
+      }
+    }
+
+    async function loadAdminKeys() {
+      const meta = document.getElementById("keysMeta");
+      meta.textContent = "טוען…";
+      const res = await adminAction({ action: "admin-keys" });
+      if (!res.ok) {
+        adminKeysCache = [];
+        document.getElementById("keysList").replaceChildren();
+        meta.textContent = res.data?.message || "לא הצלחנו לטעון את הרישיונות";
+        return;
+      }
+      adminKeysCache = Array.isArray(res.data.keys) ? res.data.keys : [];
+      renderAdminKeys();
+    }
+
+    async function runKeyAction(key, keyAction, device) {
+      const prompts = {
+        ban: `לחסום את הרישיון של ${key.note || key.license_key}?`,
+        delete: `למחוק את הרישיון של ${key.note || key.license_key}? הפעולה לא ניתנת לביטול.`,
+        "reset-hwid": `לאפס את כל המכשירים של ${key.note || key.license_key}?`,
+        kick: `לנתק את ${device?.name || "המכשיר"}?`,
+      };
+      if (prompts[keyAction] && !window.confirm(prompts[keyAction])) return;
+      const res = await adminAction({
+        action: "admin-key",
+        key_action: keyAction,
+        license_key: key.license_key,
+        hwid: device?.hwid || "",
+      });
+      if (!res.ok) {
+        showToast(res.data?.message || "הפעולה נכשלה");
+        return;
+      }
+      showToast("עודכן");
+      await loadAdminKeys();
     }
 
     function durationSeconds(key) {
@@ -2798,6 +3088,7 @@
       document.getElementById("gate").hidden = true;
       document.getElementById("app").hidden = false;
       document.getElementById("licenseBtn").hidden = session.role !== "admin";
+      document.getElementById("keysBtn").hidden = isTv || session.role !== "admin";
       refreshExpiry(session);
       if (!window.__expiryClock) {
         window.__expiryClock = setInterval(() => {
@@ -4406,6 +4697,20 @@
       resetLicenseForm();
       document.getElementById("licenseDlg").showModal();
     });
+    document.getElementById("keysBtn").addEventListener("click", () => {
+      if (readSession()?.role !== "admin") return;
+      const dlg = document.getElementById("keysDlg");
+      if (!dlg.open) dlg.showModal();
+      loadAdminKeys();
+    });
+    document.getElementById("keysClose").addEventListener("click", () => {
+      document.getElementById("keysDlg").close();
+    });
+    document.getElementById("keysRefresh").addEventListener("click", () => loadAdminKeys());
+    document.getElementById("keysSearch").addEventListener("input", () => renderAdminKeys());
+    document.getElementById("keysDlg").addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) event.currentTarget.close();
+    });
     document.getElementById("licenseDlg").addEventListener("click", (event) => {
       if (event.target === event.currentTarget) event.currentTarget.close();
     });
@@ -4738,7 +5043,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=119").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=120").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
