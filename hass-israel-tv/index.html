@@ -2198,7 +2198,9 @@
         showToast(res.data?.message || "הפעולה נכשלה");
         return;
       }
-      showToast("עודכן");
+      showToast(keyAction === "devices"
+        ? `עודכן ל־${res.data?.max_devices || maxDevices} מכשירים`
+        : "עודכן");
       await loadAdminKeys();
     }
 
@@ -5085,7 +5087,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=121").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=122").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
