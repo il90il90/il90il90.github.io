@@ -553,7 +553,36 @@
       border: 1px solid var(--line);
       border-radius: 12px;
     }
-    .pair-phone h4 { margin: 0 0 4px; font-size: 15px; }
+    .pair-phone-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 4px;
+    }
+    .pair-phone h4 { margin: 0; font-size: 15px; }
+    .pair-help-btn,
+    dialog.sheet .pair-help-btn {
+      flex: 0 0 auto;
+      min-height: 32px !important;
+      height: 32px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 999px;
+      background: #243044;
+      color: inherit;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .pair-steps {
+      margin: 0 0 16px;
+      padding: 0 18px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+    .pair-steps li { margin: 0 0 10px; }
+    .pair-steps a { color: var(--accent-2); font-weight: 700; }
     .pair-phone p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
     .pair-phone .pair-row { display: flex; gap: 8px; }
     .pair-phone input {
@@ -1132,7 +1161,10 @@
         </div>
       </div>
       <div class="pair-phone" id="pairPhoneBox">
-        <h4>חיבור למסך</h4>
+        <div class="pair-phone-head">
+          <h4>חיבור למסך</h4>
+          <button type="button" class="pair-help-btn" id="pairHelpBtn">הסבר</button>
+        </div>
         <p>לחבר את הטלוויזיה לרישיון שלכם?</p>
         <div class="pair-row">
           <input id="pairCodeInput" type="text" maxlength="16" placeholder="קוד מהמסך" dir="ltr" spellcheck="false" autocomplete="off" />
@@ -1207,6 +1239,20 @@
       צור רישיון
     </button>
   </dialog>
+  <dialog class="sheet" id="pairHelpDlg">
+    <h3>חיבור למסך</h3>
+    <p style="color:var(--muted);margin:0 0 12px">כך מעדכנים את הטלוויזיה עם הרישיון מהטלפון:</p>
+    <ol class="pair-steps">
+      <li>במסך מתקינים את אפליקציית Israel TV מ־<a href="https://il90il90.github.io/hass-israel-tv/israel-tv-tv.apk" download>הורדה לטלוויזיה</a>.</li>
+      <li>פותחים את האפליקציה בטלוויזיה. על המסך מופיע ברקוד, ומעליו קוד.</li>
+      <li>בטלפון, בהגדרות, סריקת הברקוד או הזנת הקוד מחברת את המסך.</li>
+      <li>הטלוויזיה נכנסת לאותו רישיון כמו בטלפון, כולל הערוצים שלכם.</li>
+      <li>לחיבור מחדש או לעדכון מסך נוסף — שוב סריקה של הברקוד שעל המסך.</li>
+    </ol>
+    <div class="row">
+      <button type="button" class="ghost" id="pairHelpClose">סגור</button>
+    </div>
+  </dialog>
   <dialog class="sheet" id="pairDlg">
     <h3>חיבור למסך</h3>
     <p style="color:var(--muted);margin:0 0 14px">לחבר את הטלוויזיה לרישיון שלכם?</p>
@@ -1238,7 +1284,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=81";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=82";
     import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1980,6 +2026,21 @@
     }
     document.getElementById("scanBtn").addEventListener("click", () => openScan("login"));
     document.getElementById("pairScanBtn").addEventListener("click", () => openScan("pair"));
+    document.getElementById("pairHelpBtn").addEventListener("click", () => {
+      document.getElementById("pairHelpDlg").showModal();
+    });
+    document.getElementById("pairHelpClose").addEventListener("click", () => {
+      document.getElementById("pairHelpDlg").close();
+    });
+    document.getElementById("pairHelpDlg").addEventListener("click", (event) => {
+      const box = event.currentTarget.getBoundingClientRect();
+      const inside =
+        event.clientX >= box.left &&
+        event.clientX <= box.right &&
+        event.clientY >= box.top &&
+        event.clientY <= box.bottom;
+      if (!inside) event.currentTarget.close();
+    });
     document.getElementById("pairCodeGo").addEventListener("click", () => {
       const pairId = parsePairId(document.getElementById("pairCodeInput").value);
       if (!pairId) {
@@ -3555,7 +3616,8 @@
     }
 
     function tvBack() {
-      const dialog = document.querySelector("dialog[open]");
+      const dialogs = [...document.querySelectorAll("dialog[open]")];
+      const dialog = dialogs[dialogs.length - 1];
       if (dialog) {
         dialog.close();
         if (isTv) focusTvDefault();
@@ -3651,7 +3713,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=81").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=82").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
