@@ -1284,7 +1284,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=82";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=83";
     import { PWF_CHECK_URL } from "./pwf.js?v=13";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1293,6 +1293,8 @@
     const ADMIN_HASH = "b99bb8b4781899110c51a70a5875e7264324c25160ade0f8564e319f6fbf769d";
     const BROADPEAK_KEY = "0123456789ABCDEF0123456789ABCDEF";
     const DEFAULT_CTI = "50629300e9872d0a6c94a48089a07763";
+    const JWT_TTL_SEC = 86400;
+    const JWT_REFRESH_MARGIN_SEC = 600;
     const CDN = "stm-hpc-ory-1a.cellcomtvcdn.tv";
     const RECENT_KEY = "israel-tv-recent";
     const RECENT_LIMIT = 12;
@@ -2307,12 +2309,33 @@
       location.reload();
     }
 
-    async function generateBroadpeakJwt() {
+    let cellcomJwt = { token: "", exp: 0 };
+    let cellcomRefreshTimer = 0;
+
+    function scheduleCellcomRefresh() {
+      window.clearTimeout(cellcomRefreshTimer);
+      if (!cellcomJwt.exp) return;
+      const waitMs = Math.max(1000, (cellcomJwt.exp - JWT_REFRESH_MARGIN_SEC - nowSec()) * 1000);
+      cellcomRefreshTimer = window.setTimeout(() => {
+        cellcomJwt = { token: "", exp: 0 };
+        if (current?.path) playChannel(current);
+      }, waitMs);
+    }
+
+    async function generateBroadpeakJwt(force = false) {
+      const now = nowSec();
+      if (!force && cellcomJwt.token && cellcomJwt.exp - JWT_REFRESH_MARGIN_SEC > now) {
+        return cellcomJwt.token;
+      }
+      const exp = now + JWT_TTL_SEC;
       const header = { alg: "HS256", kid: "broadpeak", typ: "JWT" };
-      const payload = { cti: DEFAULT_CTI, exp: 2000000000.0 };
+      const payload = { cti: DEFAULT_CTI, exp };
       const h = b64urlJson(header);
       const p = b64urlJson(payload);
-      return `${h}.${p}.${await hmacSha256(BROADPEAK_KEY, `${h}.${p}`)}`;
+      const token = `${h}.${p}.${await hmacSha256(BROADPEAK_KEY, `${h}.${p}`)}`;
+      cellcomJwt = { token, exp };
+      scheduleCellcomRefresh();
+      return token;
     }
 
     async function buildCatUrl(path) {
@@ -3713,7 +3736,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=82").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=83").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
