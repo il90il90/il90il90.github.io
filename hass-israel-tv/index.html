@@ -1372,7 +1372,7 @@
   <script src="./jsqr.min.js"></script>
   <script type="module">
     import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=96";
-    import { PWF_CHECK_URL } from "./pwf.js?v=15";
+    import { PWF_CHECK_URL } from "./pwf.js?v=16";
 
     const AUTH_KEY = "israel-tv-auth";
     const HWID_KEY = "israel-tv-hwid";
@@ -3833,7 +3833,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=96").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=97").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
