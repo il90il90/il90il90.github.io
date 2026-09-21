@@ -479,40 +479,73 @@
       gap: 8px;
     }
     html.tv .scan-btn, html.tv #scanDlg { display: none !important; }
-    .pair-box { display: none; text-align: center; margin: 0 0 18px; }
+    .pair-box { display: none; text-align: center; margin: 0 0 8px; }
     html.tv .pair-box, html.pair-login .pair-box { display: block; }
     html.tv #loginLead, html.pair-login #loginLead { display: none; }
     html.tv #loginType, html.pair-login #loginType:not(.open) { display: none; }
-    html.pair-login #loginType.open { display: block; }
+    html.pair-login #loginType.open,
     html.tv #loginType.open { display: block; }
-    html.tv .login-manual-btn, html.pair-login .login-manual-btn { display: flex !important; }
-    .login-manual-btn {
+    html.tv .license-tile, html.pair-login .license-tile { display: flex !important; }
+    .license-tile {
       display: none !important;
       width: 100%;
+      align-items: center;
+      gap: 14px;
+      margin-top: 18px;
+      padding: 14px 16px;
+      height: auto !important;
+      background: var(--bg-soft) !important;
+      border: 1px solid var(--line) !important;
+      border-radius: 16px;
+      color: inherit !important;
+      text-align: start;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
+    .license-tile:hover { background: var(--card-hover) !important; }
+    .license-tile-icon {
+      flex: 0 0 48px;
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: rgba(61, 139, 255, 0.16);
+      color: var(--accent);
+    }
+    .license-tile-icon svg { width: 24px; height: 24px; }
+    .license-tile-copy { flex: 1; min-width: 0; }
+    .license-tile-copy strong { display: block; font-size: 16px; font-weight: 800; }
+    .license-tile-copy small { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; font-weight: 600; }
+    .license-tile-go { color: var(--muted); font-size: 22px; line-height: 1; }
+    .license-panel { width: 100%; }
+    html.tv .license-panel.open,
+    html.pair-login .license-panel.open {
       margin-top: 14px;
-      background: #243044 !important;
+      padding: 16px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 16px;
     }
     html.pair-login .scan-btn { display: none !important; }
-    .pair-lead { margin: 0 0 10px !important; }
-    .pair-steps {
-      margin: 0 0 16px;
-      padding: 0 8px 0 0;
+    .pair-help {
+      margin: 0 auto 16px !important;
+      max-width: 34em;
+      text-align: center;
       color: var(--muted);
-      font-size: 14px;
-      text-align: start;
+      font-size: 15px;
       line-height: 1.55;
     }
-    .pair-steps li { margin: 0 0 6px; }
-    .pair-wait { margin: 8px 0 0 !important; color: var(--muted); font-size: 14px; }
+    .pair-wait { margin: 10px 0 0 !important; color: var(--muted); font-size: 14px; text-align: center; }
     .pair-code {
-      margin: 8px 0 0 !important;
+      margin: 12px 0 0 !important;
       color: var(--text);
       font-size: 22px;
       font-weight: 800;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.14em;
       direction: ltr;
+      text-align: center;
     }
-    .login-qr { margin: 0 auto 4px; width: fit-content; }
+    .login-qr { margin: 0 auto; width: fit-content; }
     .pair-phone {
       margin: 0 0 16px;
       padding: 14px;
@@ -911,13 +944,28 @@
     html.tv .card .title { font-size: 16px; }
     html.tv .chip, html.tv .cat { min-height: 48px; font-size: 16px; padding: 10px 16px; }
     html.tv .chip.chip-logo { width: 56px; height: 56px; }
-    html.tv .login { width: min(720px, 86vw); padding: 32px 36px 28px; }
-    html.tv .login h2 { font-size: 32px; }
-    html.tv .login p { font-size: 18px; }
-    html.tv .pair-steps { font-size: 20px; margin: 0 0 20px; }
+    html.tv .login {
+      width: min(560px, 78vw);
+      padding: 22px 28px 18px;
+      text-align: center;
+    }
+    html.tv .login h2 { font-size: 26px; margin-bottom: 6px; }
+    html.tv .login p { font-size: 16px; }
+    html.tv .pair-help { font-size: 17px; margin-bottom: 10px !important; }
+    html.tv .pair-box { width: 100%; }
+    html.tv .qr-card.login-qr { padding: 8px; margin: 0 auto; }
     html.tv .login-qr .qr-target,
     html.tv .login-qr canvas,
-    html.tv .login-qr img { width: 300px; height: 300px; }
+    html.tv .login-qr img { width: min(32vh, 176px); height: min(32vh, 176px); }
+    html.tv .pair-code { font-size: 18px; margin-top: 8px !important; }
+    html.tv .pair-wait { font-size: 14px; margin-top: 4px !important; }
+    html.tv .license-tile {
+      padding: 12px 14px;
+      margin-top: 12px;
+    }
+    html.tv .license-tile-icon { width: 48px; height: 48px; flex-basis: 48px; }
+    html.tv .license-tile-copy strong { font-size: 18px; }
+    html.tv .license-tile-copy small { font-size: 14px; }
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 4px; }
     html.tv .stage { max-height: 52vh; }
     html.tv .now-logo { height: 44px; }
@@ -934,11 +982,7 @@
     <form class="login" id="loginForm">
       <h2>כניסה</h2>
       <div class="pair-box" id="pairBox" tabindex="0" hidden>
-        <ol class="pair-steps">
-          <li>פתחו את Israel TV בטלפון, כשאתם כבר מחוברים לרישיון</li>
-          <li>לחצו על הגדרות למעלה</li>
-          <li>סרקו את הברקוד שעל המסך, או הזינו את הקוד שמתחתיו</li>
-        </ol>
+        <p class="pair-help">מהטלפון, כשהאפליקציה כבר מחוברת לרישיון, סריקת הברקוד מחברת את המסך.</p>
         <div class="qr-card login-qr">
           <div id="pairQr" class="qr-target"></div>
         </div>
@@ -947,8 +991,17 @@
       </div>
       <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
       <p class="err" id="loginErr"></p>
-      <button type="button" class="login-manual-btn" id="loginManualBtn">הזנת רישיון עם השלט</button>
-      <div id="loginType">
+      <button type="button" class="license-tile" id="loginManualBtn">
+        <span class="license-tile-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><circle cx="8" cy="15" r="1.2" fill="currentColor" stroke="none"/><path d="M12 15h5"/></svg>
+        </span>
+        <span class="license-tile-copy">
+          <strong>הזנת רישיון</strong>
+          <small>עם מקלדת השלט</small>
+        </span>
+        <span class="license-tile-go" aria-hidden="true">‹</span>
+      </button>
+      <div class="license-panel" id="loginType">
       <input id="licenseInput" type="text" autocomplete="off" spellcheck="false" placeholder="רישיון" inputmode="text" />
       <div class="login-btns">
         <button type="button" class="scan-btn" id="scanBtn">
@@ -1193,7 +1246,7 @@
   <script src="./qrcode.min.js"></script>
   <script src="./jsqr.min.js"></script>
   <script type="module">
-    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=74";
+    import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=76";
     import { PWF_CHECK_URL } from "./pwf.js?v=12";
 
     const AUTH_KEY = "israel-tv-auth";
@@ -1571,7 +1624,7 @@
     async function paintPairQr(el, pairId) {
       if (!pairId || !window.QRCode) return false;
       el.replaceChildren();
-      const size = isTv ? 300 : 220;
+      const size = isTv ? 176 : 220;
       new window.QRCode(el, {
         text: pairingQrPayload(pairId),
         width: size,
@@ -3542,7 +3595,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=74").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=76").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
