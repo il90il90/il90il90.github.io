@@ -1985,8 +1985,46 @@
     }
 
     let rtspLaunchedAt = 0;
-    function openRtspPlayer(url) {
+    function hasNativeRtsp() {
+      try {
+        return Boolean(window.IsraelTV && typeof window.IsraelTV.canPlayRtsp === "function" && window.IsraelTV.canPlayRtsp());
+      } catch {
+        return false;
+      }
+    }
+
+    function syncNativeRtspRect() {
+      if (!hasNativeRtsp() || typeof window.IsraelTV.setRtspRect !== "function") return;
+      const box = theater.getBoundingClientRect();
+      window.IsraelTV.setRtspRect(box.left, box.top, box.width, box.height, window.innerWidth, window.innerHeight);
+    }
+
+    function playNativeRtsp(url) {
+      if (!url || !hasNativeRtsp()) return false;
+      try {
+        window.IsraelTV.playRtsp(url);
+        requestAnimationFrame(() => {
+          syncNativeRtspRect();
+          setTimeout(syncNativeRtspRect, 160);
+        });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function stopNativeRtsp() {
+      try {
+        if (window.IsraelTV && typeof window.IsraelTV.stopRtsp === "function") window.IsraelTV.stopRtsp();
+      } catch {}
+    }
+
+    function openRtspPlayer(url, force = false) {
       if (!url) return;
+      if (hasNativeRtsp() && !force) return;
+      if (force && window.IsraelTV && typeof window.IsraelTV.openExternalRtsp === "function") {
+        try { window.IsraelTV.openExternalRtsp(url); return; } catch {}
+      }
       rtspLaunchedAt = Date.now();
       const href = rtspOpenHref(url);
       const a = document.createElement("a");
@@ -2000,8 +2038,19 @@
 
     function launchRtspIfNeeded(channel) {
       const url = String(channel?.url || "");
-      if (isRtspUrl(url)) openRtspPlayer(url);
+      if (!isRtspUrl(url) || hasNativeRtsp()) return;
+      openRtspPlayer(url);
     }
+
+    window.__onRtspReady = () => {
+      setStatus("");
+      syncNativeRtspRect();
+    };
+    window.__onRtspError = () => {
+      setStatus("");
+      if (currentUrl) openRtspPlayer(currentUrl, true);
+    };
+    window.addEventListener("resize", syncNativeRtspRect);
 
     function setCameraOpen(url) {
       const btn = document.getElementById("cameraOpen");
@@ -4570,6 +4619,7 @@
     }
 
     function stopLocalPlayback() {
+      stopNativeRtsp();
       if (hls) {
         hls.destroy();
         hls = undefined;
@@ -4778,8 +4828,13 @@
         setOpenButton(currentUrl);
         if (isRtspUrl(currentUrl)) {
           stopLocalPlayback();
+          if (playNativeRtsp(currentUrl)) {
+            setCameraOpen("");
+            setStatus("נטען…", true);
+            return;
+          }
           setCameraOpen(currentUrl);
-          setStatus("הדפדפן לא מנגן מצלמות RTSP. פותחים את הנגן במכשיר…", false, "camera");
+          setStatus("");
           if (Date.now() - rtspLaunchedAt > 400) openRtspPlayer(currentUrl);
           return;
         }
@@ -5474,7 +5529,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=130").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=131").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
