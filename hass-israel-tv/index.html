@@ -261,6 +261,20 @@
     }
     .status.is-loading .status-spinner { display: block; }
     .status.is-error .status-spinner { display: none; }
+    .camera-open {
+      display: none;
+      margin-top: 6px;
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      text-decoration: none;
+      pointer-events: auto;
+    }
+    .status.is-camera .camera-open { display: inline-flex; }
+    .status.is-camera { pointer-events: auto; background: rgba(7, 11, 18, 0.88); }
+    .status.is-camera p { color: #d7e2f3; font-size: 15px; max-width: 28ch; }
     .dot {
       width: 8px; height: 8px; border-radius: 50%;
       background: var(--live); box-shadow: 0 0 0 6px rgba(255, 77, 77, 0.15);
@@ -1537,6 +1551,7 @@
       <div class="status hidden" id="status">
         <div class="status-spinner" aria-hidden="true"></div>
         <p></p>
+        <a class="camera-open" id="cameraOpen" hidden>פתח מצלמה</a>
       </div>
     </section>
 
@@ -1953,15 +1968,66 @@
       return `intent://${parsed.host}${parsed.pathname}${parsed.search}${parsed.hash}#Intent;scheme=${parsed.protocol.replace(":", "")};action=android.intent.action.VIEW;type=application/x-mpegURL;S.browser_fallback_url=${fallback};end`;
     }
 
+    function rtspOpenHref(url) {
+      if (!isAndroid) return url;
+      try {
+        const parsed = new URL(url);
+        const user = parsed.username ? encodeURIComponent(parsed.username) : "";
+        const pass = parsed.password ? encodeURIComponent(parsed.password) : "";
+        const auth = user ? `${user}${pass ? `:${pass}` : ""}@` : "";
+        const host = parsed.hostname + (parsed.port ? `:${parsed.port}` : "");
+        return `intent://${auth}${host}${parsed.pathname}${parsed.search}#Intent;scheme=${parsed.protocol.replace(":", "")};action=android.intent.action.VIEW;end`;
+      } catch {
+        return url;
+      }
+    }
+
+    let rtspLaunchedAt = 0;
+    function openRtspPlayer(url) {
+      if (!url) return;
+      rtspLaunchedAt = Date.now();
+      const href = rtspOpenHref(url);
+      const a = document.createElement("a");
+      a.href = href;
+      a.rel = "noopener";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function launchRtspIfNeeded(channel) {
+      const url = String(channel?.url || "");
+      if (isRtspUrl(url)) openRtspPlayer(url);
+    }
+
+    function setCameraOpen(url) {
+      const btn = document.getElementById("cameraOpen");
+      if (!btn) return;
+      if (!url) {
+        btn.hidden = true;
+        btn.removeAttribute("href");
+        status.classList.remove("is-camera");
+        return;
+      }
+      btn.hidden = false;
+      btn.href = rtspOpenHref(url);
+      btn.removeAttribute("target");
+      status.classList.add("is-camera");
+    }
+
     function setOpenButton(url) {
       if (!url) {
         openBtn.href = "#";
         openBtn.removeAttribute("target");
+        setCameraOpen("");
         return;
       }
       if (isRtspUrl(url)) {
-        openBtn.href = url;
+        const href = rtspOpenHref(url);
+        openBtn.href = href;
         openBtn.removeAttribute("target");
+        setCameraOpen(url);
         return;
       }
       if (isAndroid) {
@@ -3325,13 +3391,13 @@
       return `https://${CDN}/_cat/${jwt}/${path.replace(/^\/+/, "")}`;
     }
 
-    function setStatus(text, loading = false) {
+    function setStatus(text, loading = false, kind = "") {
       const line = status.querySelector("p");
       theater.classList.toggle("is-buffering", Boolean(loading));
       if (loading) {
         if (!isTv) video.controls = false;
         status.classList.add("is-loading");
-        status.classList.remove("hidden", "is-error");
+        status.classList.remove("hidden", "is-error", "is-camera");
         line.textContent = text || "נטען…";
         return;
       }
@@ -3339,12 +3405,19 @@
       if (!isTv) video.controls = true;
       if (!text) {
         status.classList.add("hidden");
-        status.classList.remove("is-error");
+        status.classList.remove("is-error", "is-camera");
         line.textContent = "";
+        setCameraOpen("");
+        return;
+      }
+      if (kind === "camera") {
+        status.classList.remove("is-error", "hidden");
+        status.classList.add("is-camera");
+        line.textContent = text;
         return;
       }
       status.classList.add("is-error");
-      status.classList.remove("hidden");
+      status.classList.remove("hidden", "is-camera");
       line.textContent = text;
     }
 
@@ -4196,7 +4269,10 @@
       btn.title = channel.name;
       btn.setAttribute("aria-label", channel.name);
       paintLogo(btn, channel);
-      bindTap(btn, () => playChannel(channel));
+      bindTap(btn, () => {
+        launchRtspIfNeeded(channel);
+        playChannel(channel);
+      });
       return btn;
     }
 
@@ -4265,7 +4341,10 @@
         card.querySelector(".sub").textContent = channel.category === "custom"
           ? (channel.group || "")
           : channel.nameEn;
-        bindTap(card, () => playChannel(channel));
+        bindTap(card, () => {
+          launchRtspIfNeeded(channel);
+          playChannel(channel);
+        });
         gridEl.append(card);
       }
 
@@ -4598,7 +4677,9 @@
         setOpenButton(currentUrl);
         if (isRtspUrl(currentUrl)) {
           stopLocalPlayback();
-          setStatus("מצלמה ברשת הביתית. לחצו פתיחה כדי לצפות ב-VLC.");
+          setCameraOpen(currentUrl);
+          setStatus("הדפדפן לא מנגן מצלמות RTSP. פותחים את הנגן במכשיר…", false, "camera");
+          if (Date.now() - rtspLaunchedAt > 400) openRtspPlayer(currentUrl);
           return;
         }
         if (getCastSession()) {
@@ -5292,7 +5373,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=128").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=129").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
