@@ -558,10 +558,11 @@
       background: #47506a;
     }
     .device-dot.online { background: #45d483; }
-    .device-item button {
+    .device-item button,
+    dialog.sheet .device-item button {
       flex: 0 0 auto;
       height: 32px;
-      padding: 0 12px;
+      padding: 0 14px;
       border: 0;
       border-radius: 999px;
       background: #3a2230;
@@ -570,6 +571,7 @@
       font-weight: 800;
       cursor: pointer;
     }
+    .device-item button:disabled { opacity: 0.55; cursor: default; }
     .device-empty { margin: 0; color: var(--muted); font-size: 13px; }
     .pair-box { text-align: center; margin: 0 0 8px; }
     html.tv #loginLead, html.pair-login #loginLead { display: none; }
@@ -711,15 +713,23 @@
     .qr-card {
       display: grid;
       justify-items: center;
-      gap: 8px;
+      gap: 0;
       margin: 12px 0 4px;
-      padding: 16px 14px 12px;
+      padding: 12px;
       background: #fff;
       border-radius: 16px;
+      line-height: 0;
     }
     .qr-card[hidden] { display: none !important; }
     .qr-card canvas, .qr-card img, .qr-target { width: 220px; height: 220px; }
-    .qr-card p { margin: 0; color: #243044; font-size: 13px; text-align: center; font-weight: 600; }
+    .qr-card p {
+      margin: 10px 0 2px;
+      color: #243044;
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: center;
+      font-weight: 600;
+    }
     #scanDlg { width: min(420px, calc(100% - 24px)); }
     #scanVideo {
       width: 100%;
@@ -1098,7 +1108,7 @@
     html.tv .login-qr-icon { width: 52px !important; height: 52px !important; flex-basis: 52px; }
     html.tv .login-qr-icon svg { width: 26px; height: 26px; }
     html.tv .pair-help { font-size: 17px; margin-bottom: 10px !important; }
-    html.tv .qr-card.login-qr { padding: 8px; margin: 0 auto; }
+    html.tv .qr-card.login-qr { padding: 12px; margin: 0 auto; }
     html.tv .login-qr .qr-target,
     html.tv .login-qr canvas,
     html.tv .login-qr img { width: min(32vh, 176px); height: min(32vh, 176px); }
@@ -1389,7 +1399,7 @@
     <p style="color:var(--muted);margin:0 0 12px">כך מעדכנים את הטלוויזיה עם הרישיון מהטלפון:</p>
     <ol class="pair-steps">
       <li>במסך מתקינים את אפליקציית Israel TV מ־<a href="https://il90il90.github.io/hass-israel-tv/israel-tv-tv.apk" download>הורדה לטלוויזיה</a>.</li>
-      <li>פותחים את האפליקציה בטלוויזיה ולוחצים על אייקון הברקוד בצד מסך הכניסה.</li>
+      <li>פותחים את האפליקציה בטלוויזיה — הברקוד מופיע במסך הכניסה.</li>
       <li>בטלפון, בהגדרות, סריקת הברקוד או הזנת הקוד מחברת את המסך.</li>
       <li>הטלוויזיה נכנסת לאותו רישיון כמו בטלפון, כולל הערוצים שלכם.</li>
       <li>לחיבור מחדש או לעדכון מסך נוסף — שוב סריקה של הברקוד שעל המסך.</li>
@@ -1853,8 +1863,10 @@
         colorLight: "#ffffff",
         correctLevel: window.QRCode.CorrectLevel.M,
       });
+      const canvas = el.querySelector("canvas");
       el.querySelectorAll("canvas, img").forEach((node) => {
-        node.style.display = "block";
+        const visible = canvas ? node === canvas : true;
+        node.style.display = visible ? "block" : "none";
         node.style.width = `${size}px`;
         node.style.height = `${size}px`;
       });
