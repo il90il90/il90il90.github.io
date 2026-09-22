@@ -2544,7 +2544,7 @@
         <option value="score-asc">הכי מעט שימוש</option>
         <option value="seen-desc">נראו לאחרונה</option>
         <option value="seen-asc">נראו הכי מזמן</option>
-        <option value="today">פעילים היום</option>
+        <option value="today">יותר דקות היום</option>
         <option value="expiry">קרובים לתפוגה</option>
         <option value="name">לפי שם</option>
       </select>
@@ -3373,12 +3373,21 @@
       }).join("");
     }
 
-    function peakHourLabel(hours) {
+    function formatWatchMinutes(mins) {
+      const n = Math.max(0, Math.round(Number(mins) || 0));
+      if (n < 60) return `${n} דק׳`;
+      const hours = Math.floor(n / 60);
+      const rest = n % 60;
+      return rest ? `${hours} שע׳ ${rest} דק׳` : `${hours} שע׳`;
+    }
+
+    function peakHourLabel(hours, unit) {
       const list = Array.isArray(hours) ? hours : [];
       const peak = Math.max(0, ...list);
       if (!peak) return "";
       const hits = list.map((value, hour) => ({ value, hour })).filter((item) => item.value === peak);
-      return `שיא ${hits.map((item) => `${String(item.hour).padStart(2, "0")}:00`).join(" · ")}`;
+      const suffix = unit === "minutes" ? ` · ${formatWatchMinutes(peak)}` : "";
+      return `שיא ${hits.map((item) => `${String(item.hour).padStart(2, "0")}:00`).join(" · ")}${suffix}`;
     }
 
     function renderAdminStats() {
@@ -3400,6 +3409,8 @@
         ["פגים ב־7 ימים", summary.expiring_7d || 0],
         ["פגי תוקף", summary.expired || 0],
         ["פתיחות השבוע", summary.opens_7d || 0],
+        ["דקות צפייה השבוע", formatWatchMinutes(summary.watch_minutes_7d || 0)],
+        ["דקות צפייה סה״כ", formatWatchMinutes(summary.watch_minutes_total || 0)],
         ["ממוצע מכשירים", summary.avg_devices || 0],
         ["שעת שיא", peakHour],
         ["הכי פעיל", summary.top_user || "—"],
@@ -3429,17 +3440,23 @@
       for (const user of rows) {
         const card = document.createElement("article");
         card.className = "stats-card";
+        const byMinutes = user.hours_unit === "minutes";
         const dayItems = Array.isArray(user.days) ? user.days.map((item) => {
           const day = String(item.day || "");
           const label = day.slice(8, 10) || day;
-          return { value: item.count, label, title: `${day}: ${item.count || 0}` };
+          const value = item.minutes ?? item.count ?? 0;
+          return { value, label, title: `${day}: ${byMinutes ? formatWatchMinutes(value) : `${value} פעמים`}` };
         }) : [];
         const hourItems = Array.from({ length: 24 }, (_, hour) => {
           const value = Number(user.hours?.[hour]) || 0;
           const label = String(hour).padStart(2, "0");
-          return { value, label, title: `${label}:00 · ${value} פעמים` };
+          return {
+            value,
+            label,
+            title: byMinutes ? `${label}:00 · ${formatWatchMinutes(value)}` : `${label}:00 · ${value} פעמים`,
+          };
         });
-        const peak = peakHourLabel(user.hours);
+        const peak = peakHourLabel(user.hours, user.hours_unit);
         card.innerHTML = `
           <div class="stats-card-head">
             <div>
@@ -3452,18 +3469,19 @@
             <span>${keyStatusLabel(user.status)}</span>
             <span>${user.opens || 0} כניסות</span>
             <span>${user.uses || 0} שימושים</span>
-            <span>${user.today || 0} היום</span>
-            <span>${user.week || 0} השבוע</span>
+            <span>${user.today || 0} ${byMinutes ? "דק׳ היום" : "היום"}</span>
+            <span>${user.week || 0} ${byMinutes ? "דק׳ השבוע" : "השבוע"}</span>
+            ${byMinutes ? `<span>${formatWatchMinutes(user.minutes_total)} סה״כ</span>` : ""}
             <span>${user.devices || 0} מכשירים</span>
             <span>${user.days_left == null ? "בלי תפוגה" : user.days_left < 0 ? "פג תוקף" : `תפוגה בעוד ${user.days_left} ימים`}</span>
             <span>${user.first_seen ? `הצטרף ${formatLastSeen(user.first_seen)}` : "עדיין לא נכנס"}</span>
           </div>
           <div class="stats-chart">
-            <label>14 הימים האחרונים</label>
+            <label>${byMinutes ? "דקות צפייה ב־14 הימים" : "14 הימים האחרונים"}</label>
             <div class="stats-bars">${statsColHtml(dayItems, "day")}</div>
           </div>
           <div class="stats-chart">
-            <label>שעות ביום<span>${peak ? `<em>${escapeHtml(peak)}</em>` : ""}</span></label>
+            <label>${byMinutes ? "דקות צפייה בכל שעה" : "שעות ביום"}<span>${peak ? `<em>${escapeHtml(peak)}</em>` : ""}</span></label>
             <div class="stats-hours">${statsColHtml(hourItems, "hour")}</div>
           </div>`;
         list.append(card);
@@ -4295,9 +4313,14 @@
       liveBeatTimer = 0;
     }
 
+    let lastWatchAt = 0;
     async function pulseLiveSession(session) {
       if (!session?.license || session.role !== "user") return true;
       try {
+        const now = Date.now();
+        const elapsed = lastWatchAt ? Math.min(60, Math.round((now - lastWatchAt) / 1000)) : (isTv ? 8 : 12);
+        lastWatchAt = now;
+        const watching = Boolean(video && !video.paused && !video.ended && video.readyState >= 2);
         const res = await fetch(PWF_CHECK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -4307,6 +4330,7 @@
             license_key: session.license,
             hwid: deviceHwid(),
             device_name: deviceLabel(),
+            watch_sec: watching ? elapsed : 0,
           }),
         });
         const data = await res.json().catch(() => ({}));
@@ -4332,6 +4356,7 @@
 
     async function startLiveSession(session) {
       stopLiveSession();
+      lastWatchAt = Date.now();
       if (appLocked || session?.role !== "user" || !session.license) return session;
       await refreshDeviceLabel();
       const interval = isTv ? 8000 : 12000;
@@ -7442,7 +7467,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=175").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=176").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
