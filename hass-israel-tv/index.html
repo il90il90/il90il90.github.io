@@ -593,23 +593,38 @@
     .login h2 { margin: 0; font-size: 22px; }
     .login p { margin: 0; color: var(--muted); font-size: 14px; }
     .login-head #loginLead { margin-top: 4px; }
-    .login-field {
-      position: relative;
-      margin-bottom: 12px;
+    html:not(.tv) #gate .login-pair-on-tv,
+    html:not(.tv) #gate .license-tile { display: none !important; }
+    html:not(.tv) #gate #loginLead,
+    html:not(.tv) #gate #loginType { display: block !important; }
+    html:not(.tv) #gate .login {
+      width: min(400px, 100%);
+      padding: 24px 20px 20px;
     }
-    .login-field input {
-      width: 100%;
-      margin-bottom: 0;
-      padding-inline-end: 92px;
-    }
-    .login-field-tools {
-      position: absolute;
-      inset-inline-end: 6px;
-      top: 50%;
-      transform: translateY(-50%);
+    html:not(.tv) #gate .phone-login-row {
       display: flex;
+      flex-wrap: nowrap;
       align-items: center;
-      gap: 4px;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    html:not(.tv) #gate .phone-login-row input {
+      flex: 1 1 auto;
+      width: auto;
+      min-width: 0;
+      height: 48px;
+      margin: 0;
+      padding: 0 14px;
+    }
+    html:not(.tv) #gate .phone-login-row .login-qr-icon {
+      flex: 0 0 48px;
+      width: 48px !important;
+      min-width: 48px !important;
+      height: 48px !important;
+      min-height: 48px !important;
+    }
+    html:not(.tv) #gate .login-btns button {
+      height: 48px;
     }
     .login-qr-icon {
       flex: 0 0 36px;
@@ -1986,16 +2001,14 @@
         <span class="license-tile-go" aria-hidden="true">‹</span>
       </button>
       <div class="license-panel" id="loginType">
-      <div class="login-field">
+      <div class="phone-login-row">
         <input id="licenseInput" type="text" dir="ltr" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="רישיון" inputmode="text" enterkeyhint="go" />
-        <div class="login-field-tools">
         <button type="button" class="login-qr-icon paste-license" id="pasteLicenseBtn" title="הדבקת רישיון" aria-label="הדבקת רישיון">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
         </button>
         <button type="button" class="login-qr-icon phone-scan" id="scanBtn" title="סריקת ברקוד" aria-label="סריקת ברקוד">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 8h8v8H8z"/></svg>
         </button>
-        </div>
       </div>
       <div class="login-btns">
         <button type="submit">כניסה</button>
@@ -6839,7 +6852,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=163").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=164").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
