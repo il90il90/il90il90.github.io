@@ -3130,8 +3130,18 @@
       return stripLicenseSpaces(value).toUpperCase();
     }
 
+    function publicPlayerUrl() {
+      const path = String(location.pathname || "/").replace(/index\.html$/i, "");
+      const url = new URL(path || "/", location.origin);
+      url.search = "";
+      url.hash = "";
+      return url;
+    }
+
     function licenseQrPayload(key) {
-      return `k=${stripLicenseSpaces(key)}`;
+      const url = publicPlayerUrl();
+      url.searchParams.set("k", stripLicenseSpaces(key));
+      return url.toString();
     }
 
     function parseLicensePayload(text) {
@@ -3199,7 +3209,9 @@
     }
 
     function pairingQrPayload(pairId) {
-      return `pair=${normalizePairId(pairId)}`;
+      const url = publicPlayerUrl();
+      url.searchParams.set("pair", normalizePairId(pairId));
+      return url.toString();
     }
 
     function formatPairCode(pairId) {
@@ -6281,7 +6293,11 @@
       licenseInput.value = linkedLicense;
       document.getElementById("loginForm").requestSubmit();
     } else {
-      if (linkedPair) pendingPairId = linkedPair;
+      if (linkedPair) {
+        pendingPairId = linkedPair;
+        const lead = document.getElementById("loginLead");
+        if (lead) lead.textContent = "המסך ממתין. הזינו רישיון כדי לחבר אותו";
+      }
       startScreenPairing();
     }
 
@@ -6792,7 +6808,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=161").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=162").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
