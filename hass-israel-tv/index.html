@@ -11,9 +11,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
-  <link rel="manifest" href="manifest.webmanifest?v=6" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120.png" />
+  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon-precomposed.png" />
+  <link rel="manifest" href="manifest.webmanifest?v=7" />
   <link rel="icon" href="favicon.png?v=5" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=5" />
   <script>
     try {
       if (sessionStorage.getItem("israel-tv-boot-2")) document.documentElement.dataset.booted = "1";
@@ -6373,7 +6377,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=148").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=149").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;

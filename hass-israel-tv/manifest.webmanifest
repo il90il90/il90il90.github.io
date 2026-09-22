@@ -1,12 +1,12 @@
 {
-  "id": "./",
+  "id": "/hass-israel-tv/",
   "name": "Israel TV",
   "short_name": "Israel TV",
   "description": "צפייה ישירה בערוצי ישראל — טלפון, מחשב ו-Android TV",
   "dir": "rtl",
   "lang": "he",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/hass-israel-tv/",
+  "scope": "/hass-israel-tv/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
@@ -16,19 +16,25 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "icon-192.png?v=4",
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png?v=4",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png?v=4",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"

@@ -1,4 +1,4 @@
-const CACHE = "israel-tv-v148";
+const CACHE = "israel-tv-v149";
 const SHELL = [
   "./",
   "./index.html",
@@ -11,6 +11,7 @@ const SHELL = [
   "./icon-512.png",
   "./icon-base.png",
   "./apple-touch-icon.png",
+  "./apple-touch-icon-precomposed.png",
 ];
 
 self.addEventListener("install", (event) => {
