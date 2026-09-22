@@ -938,15 +938,16 @@
     @media (max-width: 560px) {
       .stats-hours .col:nth-child(even) b { visibility: hidden; }
     }
-    .keys-list { display: grid; gap: 10px; }
+    .keys-list { display: grid; gap: 8px; }
     .key-card {
       display: grid;
-      gap: 10px;
-      padding: 12px;
+      gap: 0;
+      padding: 0;
       background: var(--bg-soft);
       border: 1px solid var(--line);
       border-radius: 14px;
       min-width: 0;
+      overflow: hidden;
     }
     .key-card-head {
       display: flex;
@@ -954,16 +955,67 @@
       justify-content: space-between;
       gap: 10px;
       min-width: 0;
+      padding: 10px 12px;
+      cursor: pointer;
     }
+    .key-card.open .key-card-head { border-bottom: 1px solid var(--line); }
     .key-card-head > div { min-width: 0; }
-    .key-card-head strong {
+    #keysDlg .key-name {
       display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      color: inherit;
       font-size: 16px;
+      font-weight: 800;
+      line-height: 1.25;
+      text-align: start;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .key-card-head small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    #keysDlg .key-name:hover { color: var(--accent-2); }
+    .key-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .key-pills span {
+      padding: 2px 7px;
+      background: #0b1220;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .key-pills span.on { color: #7de3a8; background: rgba(69, 212, 131, 0.12); }
+    .key-pills span.warn { color: #ff9d9d; background: rgba(255, 77, 77, 0.12); }
+    .key-card-side {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .key-chevron {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 16px;
+      color: var(--muted);
+      transition: transform 0.16s ease;
+    }
+    .key-card.open .key-chevron { transform: rotate(180deg); }
+    .key-detail {
+      display: none;
+      gap: 10px;
+      padding: 12px;
+    }
+    .key-card.open .key-detail { display: grid; }
     .key-status {
       flex: 0 0 auto;
       display: inline-flex;
@@ -3204,6 +3256,114 @@
     }
 
     let adminKeysCache = [];
+    let openAdminKey = "";
+
+    function toggleAdminKey(licenseKey) {
+      openAdminKey = openAdminKey === licenseKey ? "" : licenseKey;
+      renderAdminKeys();
+    }
+
+    function fillAdminKeyDetails(detail, key) {
+      const token = document.createElement("div");
+      token.className = "key-token";
+      const code = document.createElement("code");
+      code.textContent = key.license_key;
+      const copy = document.createElement("button");
+      copy.type = "button";
+      copy.title = "העתק";
+      copy.setAttribute("aria-label", "העתק");
+      copy.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+      copy.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(key.license_key); } catch {}
+        showToast("הטוקן הועתק");
+      });
+      token.append(code, copy);
+      const people = Array.isArray(key.devices) ? key.devices : [];
+      const devices = document.createElement("div");
+      devices.className = "devices-list";
+      for (const device of people) {
+        const row = document.createElement("div");
+        row.className = "device-item";
+        const dot = document.createElement("span");
+        dot.className = `device-dot${device.online ? " online" : ""}`;
+        const metaBox = document.createElement("div");
+        const who = document.createElement("strong");
+        who.textContent = device.name || "מכשיר";
+        const when = document.createElement("small");
+        when.textContent = `${device.online ? "מחובר" : "לא מחובר"} · ${formatLastSeen(device.last_seen)}`;
+        metaBox.append(who, when);
+        const kick = document.createElement("button");
+        kick.type = "button";
+        kick.textContent = "נתק";
+        kick.addEventListener("click", () => runKeyAction(key, "kick", device));
+        row.append(dot, metaBox, kick);
+        devices.append(row);
+      }
+      const fields = document.createElement("div");
+      fields.className = "key-fields";
+      const slotsField = document.createElement("div");
+      slotsField.className = "key-field";
+      const slotsLabel = document.createElement("label");
+      slotsLabel.textContent = "מכשירים";
+      const slotsInput = document.createElement("input");
+      slotsInput.type = "number";
+      slotsInput.min = "1";
+      slotsInput.max = "100";
+      slotsInput.value = String(Math.max(1, Number(key.max_devices) || 1));
+      slotsField.append(slotsLabel, slotsInput);
+      const expiryField = document.createElement("div");
+      expiryField.className = "key-field";
+      const expiryLabel = document.createElement("label");
+      expiryLabel.textContent = "תפוגה";
+      const expiryInput = document.createElement("input");
+      expiryInput.type = "date";
+      expiryInput.value = dateInputValue(key);
+      expiryField.append(expiryLabel, expiryInput);
+      const save = document.createElement("button");
+      save.type = "button";
+      save.className = "key-save";
+      save.textContent = "עדכן";
+      save.addEventListener("click", () => {
+        const nextSlots = Math.min(100, Math.max(1, Number(slotsInput.value) || 1));
+        const nextDate = israelEndOfDayIso(expiryInput.value);
+        slotsInput.value = String(nextSlots);
+        if (!nextDate) {
+          showToast("בחרו תאריך תפוגה");
+          return;
+        }
+        runKeyAction(key, "update", null, nextSlots, nextDate);
+      });
+      fields.append(slotsField, expiryField, save);
+      const actions = document.createElement("div");
+      actions.className = "key-actions";
+      const banned = key.status === "banned";
+      const paused = key.status === "paused";
+      const icon = {
+        ban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 8 8 8"/></svg>',
+        unban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V7z"/></svg>',
+        pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/></svg>',
+        resume: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
+        "reset-hwid": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.4-6.2"/><path d="M21 4v6h-6"/></svg>',
+        delete: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M7 7l1 13h8l1-13"/></svg>',
+      };
+      const buttons = [
+        [banned ? "בטל" : "חסום", banned ? "unban" : "ban", !banned],
+        [paused ? "הפעל" : "השהה", paused ? "resume" : "pause", false],
+        ["איפוס", "reset-hwid", false],
+        ["מחק", "delete", true],
+      ];
+      for (const [label, act, danger] of buttons) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.innerHTML = `${icon[act] || ""}<span>${label}</span>`;
+        if (danger) btn.className = "danger";
+        btn.addEventListener("click", () => runKeyAction(key, act));
+        actions.append(btn);
+      }
+      detail.append(token);
+      if (people.length) detail.append(devices);
+      detail.append(fields, actions);
+    }
 
     function renderAdminKeys() {
       const list = document.getElementById("keysList");
@@ -3216,118 +3376,61 @@
       list.replaceChildren();
       for (const key of rows) {
         const card = document.createElement("article");
-        card.className = "key-card";
+        const open = openAdminKey === key.license_key;
+        card.className = `key-card${open ? " open" : ""}`;
+        card.dataset.key = key.license_key;
+        const people = Array.isArray(key.devices) ? key.devices : [];
+        const used = key.devices_used || people.length || 0;
+        const online = people.filter((item) => item.online).length;
+        const expired = key.status === "expired";
         const head = document.createElement("div");
         head.className = "key-card-head";
+        head.addEventListener("click", () => toggleAdminKey(key.license_key));
         const title = document.createElement("div");
-        const name = document.createElement("strong");
+        const name = document.createElement("button");
+        name.type = "button";
+        name.className = "key-name";
         name.textContent = key.note || "בלי שם";
-        const info = document.createElement("small");
-        info.textContent = `${formatKeyExpiry(key)} · ${key.devices_used || 0}/${key.max_devices || 1}`;
-        title.append(name, info);
+        name.setAttribute("aria-expanded", open ? "true" : "false");
+        const pills = document.createElement("div");
+        pills.className = "key-pills";
+        const expiry = document.createElement("span");
+        expiry.textContent = formatKeyExpiry(key);
+        if (expired) expiry.className = "warn";
+        const slots = document.createElement("span");
+        slots.textContent = `${used}/${key.max_devices || 1} מכשירים`;
+        pills.append(expiry, slots);
+        if (online) {
+          const live = document.createElement("span");
+          live.className = "on";
+          live.textContent = online === 1 ? "מחובר עכשיו" : `${online} מחוברים`;
+          pills.append(live);
+        }
+        title.append(name, pills);
+        const side = document.createElement("div");
+        side.className = "key-card-side";
         const badge = document.createElement("span");
         badge.className = `key-status ${key.status || ""}`;
         badge.textContent = keyStatusLabel(key.status);
-        head.append(title, badge);
-        const token = document.createElement("div");
-        token.className = "key-token";
-        const code = document.createElement("code");
-        code.textContent = key.license_key;
-        const copy = document.createElement("button");
-        copy.type = "button";
-        copy.title = "העתק";
-        copy.setAttribute("aria-label", "העתק");
-        copy.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
-        copy.addEventListener("click", async () => {
-          try { await navigator.clipboard.writeText(key.license_key); } catch {}
-          showToast("הטוקן הועתק");
-        });
-        token.append(code, copy);
-        const people = Array.isArray(key.devices) ? key.devices : [];
-        const devices = document.createElement("div");
-        devices.className = "devices-list";
-        for (const device of people) {
-          const row = document.createElement("div");
-          row.className = "device-item";
-          const dot = document.createElement("span");
-          dot.className = `device-dot${device.online ? " online" : ""}`;
-          const metaBox = document.createElement("div");
-          const who = document.createElement("strong");
-          who.textContent = device.name || "מכשיר";
-          const when = document.createElement("small");
-          when.textContent = `${device.online ? "מחובר" : "לא מחובר"} · ${formatLastSeen(device.last_seen)}`;
-          metaBox.append(who, when);
-          const kick = document.createElement("button");
-          kick.type = "button";
-          kick.textContent = "נתק";
-          kick.addEventListener("click", () => runKeyAction(key, "kick", device));
-          row.append(dot, metaBox, kick);
-          devices.append(row);
+        const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        chevron.setAttribute("class", "key-chevron");
+        chevron.setAttribute("viewBox", "0 0 24 24");
+        chevron.setAttribute("fill", "none");
+        chevron.setAttribute("stroke", "currentColor");
+        chevron.setAttribute("stroke-width", "2");
+        chevron.setAttribute("aria-hidden", "true");
+        const chevronPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        chevronPath.setAttribute("d", "m6 9 6 6 6-6");
+        chevron.append(chevronPath);
+        side.append(badge, chevron);
+        head.append(title, side);
+        card.append(head);
+        if (open) {
+          const detail = document.createElement("div");
+          detail.className = "key-detail";
+          fillAdminKeyDetails(detail, key);
+          card.append(detail);
         }
-        const fields = document.createElement("div");
-        fields.className = "key-fields";
-        const slotsField = document.createElement("div");
-        slotsField.className = "key-field";
-        const slotsLabel = document.createElement("label");
-        slotsLabel.textContent = "מכשירים";
-        const slotsInput = document.createElement("input");
-        slotsInput.type = "number";
-        slotsInput.min = "1";
-        slotsInput.max = "100";
-        slotsInput.value = String(Math.max(1, Number(key.max_devices) || 1));
-        slotsField.append(slotsLabel, slotsInput);
-        const expiryField = document.createElement("div");
-        expiryField.className = "key-field";
-        const expiryLabel = document.createElement("label");
-        expiryLabel.textContent = "תפוגה";
-        const expiryInput = document.createElement("input");
-        expiryInput.type = "date";
-        expiryInput.value = dateInputValue(key);
-        expiryField.append(expiryLabel, expiryInput);
-        const save = document.createElement("button");
-        save.type = "button";
-        save.className = "key-save";
-        save.textContent = "עדכן";
-        save.addEventListener("click", () => {
-          const nextSlots = Math.min(100, Math.max(1, Number(slotsInput.value) || 1));
-          const nextDate = israelEndOfDayIso(expiryInput.value);
-          slotsInput.value = String(nextSlots);
-          if (!nextDate) {
-            showToast("בחרו תאריך תפוגה");
-            return;
-          }
-          runKeyAction(key, "update", null, nextSlots, nextDate);
-        });
-        fields.append(slotsField, expiryField, save);
-        const actions = document.createElement("div");
-        actions.className = "key-actions";
-        const banned = key.status === "banned";
-        const paused = key.status === "paused";
-        const icon = {
-          ban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 8 8 8"/></svg>',
-          unban: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8.4 8 9 4.6-.6 8-4 8-9V7z"/></svg>',
-          pause: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="5" width="3" height="14" rx="1"/><rect x="14" y="5" width="3" height="14" rx="1"/></svg>',
-          resume: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>',
-          "reset-hwid": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.4-6.2"/><path d="M21 4v6h-6"/></svg>',
-          delete: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M7 7l1 13h8l1-13"/></svg>',
-        };
-        const buttons = [
-          [banned ? "בטל" : "חסום", banned ? "unban" : "ban", !banned],
-          [paused ? "הפעל" : "השהה", paused ? "resume" : "pause", false],
-          ["איפוס", "reset-hwid", false],
-          ["מחק", "delete", true],
-        ];
-        for (const [label, act, danger] of buttons) {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.innerHTML = `${icon[act] || ""}<span>${label}</span>`;
-          if (danger) btn.className = "danger";
-          btn.addEventListener("click", () => runKeyAction(key, act));
-          actions.append(btn);
-        }
-        card.append(head, token);
-        if (people.length) card.append(devices);
-        card.append(fields, actions);
         list.append(card);
       }
     }
@@ -3533,7 +3636,7 @@
       };
       if (prompts[keyAction] && !window.confirm(prompts[keyAction])) return;
       const card = [...document.querySelectorAll("#keysList .key-card")].find((el) => (
-        el.querySelector("code")?.textContent === key.license_key
+        el.dataset.key === key.license_key
       ));
       card?.querySelectorAll("button").forEach((btn) => { btn.disabled = true; });
       const res = await adminAction({
@@ -3563,6 +3666,7 @@
       };
       if (keyAction === "delete") {
         adminKeysCache = adminKeysCache.filter((item) => item.license_key !== key.license_key);
+        if (openAdminKey === key.license_key) openAdminKey = "";
         renderAdminKeys();
       }
       showToast(done[keyAction] || "עודכן");
@@ -7467,7 +7571,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=176").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=177").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
