@@ -955,7 +955,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 0;
+      gap: 16px;
       text-align: center;
       margin: 0 0 16px;
     }
@@ -1748,7 +1748,7 @@
       height: 100% !important;
       image-rendering: pixelated;
     }
-    html.tv .pair-meta { margin: 18px 0 8px; }
+    html.tv .pair-meta { margin: 0; }
     html.tv .pair-code {
       display: inline-block;
       font-size: 30px;
@@ -1969,10 +1969,10 @@
         <div class="qr-card login-qr">
           <div id="pairQr" class="qr-target"></div>
         </div>
-      </div>
-      <div class="pair-meta login-pair-on-tv">
-        <p class="pair-code" id="pairCode" hidden></p>
-        <p class="pair-wait" id="pairWait">מכינים ברקוד לסריקה מהטלפון…</p>
+        <div class="pair-meta">
+          <p class="pair-code" id="pairCode" hidden></p>
+          <p class="pair-wait" id="pairWait">ממתינים לחיבור מהטלפון…</p>
+        </div>
       </div>
       <p class="err" id="loginErr"></p>
       <button type="button" class="license-tile" id="loginManualBtn">
@@ -6440,7 +6440,23 @@
       return gridEl ? [...gridEl.querySelectorAll(".card")] : [];
     }
 
+    function tvLoginItems() {
+      if (document.documentElement.dataset.session === "1") return [];
+      const items = [];
+      const qr = document.getElementById("loginPairBox");
+      const tile = document.getElementById("loginManualBtn");
+      const panel = document.getElementById("loginType");
+      if (qr && tvVisible(qr)) items.push(qr);
+      if (tile && !tile.hidden && tvVisible(tile)) items.push(tile);
+      if (panel?.classList.contains("open")) {
+        items.push(...[...panel.querySelectorAll(TV_FOCUSABLE)].filter(tvVisible));
+      }
+      return items;
+    }
+
     function tvFocusStrips() {
+      const login = tvLoginItems();
+      if (login.length) return [{ type: "col", items: login }];
       const strips = [];
       const header = tvHeaderItems();
       if (header.length) strips.push({ type: "row", items: header });
@@ -6654,6 +6670,7 @@
       }
       const strip = strips[s];
       if (dx) {
+        if (strip.type === "col") return;
         const next = strip.type === "grid"
           ? moveInGrid(strip.items, active, dx, 0)
           : moveInRow(strip.items, active, dx);
@@ -6661,6 +6678,12 @@
         return;
       }
       if (!dy) return;
+      if (strip.type === "col") {
+        const idx = strip.items.indexOf(active);
+        const next = strip.items[idx + dy];
+        if (next) focusTvNode(next);
+        return;
+      }
       if (strip.type === "row") {
         const withinRow = moveInRowVertical(strip.items, active, dy);
         if (withinRow) {
@@ -6689,6 +6712,14 @@
       if (dialog) {
         dialog.close();
         if (isTv) focusTvDefault();
+        return true;
+      }
+      const panel = document.getElementById("loginType");
+      if (isTv && panel?.classList.contains("open")) {
+        panel.classList.remove("open");
+        const tile = document.getElementById("loginManualBtn");
+        if (tile) tile.hidden = false;
+        document.getElementById("loginPairBox")?.focus({ preventScroll: true });
         return true;
       }
       if (isTv && searchInput.classList.contains("tv-search-open")) {
@@ -6808,7 +6839,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=162").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=163").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
