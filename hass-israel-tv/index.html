@@ -2388,7 +2388,8 @@
   </dialog>
   <dialog class="sheet" id="licenseDlg">
     <h3>יצירת רישיון</h3>
-    <input id="licNote" type="text" placeholder="שם / הערה (לא חובה)" />
+    <label class="lic-label" for="licNote">שם המשתמש</label>
+    <input id="licNote" type="text" required minlength="2" maxlength="80" placeholder="שם המשתמש (חובה)" autocomplete="off" />
     <div class="presets">
       <button type="button" data-sec="3600">שעה</button>
       <button type="button" data-sec="86400">יום</button>
@@ -2396,6 +2397,8 @@
       <button type="button" data-sec="2592000">חודש</button>
       <button type="button" data-sec="31536000">שנה</button>
     </div>
+    <label class="lic-label" for="licDate">תאריך תפוגה</label>
+    <input id="licDate" type="date" required />
     <label class="lic-label" for="licAmount">משך הרישיון</label>
     <div class="row">
       <input id="licAmount" type="number" min="1" max="3650" value="30" />
@@ -2956,6 +2959,7 @@
           token,
           note,
           seconds,
+          expires_at: israelEndOfDayIso(document.getElementById("licDate").value),
           amount: Number(document.getElementById("licAmount").value) || 1,
           unit: Number(document.getElementById("licUnit").value) || 86400,
           max_devices: Number(document.getElementById("licDevices").value) || 1,
@@ -6354,6 +6358,24 @@
     bindKeyCopy(document.getElementById("licCopy"), document.getElementById("licOut"));
 
     document.getElementById("logoutBtn").addEventListener("click", lockApp);
+    function israelDatePlusMs(ms) {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jerusalem",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).format(new Date(Date.now() + Math.max(0, ms)));
+    }
+
+    function syncLicenseDateFromDuration() {
+      const dateEl = document.getElementById("licDate");
+      if (!dateEl) return;
+      const amount = Number(document.getElementById("licAmount").value) || 1;
+      const unit = Number(document.getElementById("licUnit").value) || 86400;
+      dateEl.min = israelDatePlusMs(0);
+      dateEl.value = israelDatePlusMs(amount * unit * 1000);
+    }
+
     function resetLicenseForm() {
       document.getElementById("licNote").value = "";
       document.getElementById("licAmount").value = "30";
@@ -6363,6 +6385,7 @@
       document.getElementById("licOut").value = "";
       document.getElementById("licOutWrap").hidden = true;
       document.getElementById("licQrWrap").hidden = true;
+      syncLicenseDateFromDuration();
     }
 
     document.getElementById("licenseBtn").addEventListener("click", () => {
@@ -6388,6 +6411,9 @@
       if (event.target === event.currentTarget) event.currentTarget.close();
     });
     function selectedLicenseSeconds() {
+      const iso = israelEndOfDayIso(document.getElementById("licDate").value);
+      const stamp = Date.parse(iso);
+      if (Number.isFinite(stamp)) return Math.max(60, Math.round((stamp - Date.now()) / 1000));
       const amount = Number(document.getElementById("licAmount").value) || 1;
       const unit = Number(document.getElementById("licUnit").value) || 86400;
       return Math.max(60, amount * unit);
@@ -6406,22 +6432,39 @@
           document.getElementById("licAmount").value = String(Math.max(1, Math.round(sec / 3600)));
           document.getElementById("licUnit").value = "3600";
         }
+        syncLicenseDateFromDuration();
       });
     });
+    document.getElementById("licAmount").addEventListener("input", syncLicenseDateFromDuration);
+    document.getElementById("licUnit").addEventListener("change", syncLicenseDateFromDuration);
 
     document.getElementById("licMake").addEventListener("click", async () => {
       const note = document.getElementById("licNote").value.trim();
+      const dateValue = document.getElementById("licDate").value;
       const seconds = selectedLicenseSeconds();
       const until = document.getElementById("licUntil");
       const out = document.getElementById("licOut");
       const wrap = document.getElementById("licOutWrap");
+      if (note.length < 2) {
+        until.textContent = "חובה לתת שם למשתמש";
+        document.getElementById("licNote").focus();
+        return;
+      }
+      if (!israelEndOfDayIso(dateValue)) {
+        until.textContent = "חובה לבחור תאריך תפוגה";
+        document.getElementById("licDate").focus();
+        return;
+      }
       until.textContent = "יוצר רישיון…";
       wrap.hidden = true;
       try {
         const issued = await createLicense(note, seconds);
         out.value = issued.license_key;
         wrap.hidden = false;
-        until.textContent = "";
+        const stamp = Date.parse(issued.expires_at || israelEndOfDayIso(dateValue));
+        until.textContent = Number.isFinite(stamp)
+          ? `בתוקף עד ${new Date(stamp).toLocaleDateString("he-IL")}`
+          : "";
         const qrWrap = document.getElementById("licQrWrap");
         try {
           qrWrap.hidden = !(await paintQr(document.getElementById("licQr"), issued.license_key));
@@ -7070,7 +7113,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=171").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=172").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
