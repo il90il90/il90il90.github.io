@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <g stroke="#101318" stroke-width="24.00" stroke-linecap="round">
+      <path class="boot-arc" d="M 451.08 119.59 A 44.03 44.03 0 0 1 465.88 178.94"/>
+      <path class="boot-arc" d="M 473.33 83.98 A 86.02 86.02 0 0 1 502.24 199.94"/>
+      <path class="boot-arc" d="M 496.12 47.51 A 129.02 129.02 0 0 1 539.48 221.44"/>
+  </g>
+</svg>

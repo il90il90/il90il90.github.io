@@ -34,7 +34,10 @@
         || localStorage.getItem("israel-tv-tv") === "1"
         || /IsraelTV-AndroidTV/i.test(ua)
         || (/Android/i.test(ua) && /(Android TV|GoogleTV|SDK_GOOGLE_ATV|AOSP on ATV|BRAVIA|AFT[A-Z0-9]|SHIELD|MIBOX|BeyondTV|SmartTV|Nexus Player|ADT-|AndroidTV)/i.test(ua));
-      if (tv) document.documentElement.classList.add("tv");
+      if (tv) {
+        document.documentElement.classList.add("tv");
+        document.documentElement.dataset.booted = "1";
+      }
     })();
   </script>
   <style>
@@ -447,7 +450,7 @@
       border-radius: 16px; background: #0b1018;
       display: grid; place-items: center; overflow: hidden;
     }
-    .logo img { width: 100%; height: 100%; object-fit: contain; }
+    .logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .card .title { font-weight: 700; font-size: 14px; line-height: 1.3; }
     .card .sub { color: var(--muted); font-size: 12px; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -1501,74 +1504,94 @@
     .tv-only { display: none !important; }
     .tv-hint { display: none; }
     html.tv {
-      --header: 76px;
-      --video-max-h: min(46vh, 520px);
-      --radius: 18px;
+      --header: 64px;
+      --video-max-h: min(42vh, 460px);
+      --radius: 14px;
     }
-    html.tv body { font-size: 18px; }
+    html.tv body { font-size: 15px; }
     html.tv #app, html.tv main { max-width: none; }
     html.tv header.top {
-      gap: 16px;
-      padding: 24px 56px 16px;
+      gap: 10px;
+      padding: 12px 28px 10px;
+      backdrop-filter: none;
+      background: #070b12;
     }
-    html.tv main { padding: 16px 56px 0; }
-    html.tv .catalog { padding-bottom: 48px; }
-    html.tv .brand img { width: 44px; height: 44px; }
-    html.tv .brand h1 { font-size: 22px; }
-    html.tv .expiry { min-height: 44px; padding: 4px 10px; }
-    html.tv .expiry .expiry-main { font-size: 13px; }
-    html.tv .expiry .expiry-until { font-size: 11px; }
+    html.tv .brand span { display: none; }
+    html.tv .count, html.tv footer.credit { display: none; }
+    html.tv main { padding: 10px 28px 0; }
+    html.tv .catalog { padding-bottom: 28px; }
+    html.tv .section { margin-top: 10px; }
+    html.tv .section h2 { font-size: 13px; margin-bottom: 8px; }
+    html.tv .brand img { width: 36px; height: 36px; }
+    html.tv .brand h1 { font-size: 18px; }
+    html.tv .expiry { min-height: 36px; padding: 3px 8px; }
+    html.tv .expiry .expiry-main { font-size: 11px; }
+    html.tv .expiry .expiry-until { font-size: 9px; }
     html.tv .icon-btn, html.tv .actions button, html.tv .actions a {
-      width: 52px;
-      height: 52px;
+      width: 44px;
+      height: 44px;
     }
     html.tv .header-search { display: none; }
     html.tv .header-search.open,
     html.tv .header-search:has(.tv-search-open) { display: flex; }
-    html.tv .search { height: 52px; font-size: 20px; }
+    html.tv .search { height: 44px; font-size: 16px; }
     html.tv .tv-only { display: grid !important; }
-    html.tv .tv-hint { display: block; margin: 0 0 16px; color: var(--muted); font-size: 16px; }
+    html.tv .tv-hint { display: none !important; }
     html.tv #pipBtn, html.tv #castBtn, html.tv #openBtn, html.tv #installBtn { display: none !important; }
-    html.tv .grid { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 14px; }
-    html.tv .card { padding: 12px 8px 14px; }
-    html.tv .logo { width: 72px; height: 72px; }
-    html.tv .card .title { font-size: 16px; }
-    html.tv .chip, html.tv .cat { min-height: 48px; font-size: 16px; padding: 10px 16px; }
-    html.tv .chip.chip-logo { width: 56px; height: 56px; }
+    html.tv .grid {
+      grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+      gap: 10px;
+    }
+    html.tv .card {
+      padding: 8px 6px 10px;
+    }
+    html.tv .logo { width: 56px; height: 56px; margin-bottom: 6px; border-radius: 12px; }
+    html.tv .logo img, html.tv .chip.chip-logo img { display: block; }
+    html.tv .card .title { font-size: 13px; }
+    html.tv .card .sub { display: none; }
+    html.tv .chip, html.tv .cat { min-height: 40px; font-size: 14px; padding: 7px 12px; }
+    html.tv .chip.chip-logo { width: 44px; height: 44px; }
+    html.tv .chips, html.tv .cats {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    html.tv .chips::-webkit-scrollbar, html.tv .cats::-webkit-scrollbar { display: none; }
     html.tv .login {
-      width: min(560px, 78vw);
-      padding: 22px 28px 18px;
+      width: min(480px, 72vw);
+      padding: 18px 22px 16px;
       text-align: center;
     }
-    html.tv .login h2 { font-size: 26px; }
-    html.tv .login p { font-size: 16px; }
-    html.tv .login-qr-icon { width: 52px !important; height: 52px !important; flex-basis: 52px; }
-    html.tv .login-qr-icon svg { width: 26px; height: 26px; }
-    html.tv .pair-help { font-size: 17px; margin-bottom: 10px !important; }
-    html.tv .qr-card.login-qr { padding: 12px; margin: 0 auto; }
+    html.tv .login h2 { font-size: 22px; }
+    html.tv .login p { font-size: 14px; }
+    html.tv .login-qr-icon { width: 44px !important; height: 44px !important; flex-basis: 44px; }
+    html.tv .login-qr-icon svg { width: 22px; height: 22px; }
+    html.tv .pair-help { font-size: 15px; margin-bottom: 8px !important; }
+    html.tv .qr-card.login-qr { padding: 10px; margin: 0 auto; }
     html.tv .login-qr .qr-target,
     html.tv .login-qr canvas,
-    html.tv .login-qr img { width: min(32vh, 176px); height: min(32vh, 176px); }
-    html.tv .pair-code { font-size: 18px; margin-top: 8px !important; }
-    html.tv .pair-wait { font-size: 14px; margin-top: 4px !important; }
+    html.tv .login-qr img { width: min(28vh, 156px); height: min(28vh, 156px); }
+    html.tv .pair-code { font-size: 16px; margin-top: 6px !important; }
+    html.tv .pair-wait { font-size: 13px; margin-top: 4px !important; }
     html.tv .license-tile {
-      padding: 12px 14px;
-      margin-top: 12px;
+      padding: 10px 12px;
+      margin-top: 10px;
     }
-    html.tv .license-tile-icon { width: 48px; height: 48px; flex-basis: 48px; }
-    html.tv .license-tile-copy strong { font-size: 18px; }
-    html.tv .license-tile-copy small { font-size: 14px; }
-    html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 4px; }
-    html.tv .stage { max-height: 52vh; }
-    html.tv .now-logo { height: 44px; }
-    html.tv .status-spinner { width: 44px; height: 44px; border-width: 4px; }
-    html.tv .status p { font-size: 18px; }
+    html.tv .license-tile-icon { width: 40px; height: 40px; flex-basis: 40px; }
+    html.tv .license-tile-copy strong { font-size: 16px; }
+    html.tv .license-tile-copy small { font-size: 13px; }
+    html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 3px; }
+    html.tv .stage { max-height: 48vh; }
+    html.tv .now { padding: 6px 8px; }
+    html.tv .now-logo { height: 32px; }
+    html.tv .status-spinner { width: 36px; height: 36px; border-width: 3px; }
+    html.tv .status p { font-size: 15px; }
     html.tv button:focus, html.tv a:focus, html.tv input:focus, html.tv select:focus, html.tv textarea:focus, html.tv .theater:focus {
       outline: 3px solid var(--accent-2);
-      outline-offset: 4px;
+      outline-offset: 3px;
     }
-    html.tv .card:focus, html.tv .chip:focus, html.tv .cat:focus { background: var(--card-hover); }
-    html.tv .chip.active:focus, html.tv .cat.active:focus { filter: brightness(1.12); }
+    html.tv .card:focus, html.tv .chip:focus, html.tv .cat:focus { background: var(--card-hover); filter: none; }
+    html.tv .chip.active:focus, html.tv .cat.active:focus { filter: none; }
     #bootSplash {
       position: fixed;
       inset: 0;
@@ -2350,16 +2373,25 @@
       });
     }
 
-    function readSession() {
+    function readSessionRaw() {
       try {
         const session = JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
-        if (!session?.role) return null;
-        const end = session.licenseExp || session.exp;
-        if (!end || end < nowSec()) return null;
-        return session;
+        return session?.role ? session : null;
       } catch {
         return null;
       }
+    }
+
+    function sessionStillValid(session) {
+      if (!session?.role) return false;
+      if (session.role === "admin") return true;
+      const end = session.licenseExp || session.exp;
+      return Number.isFinite(end) && end >= nowSec();
+    }
+
+    function readSession() {
+      const session = readSessionRaw();
+      return sessionStillValid(session) ? session : null;
     }
 
     function writeSession(session) {
@@ -3312,6 +3344,7 @@
 
     let liveBeatTimer = 0;
     let appLocked = false;
+    let expiryRefreshBusy = false;
     function stopLiveSession() {
       if (liveBeatTimer) window.clearInterval(liveBeatTimer);
       liveBeatTimer = 0;
@@ -3334,11 +3367,14 @@
         const data = await res.json().catch(() => ({}));
         if (data?.success) {
           const stamp = Date.parse(data.expires_at);
+          const next = { ...session };
           if (Number.isFinite(stamp)) {
-            const next = { ...session, licenseExp: Math.floor(stamp / 1000), exp: Math.floor(stamp / 1000) };
-            writeSession(next);
-            refreshExpiry(next);
+            next.licenseExp = Math.floor(stamp / 1000);
+            next.exp = next.licenseExp;
           }
+          if (data.session_id) next.sessionId = data.session_id;
+          writeSession(next);
+          refreshExpiry(next);
           return true;
         }
         const code = String(data?.error_code || "").toUpperCase();
@@ -3353,13 +3389,13 @@
       stopLiveSession();
       if (appLocked || session?.role !== "user" || !session.license) return session;
       await refreshDeviceLabel();
-      const interval = isTv ? 5000 : 8000;
+      const interval = isTv ? 8000 : 12000;
       const beat = async () => {
         if (appLocked) {
           stopLiveSession();
           return;
         }
-        const current = readSession();
+        const current = readSessionRaw();
         if (!current?.license) {
           stopLiveSession();
           return;
@@ -3538,6 +3574,7 @@
 
     function refreshExpiry(session) {
       const el = document.getElementById("expiry");
+      if (!session) return;
       if (session.role === "admin") {
         el.hidden = false;
         el.className = "expiry";
@@ -3547,7 +3584,20 @@
       const exp = session.licenseExp || session.exp;
       const left = exp - nowSec();
       if (left <= 0) {
-        lockApp();
+        if (session.license && !expiryRefreshBusy) {
+          expiryRefreshBusy = true;
+          refreshLicenseSnapshot(session).finally(() => { expiryRefreshBusy = false; }).then((next) => {
+            if (!next || appLocked) return;
+            if ((next.licenseExp || next.exp) - nowSec() <= 0) {
+              lockApp();
+              return;
+            }
+            writeSession(next);
+            refreshExpiry(next);
+          });
+          return;
+        }
+        if (!expiryRefreshBusy) lockApp();
         return;
       }
       el.hidden = false;
@@ -3616,7 +3666,7 @@
       refreshExpiry(session);
       if (!window.__expiryClock) {
         window.__expiryClock = setInterval(() => {
-          const current = readSession();
+          const current = readSessionRaw();
           if (!current) {
             lockApp();
             return;
@@ -3636,7 +3686,7 @@
       if (appLocked) return;
       appLocked = true;
       stopLiveSession();
-      endLiveSession(readSession());
+      endLiveSession(readSessionRaw());
       document.documentElement.dataset.session = "0";
       document.documentElement.dataset.admin = "0";
       clearSession();
@@ -4606,19 +4656,32 @@
       localStorage.setItem(RECENT_KEY, JSON.stringify(ids.slice(0, RECENT_LIMIT)));
     }
 
+    function logoSrc(path) {
+      const value = String(path || "").trim();
+      if (!value) return "";
+      if (/^(https?:|data:|blob:)/i.test(value)) return value;
+      try { return new URL(value, document.baseURI).href; } catch { return value; }
+    }
+
     function paintLogo(box, channel) {
       const initials = String(channel.name || "").slice(0, 2);
-      box.textContent = initials;
-      if (!channel.logo) return;
+      const src = logoSrc(channel.logo);
+      box.replaceChildren();
+      if (!src) {
+        box.textContent = initials;
+        return;
+      }
       const img = document.createElement("img");
       img.alt = "";
-      img.loading = "lazy";
-      img.referrerPolicy = "no-referrer";
+      img.draggable = false;
+      try { img.decoding = "async"; } catch {}
+      try { img.loading = (isTv || isAndroid) ? "eager" : "lazy"; } catch {}
       img.addEventListener("error", () => {
+        box.replaceChildren();
         box.textContent = initials;
-      });
-      img.src = channel.logo;
-      box.replaceChildren(img);
+      }, { once: true });
+      img.src = src;
+      box.append(img);
     }
 
     function visibleChannels() {
@@ -4710,10 +4773,11 @@
       }
 
       const list = visibleChannels();
-      gridEl.innerHTML = "";
+      const frag = document.createDocumentFragment();
       const customView = isCustomCat(category);
       const showGroups = !query && (customView || category === "all");
       let lastGroup = null;
+      let cardIndex = 0;
       for (const channel of list) {
         if (showGroups && String(channel.id || "").startsWith("custom_")) {
           const group = customView
@@ -4724,7 +4788,7 @@
             const head = document.createElement("div");
             head.className = "grid-group";
             head.textContent = group;
-            gridEl.append(head);
+            frag.append(head);
           }
         } else if (lastGroup && !String(channel.id || "").startsWith("custom_")) {
           lastGroup = null;
@@ -4732,23 +4796,30 @@
         const card = document.createElement("button");
         card.type = "button";
         card.dataset.id = channel.id;
+        card.dataset.i = String(cardIndex++);
         card.className = `card${current?.id === channel.id ? " active" : ""}`;
-        card.innerHTML = `
-          <div class="logo"></div>
-          <div class="title"></div>
-          <div class="sub"></div>
-        `;
-        paintLogo(card.querySelector(".logo"), channel);
-        card.querySelector(".title").textContent = channel.name;
-        card.querySelector(".sub").textContent = String(channel.id || "").startsWith("custom_")
-          ? (customView ? (channel.group || channel.folder || "") : (channel.folder || ""))
-          : channel.nameEn;
+        const logo = document.createElement("div");
+        logo.className = "logo";
+        const title = document.createElement("div");
+        title.className = "title";
+        title.textContent = channel.name;
+        card.append(logo, title);
+        if (!isTv) {
+          const sub = document.createElement("div");
+          sub.className = "sub";
+          sub.textContent = String(channel.id || "").startsWith("custom_")
+            ? (customView ? (channel.group || channel.folder || "") : (channel.folder || ""))
+            : channel.nameEn;
+          card.append(sub);
+        }
+        paintLogo(logo, channel);
         bindTap(card, () => {
           launchRtspIfNeeded(channel);
           playChannel(channel);
         });
-        gridEl.append(card);
+        frag.append(card);
       }
+      gridEl.replaceChildren(frag);
 
       countEl.textContent = `${list.length} ערוצים`;
       gridTitle.textContent = query || category !== "all"
@@ -4838,7 +4909,7 @@
 
     function setNowLogo(channel) {
       if (channel?.logo) {
-        nowLogo.src = channel.logo;
+        nowLogo.src = logoSrc(channel.logo);
         nowLogo.alt = channel.name || "";
         nowLogo.title = channel.name || "";
         nowLogo.hidden = false;
@@ -5322,10 +5393,15 @@
     });
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState !== "visible") return;
-      const session = readSession();
-      if (session?.role === "user") {
-        pulseLiveSession(session).then((ok) => {
-          if (!ok) lockApp();
+      const session = readSessionRaw();
+      if (session?.role === "user" && session.license) {
+        refreshLicenseSnapshot(session).then((next) => {
+          if (!next) {
+            if (!sessionStillValid(session) && !appLocked) lockApp();
+            return;
+          }
+          if (document.getElementById("app")?.hidden) unlockApp(next);
+          else applyFreshSession(next);
         }).catch(() => {});
       }
       pullProfile().catch(() => {});
@@ -5500,26 +5576,63 @@
       }
     });
 
-    async function repairSession(session) {
+    async function refreshLicenseSnapshot(session) {
+      if (!session) return null;
       if (session.role !== "user" || !session.license) return session;
-      const ok = await pulseLiveSession(session);
-      if (!ok) {
+      const pulseOk = await pulseLiveSession(session);
+      const afterPulse = readSessionRaw() || session;
+      if (pulseOk && sessionStillValid(afterPulse)) return afterPulse;
+      if (pulseOk === false) {
         lockApp();
         return null;
       }
-      return session;
+      try {
+        const result = await verifyPwfLicense(session.license, session.email || "");
+        if (!result.ok) {
+          const code = String(result.data?.error_code || "").toUpperCase();
+          if (["BANNED", "PAUSED", "EXPIRED", "INVALID_KEY", "DEVICE_REMOVED"].includes(code)) {
+            lockApp();
+            return null;
+          }
+          return sessionStillValid(session) ? session : null;
+        }
+        const exp = parsePwfExp(result.key);
+        const next = {
+          ...session,
+          licenseExp: exp,
+          exp,
+          sessionId: result.sessionId || session.sessionId,
+          heartbeatInterval: result.heartbeatInterval || session.heartbeatInterval,
+          maxDevices: parseMaxDevices(result.key) || session.maxDevices,
+          devicesUsed: result.devicesUsed,
+          devicesLeft: result.devicesLeft,
+        };
+        writeSession(next);
+        return next;
+      } catch {
+        return sessionStillValid(afterPulse) ? afterPulse : null;
+      }
+    }
+
+    function applyFreshSession(session) {
+      if (!session || appLocked) return;
+      writeSession(session);
+      refreshExpiry(session);
+      startLiveSession(session);
     }
 
     const linkedPair = consumePairLink();
     const linkedLicense = consumeLicenseLink();
-    const existing = readSession();
-    if (existing) {
-      unlockApp(existing);
-      repairSession(existing).then((session) => {
-        if (!session || appLocked) return;
-        writeSession(session);
-        refreshExpiry(session);
-        startLiveSession(session);
+    const existing = readSessionRaw();
+    if (existing && (sessionStillValid(existing) || (existing.role === "user" && existing.license))) {
+      if (sessionStillValid(existing)) unlockApp(existing);
+      refreshLicenseSnapshot(existing).then((session) => {
+        if (!session || appLocked) {
+          if (!sessionStillValid(existing) && !appLocked) startScreenPairing();
+          return;
+        }
+        if (document.getElementById("app")?.hidden) unlockApp(session);
+        else applyFreshSession(session);
       });
       if (linkedPair) askClaimPair(linkedPair);
     } else if (linkedLicense) {
@@ -5608,6 +5721,7 @@
       const root = tvRoot();
       if (!root) return [];
       return [...root.querySelectorAll(TV_FOCUSABLE)].filter((el) => {
+        if (el.classList.contains("card")) return false;
         if (!tvVisible(el)) return false;
         if (el.id === "q" && !el.classList.contains("tv-search-open")) return false;
         if (el.id === "licenseInput" && !document.getElementById("loginType")?.classList.contains("open")) return false;
@@ -5615,15 +5729,128 @@
       });
     }
 
+    function tvGridCols() {
+      const style = getComputedStyle(gridEl);
+      const cols = style.gridTemplateColumns;
+      if (!cols || cols === "none") return 1;
+      return cols.split(" ").filter(Boolean).length || 1;
+    }
+
+    function tvCards() {
+      return tvCardList();
+    }
+
+    function tvHeaderItems() {
+      const header = document.querySelector("#app header.top");
+      if (!header) return [];
+      return [...header.querySelectorAll(TV_FOCUSABLE)].filter((el) => {
+        if (!tvVisible(el)) return false;
+        if (el.id === "q" && !el.classList.contains("tv-search-open")) return false;
+        return true;
+      });
+    }
+
+    function tvRecentItems() {
+      if (!recentEl || recentSection?.hidden) return [];
+      return [...recentEl.querySelectorAll(TV_FOCUSABLE)].filter(tvVisible);
+    }
+
+    function tvCatItems() {
+      return catsEl ? [...catsEl.querySelectorAll(TV_FOCUSABLE)].filter(tvVisible) : [];
+    }
+
+    function tvCardList() {
+      return gridEl ? [...gridEl.querySelectorAll(".card")] : [];
+    }
+
+    function tvFocusStrips() {
+      const strips = [];
+      const header = tvHeaderItems();
+      if (header.length) strips.push({ type: "row", items: header });
+      const recent = tvRecentItems();
+      if (recent.length) strips.push({ type: "row", items: recent });
+      const cats = tvCatItems();
+      if (cats.length) strips.push({ type: "row", items: cats });
+      const cards = tvCardList();
+      if (cards.length) strips.push({ type: "grid", items: cards });
+      return strips;
+    }
+
+    function nearestByX(items, fromEl) {
+      if (!items.length) return null;
+      const from = fromEl.getBoundingClientRect();
+      const ax = from.left + from.width / 2;
+      let best = items[0];
+      let score = Infinity;
+      for (const el of items) {
+        const box = el.getBoundingClientRect();
+        const dist = Math.abs(box.left + box.width / 2 - ax);
+        if (dist < score) {
+          score = dist;
+          best = el;
+        }
+      }
+      return best;
+    }
+
+    function moveInRow(items, active, dx) {
+      const from = active.getBoundingClientRect();
+      const line = items.filter((el) => Math.abs(el.getBoundingClientRect().top - from.top) < 18);
+      const sorted = [...(line.length ? line : items)].sort((a, b) => (
+        a.getBoundingClientRect().left - b.getBoundingClientRect().left
+      ));
+      const idx = sorted.indexOf(active);
+      if (idx < 0) return nearestByX(sorted, active);
+      return sorted[idx + dx] || null;
+    }
+
+    function moveInRowVertical(items, active, dy) {
+      const from = active.getBoundingClientRect();
+      const ax = from.left + from.width / 2;
+      const ay = from.top + from.height / 2;
+      let best = null;
+      let bestScore = Infinity;
+      for (const el of items) {
+        if (el === active) continue;
+        const box = el.getBoundingClientRect();
+        const vy = (box.top + box.height / 2) - ay;
+        if (vy * dy < Math.max(12, from.height * 0.45)) continue;
+        const distX = Math.abs((box.left + box.width / 2) - ax);
+        const score = Math.abs(vy) + distX * 0.3;
+        if (score < bestScore) {
+          bestScore = score;
+          best = el;
+        }
+      }
+      return best;
+    }
+
+    function moveInGrid(items, active, dx, dy) {
+      const marked = Number(active.dataset.i);
+      const i = Number.isFinite(marked) ? marked : items.indexOf(active);
+      if (i < 0) return null;
+      const cols = tvGridCols();
+      if (dx) {
+        const rtl = getComputedStyle(gridEl).direction === "rtl";
+        const step = rtl ? -dx : dx;
+        const next = items[i + step];
+        if (next && Math.floor((i + step) / cols) === Math.floor(i / cols)) return next;
+        return null;
+      }
+      if (dy) return items[i + dy * cols] || null;
+      return null;
+    }
+
     function focusTvDefault() {
+      const cards = tvCards();
       const items = tvFocusables();
-      const preferred = items.find((el) => el.classList.contains("card") && el.classList.contains("active"))
+      const preferred = [...cards].find((el) => el.classList.contains("active"))
         || items.find((el) => el.classList.contains("cat"))
+        || cards[0]
         || items.find((el) => el.id === "loginPairBox")
         || items.find((el) => el.id === "loginManualBtn")
         || items[0];
-      preferred?.focus({ preventScroll: true });
-      preferred?.scrollIntoView({ block: "nearest", inline: "nearest" });
+      focusTvNode(preferred);
     }
 
     function openTvSearch() {
@@ -5645,14 +5872,13 @@
       else video.pause();
     }
 
-    function moveTvFocus(dx, dy) {
-      const items = tvFocusables();
-      if (!items.length) return;
-      const active = items.includes(document.activeElement) ? document.activeElement : null;
-      if (!active) {
-        focusTvDefault();
-        return;
-      }
+    function focusTvNode(el) {
+      if (!el) return;
+      el.focus({ preventScroll: true });
+      el.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+
+    function pickTvByGeometry(items, active, dx, dy) {
       const from = active.getBoundingClientRect();
       const ax = from.left + from.width / 2;
       const ay = from.top + from.height / 2;
@@ -5678,9 +5904,61 @@
           best = el;
         }
       }
-      if (!best) return;
-      best.focus({ preventScroll: true });
-      best.scrollIntoView({ block: "nearest", inline: "nearest" });
+      return best;
+    }
+
+    function moveTvFocus(dx, dy) {
+      const dialog = document.querySelector("dialog[open]");
+      if (dialog) {
+        const items = tvFocusables();
+        const active = items.includes(document.activeElement) ? document.activeElement : null;
+        if (!active) {
+          focusTvDefault();
+          return;
+        }
+        if (dx) {
+          focusTvNode(moveInRow(items, active, dx));
+          return;
+        }
+        focusTvNode(pickTvByGeometry(items, active, dx, dy));
+        return;
+      }
+      const strips = tvFocusStrips();
+      const active = document.activeElement;
+      const s = strips.findIndex((strip) => strip.items.includes(active));
+      if (s < 0) {
+        focusTvDefault();
+        return;
+      }
+      const strip = strips[s];
+      if (dx) {
+        const next = strip.type === "grid"
+          ? moveInGrid(strip.items, active, dx, 0)
+          : moveInRow(strip.items, active, dx);
+        if (next) focusTvNode(next);
+        return;
+      }
+      if (!dy) return;
+      if (strip.type === "row") {
+        const withinRow = moveInRowVertical(strip.items, active, dy);
+        if (withinRow) {
+          focusTvNode(withinRow);
+          return;
+        }
+      }
+      if (strip.type === "grid") {
+        const within = moveInGrid(strip.items, active, 0, dy);
+        if (within) {
+          focusTvNode(within);
+          return;
+        }
+      }
+      const target = strips[s + dy];
+      if (!target) return;
+      const pool = target.type === "grid"
+        ? target.items.slice(0, Math.max(1, tvGridCols()))
+        : target.items;
+      focusTvNode(nearestByX(pool, active));
     }
 
     function tvBack() {
@@ -5744,18 +6022,22 @@
         if (event.key === "ArrowLeft") {
           if (typing) return;
           event.preventDefault();
+          event.stopPropagation();
           moveTvFocus(-1, 0);
         } else if (event.key === "ArrowRight") {
           if (typing) return;
           event.preventDefault();
+          event.stopPropagation();
           moveTvFocus(1, 0);
         } else if (event.key === "ArrowUp") {
           if (typing) return;
           event.preventDefault();
+          event.stopPropagation();
           moveTvFocus(0, -1);
         } else if (event.key === "ArrowDown") {
           if (typing) return;
           event.preventDefault();
+          event.stopPropagation();
           moveTvFocus(0, 1);
         } else if (event.key === "Escape" || event.key === "BrowserBack") {
           if (tvBack()) event.preventDefault();
@@ -5781,7 +6063,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=141").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=144").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;

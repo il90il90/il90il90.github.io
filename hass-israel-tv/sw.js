@@ -1,4 +1,4 @@
-const CACHE = "israel-tv-v141";
+const CACHE = "israel-tv-v144";
 const SHELL = [
   "./",
   "./index.html",
@@ -48,10 +48,18 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(request, fresh ? { cache: "no-store" } : undefined)
       .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE).then((cache) => cache.put(request, copy));
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, copy));
+        }
         return response;
       })
-      .catch(() => caches.match(request).then((cached) => cached || caches.match("./index.html")))
+      .catch(() => caches.match(request).then((cached) => {
+        if (cached) return cached;
+        if (request.destination === "image" || /\.(png|jpe?g|gif|webp|svg)$/i.test(url.pathname)) {
+          return new Response("", { status: 404, statusText: "Not Found" });
+        }
+        return caches.match("./index.html");
+      }))
   );
 });
