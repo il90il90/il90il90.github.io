@@ -775,13 +775,14 @@
       font-weight: 700;
     }
     .keys-toolbar {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) var(--key-h);
+      display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin: 0 0 12px;
     }
     #keysDlg .keys-toolbar input:not([type="file"]) {
-      width: 100%;
+      width: auto;
+      flex: 1 1 140px;
       margin: 0 !important;
       height: var(--key-h);
       padding: 0 12px !important;
@@ -792,6 +793,12 @@
       padding: 0;
       display: grid;
       place-items: center;
+    }
+    #keysDlg .keys-toolbar .keys-toggle-all {
+      width: auto;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 800;
     }
     #keysDlg .keys-toolbar button svg { width: 16px; height: 16px; display: block; }
     #statsDlg {
@@ -850,7 +857,9 @@
       display: grid;
       place-items: center;
     }
-    #statsDlg .stats-toolbar #statsClearFilter {
+    #statsDlg .stats-toolbar #statsClearFilter,
+    #statsDlg .stats-toolbar #statsOpenAll,
+    #statsDlg .stats-toolbar #statsCloseAll {
       width: auto;
       padding: 0 12px;
       font-size: 13px;
@@ -2665,6 +2674,8 @@
     <h3>כל הרישיונות<span class="keys-meta" id="keysMeta">טוען…</span></h3>
     <div class="keys-toolbar">
       <input id="keysSearch" type="search" placeholder="חיפוש שם, טוקן או סטטוס" autocomplete="off" />
+      <button type="button" class="ghost keys-toggle-all" id="keysOpenAll">פתח הכל</button>
+      <button type="button" class="ghost keys-toggle-all" id="keysCloseAll">סגור הכל</button>
       <button type="button" class="ghost" id="keysRefresh" title="רענון" aria-label="רענון">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.4-6.2"/><path d="M21 4v6h-6"/></svg>
       </button>
@@ -2689,6 +2700,8 @@
         <option value="name">לפי שם</option>
       </select>
       <button type="button" class="ghost" id="statsClearFilter" hidden>הצג הכל</button>
+      <button type="button" class="ghost" id="statsOpenAll">פתח הכל</button>
+      <button type="button" class="ghost" id="statsCloseAll">סגור הכל</button>
       <button type="button" class="ghost" id="statsRefresh" title="רענון" aria-label="רענון">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.4-6.2"/><path d="M21 4v6h-6"/></svg>
       </button>
@@ -3358,10 +3371,11 @@
     }
 
     let adminKeysCache = [];
-    let openAdminKey = "";
+    const openAdminKeys = new Set();
 
     function toggleAdminKey(licenseKey) {
-      openAdminKey = openAdminKey === licenseKey ? "" : licenseKey;
+      if (openAdminKeys.has(licenseKey)) openAdminKeys.delete(licenseKey);
+      else openAdminKeys.add(licenseKey);
       renderAdminKeys();
     }
 
@@ -3478,7 +3492,7 @@
       list.replaceChildren();
       for (const key of rows) {
         const card = document.createElement("article");
-        const open = openAdminKey === key.license_key;
+        const open = openAdminKeys.has(key.license_key);
         card.className = `key-card${open ? " open" : ""}`;
         card.dataset.key = key.license_key;
         const people = Array.isArray(key.devices) ? key.devices : [];
@@ -3705,7 +3719,7 @@
     }
 
     let statsFilter = "";
-    let statsOpenUser = "";
+    const statsOpenUsers = new Set();
     const statsDayPick = {};
 
     function statsFilterMatch(user, filter, summary, now) {
@@ -3814,14 +3828,15 @@
         : (statsFilter ? `אין אנשים ב־${filterLabel}` : (query ? "אין תוצאות לחיפוש" : "אין נתונים עדיין"));
       list.replaceChildren();
       for (const user of rows) {
-        const open = statsOpenUser === user.license_key;
+        const open = statsOpenUsers.has(user.license_key);
         const card = document.createElement("article");
         card.className = `stats-card${open ? " open" : ""}`;
         const devices = Array.isArray(user.device_list) ? user.device_list : [];
         const head = document.createElement("div");
         head.className = "stats-card-head";
         head.addEventListener("click", () => {
-          statsOpenUser = open ? "" : user.license_key;
+          if (open) statsOpenUsers.delete(user.license_key);
+          else statsOpenUsers.add(user.license_key);
           renderAdminStats();
         });
         const title = document.createElement("div");
@@ -3969,7 +3984,7 @@
       };
       if (keyAction === "delete") {
         adminKeysCache = adminKeysCache.filter((item) => item.license_key !== key.license_key);
-        if (openAdminKey === key.license_key) openAdminKey = "";
+        openAdminKeys.delete(key.license_key);
         renderAdminKeys();
       }
       showToast(done[keyAction] || "עודכן");
@@ -7159,6 +7174,25 @@
       statsFilter = "";
       renderAdminStats();
     });
+    document.getElementById("statsOpenAll").addEventListener("click", () => {
+      const query = document.getElementById("statsSearch").value.trim().toLowerCase();
+      const summary = adminStatsCache.summary || {};
+      const now = Number(adminStatsCache.generated_at) || Date.now();
+      for (const user of adminStatsCache.users || []) {
+        if (!statsFilterMatch(user, statsFilter, summary, now)) continue;
+        if (query) {
+          const status = keyStatusLabel(user.status);
+          const hay = [user.note, user.license_key, user.status, status, user.online ? "מחובר" : ""].join(" ").toLowerCase();
+          if (!hay.includes(query)) continue;
+        }
+        if (user.license_key) statsOpenUsers.add(user.license_key);
+      }
+      renderAdminStats();
+    });
+    document.getElementById("statsCloseAll").addEventListener("click", () => {
+      statsOpenUsers.clear();
+      renderAdminStats();
+    });
     document.getElementById("statsSort").addEventListener("change", () => renderAdminStats());
     document.getElementById("statsSearch").addEventListener("input", () => renderAdminStats());
     document.getElementById("statsDlg").addEventListener("click", (event) => {
@@ -7168,6 +7202,17 @@
       document.getElementById("keysDlg").close();
     });
     document.getElementById("keysRefresh").addEventListener("click", () => loadAdminKeys());
+    document.getElementById("keysOpenAll").addEventListener("click", () => {
+      const query = document.getElementById("keysSearch").value.trim().toLowerCase();
+      for (const key of adminKeysCache) {
+        if (keyMatchesSearch(key, query) && key.license_key) openAdminKeys.add(key.license_key);
+      }
+      renderAdminKeys();
+    });
+    document.getElementById("keysCloseAll").addEventListener("click", () => {
+      openAdminKeys.clear();
+      renderAdminKeys();
+    });
     document.getElementById("keysSearch").addEventListener("input", () => renderAdminKeys());
     document.getElementById("keysDlg").addEventListener("click", (event) => {
       if (event.target === event.currentTarget) event.currentTarget.close();
@@ -7878,7 +7923,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=182").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=183").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
