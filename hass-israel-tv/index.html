@@ -1866,23 +1866,33 @@
     html.tv .license-tile-copy small { font-size: 16px; color: #c5d0e0; }
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 3px; }
     html.tv dialog.sheet[open] {
-      display: flex;
-      flex-direction: column;
-      width: min(560px, 86vw);
-      max-height: min(86vh, 720px);
+      position: fixed;
+      inset: 0;
+      width: auto;
+      height: auto;
+      max-width: none;
+      max-height: none;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      background: #070b12;
       overflow-x: hidden;
-      overflow-y: auto;
+      overflow-y: scroll;
+      padding: 28px 48px 80px;
     }
     html.tv #licenseViewDlg[open] {
-      padding: 0;
-      overflow: hidden;
-    }
-    html.tv #licenseViewDlg .lic-head { flex: 0 0 auto; }
-    html.tv #licenseViewDlg .lic-body {
-      flex: 1 1 auto;
-      min-height: 0;
+      padding: 0 0 80px;
       overflow-x: hidden;
-      overflow-y: auto;
+      overflow-y: scroll;
+    }
+    html.tv #licenseViewDlg .lic-head {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    html.tv #licenseViewDlg .lic-body {
+      overflow: visible;
+      min-height: 0;
     }
     html.tv #licenseViewDlg .qr-card { padding: 12px; }
     html.tv #licenseViewDlg .qr-target,
@@ -2608,18 +2618,42 @@
       if (isTextField(el)) el.blur();
     }
 
+    function lockTvSheetScroll(dlg) {
+      if (!isTv || !dlg) return;
+      const h = Math.max(320, window.innerHeight || 720);
+      dlg.style.position = "fixed";
+      dlg.style.inset = "0px";
+      dlg.style.width = "100vw";
+      dlg.style.height = `${h}px`;
+      dlg.style.maxHeight = `${h}px`;
+      dlg.style.margin = "0";
+      dlg.style.overflowX = "hidden";
+      dlg.style.overflowY = "scroll";
+      const body = dlg.querySelector(".lic-body");
+      if (body) {
+        body.style.overflow = "visible";
+        body.style.height = "auto";
+        body.style.maxHeight = "none";
+      }
+    }
+
     function openSheet(dlg) {
       if (!dlg) return;
       dlg.dataset.ready = "";
       const title = dlg.querySelector("h3");
       if (title && !title.hasAttribute("tabindex")) title.tabIndex = -1;
-      if (!dlg.open) dlg.showModal();
+      if (!dlg.open) {
+        if (isTv) dlg.show();
+        else dlg.showModal();
+      }
+      lockTvSheetScroll(dlg);
       title?.focus({ preventScroll: true });
       if (isTextField(document.activeElement)) {
         document.activeElement.blur();
         title?.focus({ preventScroll: true });
       }
       requestAnimationFrame(() => {
+        lockTvSheetScroll(dlg);
         if (isTextField(document.activeElement)) {
           document.activeElement.blur();
           title?.focus({ preventScroll: true });
@@ -2630,6 +2664,12 @@
         }
       });
       window.setTimeout(() => { dlg.dataset.ready = "1"; }, 350);
+    }
+
+    if (isTv) {
+      window.addEventListener("resize", () => {
+        document.querySelectorAll("dialog[open]").forEach(lockTvSheetScroll);
+      });
     }
 
     document.addEventListener("pointerdown", (event) => {
@@ -6806,36 +6846,47 @@
     }
 
     function tvDialogScrollRoot(dialog) {
+      if (!dialog) return null;
+      if (dialog.scrollHeight > dialog.clientHeight + 4) return dialog;
       const body = dialog.querySelector(".lic-body");
       if (body && body.scrollHeight > body.clientHeight + 4) return body;
       return dialog;
     }
 
+    function scrollTvDialog(dialog, dy) {
+      if (!dialog || !dy) return;
+      const step = Math.max(180, Math.round((window.innerHeight || 720) * 0.34));
+      const delta = dy * step;
+      const roots = [dialog, dialog.querySelector(".lic-body")].filter(Boolean);
+      for (const root of roots) {
+        const before = root.scrollTop;
+        root.scrollTop = before + delta;
+        if (Math.abs(root.scrollTop - before) > 2) return;
+      }
+    }
+
     function moveTvDialogFocus(dialog, dx, dy) {
+      if (dy) scrollTvDialog(dialog, dy);
       const items = tvFocusables();
-      const scroller = tvDialogScrollRoot(dialog);
-      if (!items.length) {
-        scroller.scrollBy({ top: dy * 96, left: 0 });
-        return;
-      }
+      if (!items.length) return;
       const active = items.includes(document.activeElement) ? document.activeElement : null;
-      if (!active) {
-        focusTvNode(items[0]);
-        return;
-      }
       if (dx) {
-        const next = moveInRow(items, active, dx);
-        if (next) focusTvNode(next);
+        const next = moveInRow(items, active || items[0], dx);
+        if (next) next.focus({ preventScroll: true });
         return;
       }
-      if (!dy) return;
-      const idx = items.indexOf(active);
-      const next = items[idx + dy];
-      if (next) {
-        focusTvNode(next);
-        return;
+      const mid = (window.innerHeight || 720) * 0.42;
+      let best = items[0];
+      let score = Infinity;
+      for (const el of items) {
+        const box = el.getBoundingClientRect();
+        const dist = Math.abs(box.top + box.height / 2 - mid);
+        if (dist < score) {
+          score = dist;
+          best = el;
+        }
       }
-      scroller.scrollBy({ top: dy * 96, left: 0 });
+      best.focus({ preventScroll: true });
     }
 
     function moveTvFocus(dx, dy) {
@@ -7030,7 +7081,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=168").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=169").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
