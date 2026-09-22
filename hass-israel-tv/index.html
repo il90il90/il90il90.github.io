@@ -824,12 +824,14 @@
     }
     .stats-toolbar {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin: 0 0 12px;
     }
+    #statsDlg .stats-toolbar input,
     #statsDlg .stats-toolbar select {
       width: auto;
-      flex: 1 1 auto;
+      flex: 1 1 140px;
       margin: 0;
     }
     #statsDlg .stats-toolbar button {
@@ -2536,11 +2538,14 @@
     <h3>שימוש באפליקציה<span class="keys-meta" id="statsMeta">טוען…</span></h3>
     <div class="stats-summary" id="statsSummary"></div>
     <div class="stats-toolbar">
+      <input id="statsSearch" type="search" placeholder="חיפוש שם, רישיון או סטטוס" autocomplete="off" />
       <select id="statsSort">
         <option value="score-desc">הכי הרבה שימוש</option>
         <option value="score-asc">הכי מעט שימוש</option>
         <option value="seen-desc">נראו לאחרונה</option>
         <option value="seen-asc">נראו הכי מזמן</option>
+        <option value="today">פעילים היום</option>
+        <option value="expiry">קרובים לתפוגה</option>
         <option value="name">לפי שם</option>
       </select>
       <button type="button" class="ghost" id="statsRefresh" title="רענון" aria-label="רענון">
@@ -3381,23 +3386,45 @@
       const list = document.getElementById("statsList");
       const meta = document.getElementById("statsMeta");
       const sort = document.getElementById("statsSort").value;
+      const query = document.getElementById("statsSearch").value.trim().toLowerCase();
       const summary = adminStatsCache.summary || {};
+      const peakHour = summary.peak_hour == null ? "—" : `${String(summary.peak_hour).padStart(2, "0")}:00`;
       summaryEl.innerHTML = [
         ["משתמשים", summary.users || 0],
         ["מחוברים עכשיו", summary.online || 0],
         ["פעילים היום", summary.active_24h || 0],
         ["פעילים השבוע", summary.active_7d || 0],
+        ["חדשים השבוע", summary.new_7d || 0],
+        ["לא נכנסו מעולם", summary.never_seen || 0],
+        ["שקטים 7 ימים", summary.quiet_7d || 0],
+        ["פגים ב־7 ימים", summary.expiring_7d || 0],
+        ["פגי תוקף", summary.expired || 0],
         ["פתיחות השבוע", summary.opens_7d || 0],
-        ["מכשירים", summary.devices || 0],
-      ].map(([label, value]) => `<div class="stats-metric"><span>${label}</span><strong>${value}</strong></div>`).join("");
-      const rows = [...(adminStatsCache.users || [])].sort((a, b) => {
+        ["ממוצע מכשירים", summary.avg_devices || 0],
+        ["שעת שיא", peakHour],
+        ["הכי פעיל", summary.top_user || "—"],
+      ].map(([label, value]) => `<div class="stats-metric"><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+      const rows = [...(adminStatsCache.users || [])].filter((user) => {
+        if (!query) return true;
+        const status = keyStatusLabel(user.status);
+        return [user.note, user.license_key, user.status, status, user.online ? "מחובר" : ""]
+          .join(" ").toLowerCase().includes(query);
+      }).sort((a, b) => {
         if (sort === "score-asc") return (a.score || 0) - (b.score || 0);
         if (sort === "seen-desc") return (b.last_seen || 0) - (a.last_seen || 0);
         if (sort === "seen-asc") return (a.last_seen || 0) - (b.last_seen || 0);
+        if (sort === "today") return (b.today || 0) - (a.today || 0);
+        if (sort === "expiry") {
+          const ax = a.days_left == null ? 9999 : a.days_left;
+          const bx = b.days_left == null ? 9999 : b.days_left;
+          return ax - bx;
+        }
         if (sort === "name") return String(a.note || "").localeCompare(String(b.note || ""), "he");
         return (b.score || 0) - (a.score || 0);
       });
-      meta.textContent = rows.length ? `${rows.length} משתמשים` : "אין נתונים עדיין";
+      meta.textContent = rows.length
+        ? (query ? `${rows.length} מתוך ${adminStatsCache.users.length}` : `${rows.length} משתמשים`)
+        : (query ? "אין תוצאות לחיפוש" : "אין נתונים עדיין");
       list.replaceChildren();
       for (const user of rows) {
         const card = document.createElement("article");
@@ -3422,9 +3449,14 @@
             <span class="stats-dot${user.online ? " on" : ""}" title="${user.online ? "מחובר" : "לא מחובר"}"></span>
           </div>
           <div class="stats-meta">
+            <span>${keyStatusLabel(user.status)}</span>
             <span>${user.opens || 0} כניסות</span>
             <span>${user.uses || 0} שימושים</span>
+            <span>${user.today || 0} היום</span>
+            <span>${user.week || 0} השבוע</span>
             <span>${user.devices || 0} מכשירים</span>
+            <span>${user.days_left == null ? "בלי תפוגה" : user.days_left < 0 ? "פג תוקף" : `תפוגה בעוד ${user.days_left} ימים`}</span>
+            <span>${user.first_seen ? `הצטרף ${formatLastSeen(user.first_seen)}` : "עדיין לא נכנס"}</span>
           </div>
           <div class="stats-chart">
             <label>14 הימים האחרונים</label>
@@ -6692,6 +6724,7 @@
     });
     document.getElementById("statsRefresh").addEventListener("click", () => loadAdminStats());
     document.getElementById("statsSort").addEventListener("change", () => renderAdminStats());
+    document.getElementById("statsSearch").addEventListener("input", () => renderAdminStats());
     document.getElementById("statsDlg").addEventListener("click", (event) => {
       if (event.target === event.currentTarget) event.currentTarget.close();
     });
@@ -7409,7 +7442,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=174").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=175").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
