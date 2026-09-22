@@ -794,6 +794,118 @@
       place-items: center;
     }
     #keysDlg .keys-toolbar button svg { width: 16px; height: 16px; display: block; }
+    #statsDlg {
+      width: min(720px, calc(100% - 24px));
+    }
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .stats-metric {
+      padding: 10px 10px 9px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      min-width: 0;
+    }
+    .stats-metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+    }
+    .stats-metric strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+    .stats-toolbar {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+    #statsDlg .stats-toolbar select {
+      width: auto;
+      flex: 1 1 auto;
+      margin: 0;
+    }
+    #statsDlg .stats-toolbar button {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+    }
+    #statsDlg .stats-toolbar button svg { width: 16px; height: 16px; display: block; }
+    .stats-list { display: grid; gap: 10px; }
+    .stats-card {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+    }
+    .stats-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .stats-card-head strong { display: block; font-size: 15px; }
+    .stats-card-head small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
+    .stats-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3d4a5f;
+      flex: 0 0 8px;
+      margin-top: 6px;
+    }
+    .stats-dot.on { background: var(--ok); }
+    .stats-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .stats-chart { display: grid; gap: 6px; }
+    .stats-chart label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+    }
+    .stats-bars {
+      display: grid;
+      grid-template-columns: repeat(14, minmax(0, 1fr));
+      align-items: end;
+      gap: 3px;
+      height: 56px;
+    }
+    .stats-bars i {
+      display: block;
+      min-height: 2px;
+      border-radius: 3px 3px 1px 1px;
+      background: rgba(61, 139, 255, 0.35);
+    }
+    .stats-bars i.has { background: var(--accent); }
+    .stats-hours {
+      display: grid;
+      grid-template-columns: repeat(24, minmax(0, 1fr));
+      gap: 2px;
+      height: 18px;
+    }
+    .stats-hours i {
+      display: block;
+      height: 100%;
+      border-radius: 2px;
+      background: #243044;
+    }
+    .stats-hours i.has { background: var(--accent-2); }
     .keys-list { display: grid; gap: 10px; }
     .key-card {
       display: grid;
@@ -1237,10 +1349,11 @@
       cursor: pointer;
     }
     .icon-btn[hidden] { display: none !important; }
-    #licenseBtn, #keysBtn { display: none !important; }
+    #licenseBtn, #keysBtn, #statsBtn { display: none !important; }
     html[data-admin="1"] #licenseBtn:not([hidden]),
-    html[data-admin="1"] #keysBtn:not([hidden]) { display: grid !important; }
-    html.tv #keysBtn { display: none !important; }
+    html[data-admin="1"] #keysBtn:not([hidden]),
+    html[data-admin="1"] #statsBtn:not([hidden]) { display: grid !important; }
+    html.tv #keysBtn, html.tv #statsBtn { display: none !important; }
     dialog.sheet {
       border: 1px solid var(--line);
       border-radius: 16px;
@@ -2149,6 +2262,9 @@
       <button type="button" class="icon-btn" id="keysBtn" hidden title="כל הרישיונות" aria-label="כל הרישיונות">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
       </button>
+      <button type="button" class="icon-btn" id="statsBtn" hidden title="שימוש" aria-label="שימוש">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9"/><path d="M10 19V5"/><path d="M16 19v-7"/><path d="M22 19V8"/></svg>
+      </button>
     </div>
     <div class="header-actions">
       <button type="button" class="icon-btn install" id="installBtn" hidden title="התקן אפליקציה" aria-label="התקן אפליקציה">
@@ -2384,6 +2500,26 @@
     <div class="keys-list" id="keysList"></div>
     <div class="row">
       <button type="button" class="ghost" id="keysClose">סגור</button>
+    </div>
+  </dialog>
+  <dialog class="sheet" id="statsDlg">
+    <h3>שימוש באפליקציה<span class="keys-meta" id="statsMeta">טוען…</span></h3>
+    <div class="stats-summary" id="statsSummary"></div>
+    <div class="stats-toolbar">
+      <select id="statsSort">
+        <option value="score-desc">הכי הרבה שימוש</option>
+        <option value="score-asc">הכי מעט שימוש</option>
+        <option value="seen-desc">נראו לאחרונה</option>
+        <option value="seen-asc">נראו הכי מזמן</option>
+        <option value="name">לפי שם</option>
+      </select>
+      <button type="button" class="ghost" id="statsRefresh" title="רענון" aria-label="רענון">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.4-6.2"/><path d="M21 4v6h-6"/></svg>
+      </button>
+    </div>
+    <div class="stats-list" id="statsList"></div>
+    <div class="row">
+      <button type="button" class="ghost" id="statsClose">סגור</button>
     </div>
   </dialog>
   <dialog class="sheet" id="licenseDlg">
@@ -3173,6 +3309,97 @@
       }
       adminKeysCache = Array.isArray(res.data.keys) ? res.data.keys : [];
       renderAdminKeys();
+    }
+
+    let adminStatsCache = { summary: {}, users: [] };
+
+    function escapeHtml(text) {
+      return String(text || "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      }[ch]));
+    }
+
+    function statsBarHtml(values, cls) {
+      const max = Math.max(1, ...values);
+      return values.map((value) => {
+        const pct = Math.round((Number(value) || 0) / max * 100);
+        return `<i class="${value ? "has" : ""}" style="height:${Math.max(value ? 8 : 2, pct)}%"></i>`;
+      }).join("");
+    }
+
+    function renderAdminStats() {
+      const summaryEl = document.getElementById("statsSummary");
+      const list = document.getElementById("statsList");
+      const meta = document.getElementById("statsMeta");
+      const sort = document.getElementById("statsSort").value;
+      const summary = adminStatsCache.summary || {};
+      summaryEl.innerHTML = [
+        ["משתמשים", summary.users || 0],
+        ["מחוברים עכשיו", summary.online || 0],
+        ["פעילים היום", summary.active_24h || 0],
+        ["פעילים השבוע", summary.active_7d || 0],
+        ["פתיחות השבוע", summary.opens_7d || 0],
+        ["מכשירים", summary.devices || 0],
+      ].map(([label, value]) => `<div class="stats-metric"><span>${label}</span><strong>${value}</strong></div>`).join("");
+      const rows = [...(adminStatsCache.users || [])].sort((a, b) => {
+        if (sort === "score-asc") return (a.score || 0) - (b.score || 0);
+        if (sort === "seen-desc") return (b.last_seen || 0) - (a.last_seen || 0);
+        if (sort === "seen-asc") return (a.last_seen || 0) - (b.last_seen || 0);
+        if (sort === "name") return String(a.note || "").localeCompare(String(b.note || ""), "he");
+        return (b.score || 0) - (a.score || 0);
+      });
+      meta.textContent = rows.length ? `${rows.length} משתמשים` : "אין נתונים עדיין";
+      list.replaceChildren();
+      for (const user of rows) {
+        const card = document.createElement("article");
+        card.className = "stats-card";
+        const days = Array.isArray(user.days) ? user.days.map((item) => item.count) : [];
+        const hours = Array.isArray(user.hours) ? user.hours : [];
+        card.innerHTML = `
+          <div class="stats-card-head">
+            <div>
+              <strong>${escapeHtml(user.note || "בלי שם")}</strong>
+              <small>${user.last_seen ? `נראה ${formatLastSeen(user.last_seen)}` : "עדיין לא נכנס"}</small>
+            </div>
+            <span class="stats-dot${user.online ? " on" : ""}" title="${user.online ? "מחובר" : "לא מחובר"}"></span>
+          </div>
+          <div class="stats-meta">
+            <span>${user.opens || 0} כניסות</span>
+            <span>${user.uses || 0} שימושים</span>
+            <span>${user.devices || 0} מכשירים</span>
+          </div>
+          <div class="stats-chart">
+            <label>14 הימים האחרונים</label>
+            <div class="stats-bars">${statsBarHtml(days, "day")}</div>
+          </div>
+          <div class="stats-chart">
+            <label>שעות פעילות ביום</label>
+            <div class="stats-hours">${hours.map((value) => `<i class="${value ? "has" : ""}" style="opacity:${value ? Math.max(0.35, value / Math.max(1, ...hours)) : 0.25}"></i>`).join("")}</div>
+          </div>`;
+        list.append(card);
+      }
+    }
+
+    async function loadAdminStats() {
+      const meta = document.getElementById("statsMeta");
+      meta.textContent = "טוען…";
+      const res = await adminAction({ action: "admin-stats" });
+      if (!res.ok) {
+        adminStatsCache = { summary: {}, users: [] };
+        document.getElementById("statsSummary").replaceChildren();
+        document.getElementById("statsList").replaceChildren();
+        meta.textContent = res.data?.message || "לא הצלחנו לטעון את השימוש";
+        return;
+      }
+      adminStatsCache = {
+        summary: res.data.summary || {},
+        users: Array.isArray(res.data.users) ? res.data.users : [],
+      };
+      renderAdminStats();
     }
 
     function dateInputValue(key) {
@@ -4294,6 +4521,7 @@
       document.getElementById("app").hidden = false;
       document.getElementById("licenseBtn").hidden = session.role !== "admin";
       document.getElementById("keysBtn").hidden = isTv || session.role !== "admin";
+      document.getElementById("statsBtn").hidden = isTv || session.role !== "admin";
       if (!isTv) dismissKeyboard();
       refreshExpiry(session);
       if (!window.__expiryClock) {
@@ -6399,6 +6627,20 @@
       if (!dlg.open) openSheet(dlg);
       loadAdminKeys();
     });
+    document.getElementById("statsBtn").addEventListener("click", () => {
+      if (readSession()?.role !== "admin") return;
+      const dlg = document.getElementById("statsDlg");
+      if (!dlg.open) openSheet(dlg);
+      loadAdminStats();
+    });
+    document.getElementById("statsClose").addEventListener("click", () => {
+      document.getElementById("statsDlg").close();
+    });
+    document.getElementById("statsRefresh").addEventListener("click", () => loadAdminStats());
+    document.getElementById("statsSort").addEventListener("change", () => renderAdminStats());
+    document.getElementById("statsDlg").addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) event.currentTarget.close();
+    });
     document.getElementById("keysClose").addEventListener("click", () => {
       document.getElementById("keysDlg").close();
     });
@@ -7113,7 +7355,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=172").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=173").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
