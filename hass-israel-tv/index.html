@@ -1595,7 +1595,16 @@
       outline-offset: 3px;
     }
     html.tv .card:focus, html.tv .chip:focus, html.tv .cat:focus { background: var(--card-hover); filter: none; }
-    html.tv .chip.active:focus, html.tv .cat.active:focus { filter: none; }
+    html.tv .chip.chip-logo.active {
+      outline: 2px solid var(--accent);
+      background: var(--card);
+    }
+    html.tv .chip.chip-logo:focus {
+      outline: 3px solid #fff;
+      outline-offset: 3px;
+      background: var(--card-hover);
+    }
+    html.tv video, html.tv .theater { pointer-events: none; }
     #bootSplash {
       position: fixed;
       inset: 0;
@@ -2118,6 +2127,12 @@
     }
     const searchInput = document.getElementById("q");
     const searchBtn = document.getElementById("searchBtn");
+    let tvFocus = null;
+    if (isTv) {
+      video.controls = false;
+      video.tabIndex = -1;
+      theater.tabIndex = -1;
+    }
 
     function isTextField(el) {
       if (!el || el.disabled) return false;
@@ -4790,8 +4805,10 @@
       btn.setAttribute("aria-label", channel.name);
       paintLogo(btn, channel, true);
       bindTap(btn, () => {
-        launchRtspIfNeeded(channel);
-        playChannel(channel);
+        const picked = CHANNELS.find((item) => item.id === btn.dataset.id);
+        if (!picked) return;
+        launchRtspIfNeeded(picked);
+        playChannel(picked);
       });
       return btn;
     }
@@ -4907,8 +4924,9 @@
         }
         paintLogo(logo, channel, isTv && cardIndex < 24);
         bindTap(card, () => {
-          launchRtspIfNeeded(channel);
-          playChannel(channel);
+          const picked = CHANNELS.find((item) => item.id === card.dataset.id) || channel;
+          launchRtspIfNeeded(picked);
+          playChannel(picked);
         });
         frag.append(card);
       }
@@ -4953,6 +4971,7 @@
         video.muted = muted;
         return video.play().then(() => {
           if (muted) video.muted = false;
+          holdTvFocus();
         });
       };
       return tryPlay(false).catch(() => tryPlay(true)).catch(() => {});
@@ -5248,26 +5267,25 @@
     let playSeq = 0;
     async function playChannel(channel) {
       if (!channel) return;
+      const picked = CHANNELS.find((item) => item.id === channel.id) || channel;
       const requestId = ++playSeq;
-      const fromRecent = isTv && recentEl.contains(document.activeElement);
+      const fromRecent = isTv && (recentEl.contains(document.activeElement) || recentEl.contains(tvFocus));
       stopLocalPlayback();
-      current = channel;
-      saveRecent(channel.id);
+      current = picked;
+      saveRecent(picked.id);
       showStage(true);
-      setNowLogo(channel);
-      setMediaSession(channel);
+      setNowLogo(picked);
+      setMediaSession(picked);
       setStatus("נטען…", true);
-      history.replaceState(history.state, "", `#${channel.id}`);
+      history.replaceState(history.state, "", `#${picked.id}`);
       paintRecent({ keep: isTv });
       syncActive();
       if (fromRecent) {
-        const chip = recentChip(channel.id);
+        const chip = recentChip(picked.id);
         if (chip) focusTvNode(chip);
-      } else {
-        syncActive();
       }
       try {
-        currentUrl = channel.path ? await buildCatUrl(channel.path) : String(channel.url || "");
+        currentUrl = picked.path ? await buildCatUrl(picked.path) : String(picked.url || "");
         if (!currentUrl) throw new Error("no-url");
         if (requestId !== playSeq) return;
         setOpenButton(currentUrl);
@@ -5276,6 +5294,7 @@
           if (playNativeRtsp(currentUrl)) {
             setCameraOpen("");
             setStatus("נטען…", true);
+            holdTvFocus();
             return;
           }
           setCameraOpen(currentUrl);
@@ -5285,16 +5304,18 @@
         }
         if (getCastSession()) {
           stopLocalPlayback();
-          await loadCastMedia(currentUrl, channel);
+          await loadCastMedia(currentUrl, picked);
           if (requestId !== playSeq) return;
           setStatus("");
           syncCastUi();
+          holdTvFocus();
           return;
         }
         await attachHls(currentUrl, requestId);
+        holdTvFocus();
       } catch (error) {
         if (requestId !== playSeq) return;
-        setStatus(channel.path ? "לא ניתן לחתום את הקישור בדפדפן הזה." : "השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.");
+        setStatus(picked.path ? "לא ניתן לחתום את הקישור בדפדפן הזה." : "השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.");
       }
     }
 
@@ -5964,10 +5985,15 @@
     }
 
     function focusTvDefault() {
-      const cards = tvCards();
+      const cards = tvCardList();
+      const recent = tvRecentItems();
       const items = tvFocusables();
-      const preferred = [...cards].find((el) => el.classList.contains("active"))
+      const preferred = (tvFocus && document.body.contains(tvFocus) && tvVisible(tvFocus) && tvFocus)
+        || recent.find((el) => el.classList.contains("active"))
+        || recent[0]
+        || items.find((el) => el.classList.contains("cat") && el.classList.contains("active"))
         || items.find((el) => el.classList.contains("cat"))
+        || cards.find((el) => el.classList.contains("active"))
         || cards[0]
         || items.find((el) => el.id === "loginPairBox")
         || items.find((el) => el.id === "loginManualBtn")
@@ -5996,8 +6022,36 @@
 
     function focusTvNode(el) {
       if (!el) return;
+      if (el !== video && el !== theater) tvFocus = el;
       el.focus({ preventScroll: true });
       el.scrollIntoView({ block: "nearest", inline: "nearest" });
+    }
+
+    function holdTvFocus() {
+      if (!isTv) return;
+      try { video.blur(); } catch {}
+      try { theater.blur(); } catch {}
+      const active = document.activeElement;
+      if (active && active !== video && active !== theater && active !== document.body) return;
+      if (tvFocus && document.body.contains(tvFocus) && tvVisible(tvFocus)) {
+        focusTvNode(tvFocus);
+        return;
+      }
+      const chip = current ? recentChip(current.id) : null;
+      if (chip) focusTvNode(chip);
+    }
+
+    function activateFocusedChannel() {
+      const el = (document.activeElement && document.activeElement.dataset?.id)
+        ? document.activeElement
+        : (tvFocus && tvFocus.dataset?.id ? tvFocus : null);
+      if (!el?.dataset?.id) return false;
+      if (!el.classList.contains("chip") && !el.classList.contains("card")) return false;
+      const picked = CHANNELS.find((item) => item.id === el.dataset.id);
+      if (!picked) return false;
+      launchRtspIfNeeded(picked);
+      playChannel(picked);
+      return true;
     }
 
     function pickTvByGeometry(items, active, dx, dy) {
@@ -6046,8 +6100,12 @@
         return;
       }
       const strips = tvFocusStrips();
-      const active = document.activeElement;
-      const s = strips.findIndex((strip) => strip.items.includes(active));
+      let active = document.activeElement;
+      let s = strips.findIndex((strip) => strip.items.includes(active));
+      if (s < 0 && tvFocus && document.body.contains(tvFocus)) {
+        active = tvFocus;
+        s = strips.findIndex((strip) => strip.items.includes(active));
+      }
       if (s < 0) {
         focusTvDefault();
         return;
@@ -6131,11 +6189,15 @@
     });
 
     if (isTv) {
-      theater.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          tvTogglePlay();
+      video.addEventListener("play", holdTvFocus);
+      video.addEventListener("playing", holdTvFocus);
+      document.getElementById("app")?.addEventListener("focusin", (event) => {
+        const el = event.target;
+        if (!el || el === video || el === theater) {
+          holdTvFocus();
+          return;
         }
+        if (el.closest("#recent, #grid, #cats, header.top")) tvFocus = el;
       });
       window.addEventListener("keydown", (event) => {
         const typing = event.target instanceof HTMLInputElement
@@ -6161,6 +6223,13 @@
           event.preventDefault();
           event.stopPropagation();
           moveTvFocus(0, 1);
+        } else if (event.key === "Enter" || event.key === " " || event.key === "NumpadEnter" || event.key === "Select") {
+          if (typing) return;
+          event.preventDefault();
+          event.stopPropagation();
+          if (activateFocusedChannel()) return;
+          const el = document.activeElement;
+          if (el && el !== video && el !== theater && typeof el.click === "function") el.click();
         } else if (event.key === "Escape" || event.key === "BrowserBack") {
           if (tvBack()) event.preventDefault();
         } else if (event.key === "MediaPlayPause" || event.key === "MediaPlay" || event.key === "MediaPause") {
@@ -6185,7 +6254,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=145").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=146").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
