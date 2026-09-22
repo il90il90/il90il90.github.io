@@ -1,4 +1,4 @@
-const CACHE = "israel-tv-v170";
+const CACHE = "israel-tv-v171";
 const SHELL = [
   "./",
   "./index.html",
@@ -25,8 +25,6 @@ self.addEventListener("activate", (event) => {
     const keys = await caches.keys();
     await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
     await self.clients.claim();
-    const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    await Promise.all(windows.map((client) => client.navigate(client.url)));
   })());
 });
 
