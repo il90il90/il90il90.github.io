@@ -803,12 +803,21 @@
       gap: 8px;
       margin: 0 0 14px;
     }
-    .stats-metric {
+    #statsDlg .stats-metric {
+      width: 100%;
       padding: 10px 10px 9px;
       background: var(--bg-soft);
       border: 1px solid var(--line);
       border-radius: 12px;
       min-width: 0;
+      color: inherit;
+      text-align: start;
+      cursor: pointer;
+    }
+    #statsDlg .stats-metric:hover { border-color: var(--accent); }
+    #statsDlg .stats-metric.on {
+      border-color: var(--accent);
+      background: rgba(61, 139, 255, 0.12);
     }
     .stats-metric span {
       display: block;
@@ -840,6 +849,12 @@
       padding: 0;
       display: grid;
       place-items: center;
+    }
+    #statsDlg .stats-toolbar #statsClearFilter {
+      width: auto;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 800;
     }
     #statsDlg .stats-toolbar button svg { width: 16px; height: 16px; display: block; }
     .stats-list { display: grid; gap: 10px; }
@@ -2600,6 +2615,7 @@
         <option value="expiry">קרובים לתפוגה</option>
         <option value="name">לפי שם</option>
       </select>
+      <button type="button" class="ghost" id="statsClearFilter" hidden>הצג הכל</button>
       <button type="button" class="ghost" id="statsRefresh" title="רענון" aria-label="רענון">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.4-6.2"/><path d="M21 4v6h-6"/></svg>
       </button>
@@ -3477,11 +3493,37 @@
     }
 
     function formatWatchMinutes(mins) {
-      const n = Math.max(0, Math.round(Number(mins) || 0));
-      if (n < 60) return `${n} דק׳`;
-      const hours = Math.floor(n / 60);
-      const rest = n % 60;
-      return rest ? `${hours} שע׳ ${rest} דק׳` : `${hours} שע׳`;
+      return `${Math.max(0, Math.round(Number(mins) || 0))} דקות`;
+    }
+
+    function userMinutes(user, which = "total") {
+      if (which === "today") return Math.max(0, Math.round(Number(user?.minutes_today ?? (user?.hours_unit === "minutes" ? user.today : 0)) || 0));
+      if (which === "week") return Math.max(0, Math.round(Number(user?.minutes_week ?? (user?.hours_unit === "minutes" ? user.week : 0)) || 0));
+      return Math.max(0, Math.round(Number(user?.minutes_total) || 0));
+    }
+
+    let statsFilter = "";
+
+    function statsFilterMatch(user, filter, summary, now) {
+      if (!filter || filter === "users") return true;
+      if (filter === "online") return Boolean(user.online);
+      if (filter === "active_24h") return user.last_seen > now - 86400000;
+      if (filter === "active_7d") return user.last_seen > now - 7 * 86400000;
+      if (filter === "new_7d") return (user.created_at || user.first_seen) > now - 7 * 86400000;
+      if (filter === "never_seen") return !user.last_seen;
+      if (filter === "quiet_7d") return Boolean(user.last_seen && user.last_seen <= now - 7 * 86400000);
+      if (filter === "expiring_7d") return user.days_left != null && user.days_left >= 0 && user.days_left <= 7;
+      if (filter === "expired") return user.status === "expired" || (user.days_left != null && user.days_left < 0);
+      if (filter === "opens_7d") return (user.week || 0) > 0;
+      if (filter === "watch_minutes_7d") return userMinutes(user, "week") > 0;
+      if (filter === "watch_minutes_total") return userMinutes(user) > 0;
+      if (filter === "avg_devices") return (user.devices || 0) > 0;
+      if (filter === "peak_hour") {
+        const hour = summary.peak_hour;
+        return hour != null && (Number(user.hours?.[hour]) || 0) > 0;
+      }
+      if (filter === "top_user") return user.note && user.note === summary.top_user;
+      return true;
     }
 
     function peakHourLabel(hours, unit) {
@@ -3497,28 +3539,48 @@
       const summaryEl = document.getElementById("statsSummary");
       const list = document.getElementById("statsList");
       const meta = document.getElementById("statsMeta");
+      const clearBtn = document.getElementById("statsClearFilter");
       const sort = document.getElementById("statsSort").value;
       const query = document.getElementById("statsSearch").value.trim().toLowerCase();
       const summary = adminStatsCache.summary || {};
+      const now = Number(adminStatsCache.generated_at) || Date.now();
       const peakHour = summary.peak_hour == null ? "—" : `${String(summary.peak_hour).padStart(2, "0")}:00`;
-      summaryEl.innerHTML = [
-        ["משתמשים", summary.users || 0],
-        ["מחוברים עכשיו", summary.online || 0],
-        ["פעילים היום", summary.active_24h || 0],
-        ["פעילים השבוע", summary.active_7d || 0],
-        ["חדשים השבוע", summary.new_7d || 0],
-        ["לא נכנסו מעולם", summary.never_seen || 0],
-        ["שקטים 7 ימים", summary.quiet_7d || 0],
-        ["פגים ב־7 ימים", summary.expiring_7d || 0],
-        ["פגי תוקף", summary.expired || 0],
-        ["פתיחות השבוע", summary.opens_7d || 0],
-        ["דקות צפייה השבוע", formatWatchMinutes(summary.watch_minutes_7d || 0)],
-        ["דקות צפייה סה״כ", formatWatchMinutes(summary.watch_minutes_total || 0)],
-        ["ממוצע מכשירים", summary.avg_devices || 0],
-        ["שעת שיא", peakHour],
-        ["הכי פעיל", summary.top_user || "—"],
-      ].map(([label, value]) => `<div class="stats-metric"><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
+      const metrics = [
+        ["users", "משתמשים", summary.users || 0],
+        ["online", "מחוברים עכשיו", summary.online || 0],
+        ["active_24h", "פעילים היום", summary.active_24h || 0],
+        ["active_7d", "פעילים השבוע", summary.active_7d || 0],
+        ["new_7d", "חדשים השבוע", summary.new_7d || 0],
+        ["never_seen", "לא נכנסו מעולם", summary.never_seen || 0],
+        ["quiet_7d", "שקטים 7 ימים", summary.quiet_7d || 0],
+        ["expiring_7d", "פגים ב־7 ימים", summary.expiring_7d || 0],
+        ["expired", "פגי תוקף", summary.expired || 0],
+        ["opens_7d", "פתיחות השבוע", summary.opens_7d || 0],
+        ["watch_minutes_7d", "דקות השבוע", formatWatchMinutes(summary.watch_minutes_7d || 0)],
+        ["watch_minutes_total", "דקות סה״כ", formatWatchMinutes(summary.watch_minutes_total || 0)],
+        ["avg_devices", "ממוצע מכשירים", summary.avg_devices || 0],
+        ["peak_hour", "שעת שיא", peakHour],
+        ["top_user", "הכי פעיל", summary.top_user || "—"],
+      ];
+      summaryEl.replaceChildren();
+      for (const [id, label, value] of metrics) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `stats-metric${statsFilter === id ? " on" : ""}`;
+        btn.dataset.filter = id;
+        btn.innerHTML = `<span>${label}</span><strong>${escapeHtml(value)}</strong>`;
+        btn.title = "לחצו כדי לראות את האנשים";
+        btn.addEventListener("click", () => {
+          statsFilter = statsFilter === id ? "" : id;
+          renderAdminStats();
+          document.getElementById("statsList").scrollIntoView({ block: "nearest", behavior: "smooth" });
+        });
+        summaryEl.append(btn);
+      }
+      clearBtn.hidden = !statsFilter;
+      const filterLabel = metrics.find((item) => item[0] === statsFilter)?.[1] || "";
       const rows = [...(adminStatsCache.users || [])].filter((user) => {
+        if (!statsFilterMatch(user, statsFilter, summary, now)) return false;
         if (!query) return true;
         const status = keyStatusLabel(user.status);
         return [user.note, user.license_key, user.status, status, user.online ? "מחובר" : ""]
@@ -3534,11 +3596,18 @@
           return ax - bx;
         }
         if (sort === "name") return String(a.note || "").localeCompare(String(b.note || ""), "he");
+        if (statsFilter === "watch_minutes_7d") return userMinutes(b, "week") - userMinutes(a, "week");
+        if (statsFilter === "watch_minutes_total" || statsFilter === "top_user") return userMinutes(b) - userMinutes(a);
+        if (statsFilter === "quiet_7d" || statsFilter === "never_seen") return (a.last_seen || 0) - (b.last_seen || 0);
+        if (statsFilter === "peak_hour") return (Number(b.hours?.[summary.peak_hour]) || 0) - (Number(a.hours?.[summary.peak_hour]) || 0);
+        if (statsFilter === "avg_devices") return (b.devices || 0) - (a.devices || 0);
         return (b.score || 0) - (a.score || 0);
       });
       meta.textContent = rows.length
-        ? (query ? `${rows.length} מתוך ${adminStatsCache.users.length}` : `${rows.length} משתמשים`)
-        : (query ? "אין תוצאות לחיפוש" : "אין נתונים עדיין");
+        ? (filterLabel
+          ? `${rows.length} · ${filterLabel}`
+          : (query ? `${rows.length} מתוך ${adminStatsCache.users.length}` : `${rows.length} משתמשים`))
+        : (statsFilter ? `אין אנשים ב־${filterLabel}` : (query ? "אין תוצאות לחיפוש" : "אין נתונים עדיין"));
       list.replaceChildren();
       for (const user of rows) {
         const card = document.createElement("article");
@@ -3572,19 +3641,19 @@
             <span>${keyStatusLabel(user.status)}</span>
             <span>${user.opens || 0} כניסות</span>
             <span>${user.uses || 0} שימושים</span>
-            <span>${user.today || 0} ${byMinutes ? "דק׳ היום" : "היום"}</span>
-            <span>${user.week || 0} ${byMinutes ? "דק׳ השבוע" : "השבוע"}</span>
-            ${byMinutes ? `<span>${formatWatchMinutes(user.minutes_total)} סה״כ</span>` : ""}
+            <span>${userMinutes(user)} דקות באפליקציה</span>
+            <span>${userMinutes(user, "today")} דקות היום</span>
+            <span>${userMinutes(user, "week")} דקות השבוע</span>
             <span>${user.devices || 0} מכשירים</span>
             <span>${user.days_left == null ? "בלי תפוגה" : user.days_left < 0 ? "פג תוקף" : `תפוגה בעוד ${user.days_left} ימים`}</span>
             <span>${user.first_seen ? `הצטרף ${formatLastSeen(user.first_seen)}` : "עדיין לא נכנס"}</span>
           </div>
           <div class="stats-chart">
-            <label>${byMinutes ? "דקות צפייה ב־14 הימים" : "14 הימים האחרונים"}</label>
+            <label>${byMinutes ? "דקות באפליקציה ב־14 הימים" : "14 הימים האחרונים"}</label>
             <div class="stats-bars">${statsColHtml(dayItems, "day")}</div>
           </div>
           <div class="stats-chart">
-            <label>${byMinutes ? "דקות צפייה בכל שעה" : "שעות ביום"}<span>${peak ? `<em>${escapeHtml(peak)}</em>` : ""}</span></label>
+            <label>${byMinutes ? "דקות באפליקציה בכל שעה" : "שעות ביום"}<span>${peak ? `<em>${escapeHtml(peak)}</em>` : ""}</span></label>
             <div class="stats-hours">${statsColHtml(hourItems, "hour")}</div>
           </div>`;
         list.append(card);
@@ -3596,7 +3665,7 @@
       meta.textContent = "טוען…";
       const res = await adminAction({ action: "admin-stats" });
       if (!res.ok) {
-        adminStatsCache = { summary: {}, users: [] };
+        adminStatsCache = { summary: {}, users: [], generated_at: 0 };
         document.getElementById("statsSummary").replaceChildren();
         document.getElementById("statsList").replaceChildren();
         meta.textContent = res.data?.message || "לא הצלחנו לטעון את השימוש";
@@ -3605,6 +3674,7 @@
       adminStatsCache = {
         summary: res.data.summary || {},
         users: Array.isArray(res.data.users) ? res.data.users : [],
+        generated_at: res.data.generated_at || Date.now(),
       };
       renderAdminStats();
     }
@@ -4424,7 +4494,6 @@
         const now = Date.now();
         const elapsed = lastWatchAt ? Math.min(60, Math.round((now - lastWatchAt) / 1000)) : (isTv ? 8 : 12);
         lastWatchAt = now;
-        const watching = Boolean(video && !video.paused && !video.ended && video.readyState >= 2);
         const res = await fetch(PWF_CHECK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -4434,7 +4503,7 @@
             license_key: session.license,
             hwid: deviceHwid(),
             device_name: deviceLabel(),
-            watch_sec: watching ? elapsed : 0,
+            watch_sec: elapsed,
           }),
         });
         const data = await res.json().catch(() => ({}));
@@ -6845,6 +6914,7 @@
     document.getElementById("statsBtn").addEventListener("click", () => {
       if (readSession()?.role !== "admin") return;
       const dlg = document.getElementById("statsDlg");
+      statsFilter = "";
       if (!dlg.open) openSheet(dlg);
       loadAdminStats();
     });
@@ -6852,6 +6922,10 @@
       document.getElementById("statsDlg").close();
     });
     document.getElementById("statsRefresh").addEventListener("click", () => loadAdminStats());
+    document.getElementById("statsClearFilter").addEventListener("click", () => {
+      statsFilter = "";
+      renderAdminStats();
+    });
     document.getElementById("statsSort").addEventListener("change", () => renderAdminStats());
     document.getElementById("statsSearch").addEventListener("input", () => renderAdminStats());
     document.getElementById("statsDlg").addEventListener("click", (event) => {
@@ -7571,7 +7645,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=177").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=178").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
