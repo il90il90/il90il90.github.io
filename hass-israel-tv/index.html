@@ -1615,32 +1615,9 @@
     html.tv .tv-only { display: grid !important; }
     html.tv .tv-hint { display: none !important; }
     html.tv #pipBtn, html.tv #castBtn, html.tv #openBtn, html.tv #installBtn { display: none !important; }
-    html.tv-max header.top,
-    html.tv-max .catalog,
-    html.tv-max .now { display: none !important; }
-    html.tv-max main {
-      max-width: none;
-      padding: 0;
-    }
-    html.tv-max .stage {
-      flex: 1;
-      max-height: none;
-      height: 100%;
-    }
-    html.tv-max .theater {
-      width: 100%;
-      max-height: none;
-      height: 100%;
-      aspect-ratio: auto;
-      border: 0;
-      border-radius: 0;
-      box-shadow: none;
-    }
-    html.tv-max .theater video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
+    html.tv.tv-max header.top,
+    html.tv.tv-max .catalog,
+    html.tv.tv-max .now { display: none !important; }
     html.tv .grid {
       grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
       gap: 10px;
@@ -1685,6 +1662,39 @@
     html.tv .license-tile-copy small { font-size: 13px; }
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 3px; }
     html.tv .stage { max-height: 48vh; }
+    html.tv.tv-max,
+    html.tv.tv-max body,
+    html.tv.tv-max #app,
+    html.tv.tv-max main {
+      height: 100dvh;
+      max-height: 100dvh;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    html.tv.tv-max .stage,
+    html.tv.tv-max .theater,
+    html.tv.tv-max .theater video {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      aspect-ratio: auto;
+    }
+    html.tv.tv-max .stage { z-index: 40; background: #000; }
+    html.tv.tv-max .theater { z-index: 41; }
+    html.tv.tv-max .theater video {
+      z-index: 42;
+      object-fit: contain;
+      background: #000;
+    }
     html.tv .now { padding: 6px 8px; }
     html.tv .now-logo { height: 32px; }
     html.tv .status-spinner { width: 36px; height: 36px; border-width: 3px; }
@@ -6492,7 +6502,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=152").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=153").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
