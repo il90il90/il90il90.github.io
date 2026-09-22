@@ -1695,6 +1695,31 @@
       object-fit: contain;
       background: #000;
     }
+    html.tv .theater.is-buffering video,
+    html.tv video:not(.has-frame) {
+      opacity: 0;
+    }
+    html.tv .status {
+      background: #000;
+    }
+    html.tv.tv-max .status {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: #000;
+    }
+    html.tv .status.is-loading p {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    html.tv.tv-max .status.is-loading p { font-size: 28px; }
+    html.tv video::-webkit-media-controls,
+    html.tv video::-webkit-media-controls-enclosure,
+    html.tv video::-webkit-media-controls-start-playback-button {
+      display: none !important;
+    }
     html.tv .now { padding: 6px 8px; }
     html.tv .now-logo { height: 32px; }
     html.tv .status-spinner { width: 36px; height: 36px; border-width: 3px; }
@@ -1880,7 +1905,7 @@
   <main>
     <div class="stage" id="stage" hidden>
     <section class="theater" id="theater" tabindex="-1">
-      <video id="player" playsinline webkit-playsinline autoplay x-webkit-airplay="allow" controlslist="nofullscreen nodownload noremoteplayback"></video>
+      <video id="player" playsinline webkit-playsinline autoplay x-webkit-airplay="allow" controlslist="nofullscreen nodownload noremoteplayback" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="></video>
       <div class="cast-banner" id="castBanner" hidden>
         <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor" aria-hidden="true"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
         <strong>משודר בטלוויזיה</strong>
@@ -2280,6 +2305,7 @@
       video.controls = false;
       video.tabIndex = -1;
       theater.tabIndex = -1;
+      video.poster = "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
     }
 
     function isTextField(el) {
@@ -3931,9 +3957,10 @@
       theater.classList.toggle("is-buffering", Boolean(loading));
       if (loading) {
         if (!isTv) video.controls = false;
+        video.classList.remove("has-frame");
         status.classList.add("is-loading");
         status.classList.remove("hidden", "is-error", "is-camera");
-        line.textContent = text || "נטען…";
+        line.textContent = text || (isTv ? "טעינה" : "נטען…");
         return;
       }
       status.classList.remove("is-loading");
@@ -5132,9 +5159,14 @@
     video.addEventListener("loadedmetadata", syncVideoFrame);
     video.addEventListener("loadeddata", syncVideoFrame);
     video.addEventListener("resize", syncVideoFrame);
-    video.addEventListener("playing", () => setStatus(""));
-    video.addEventListener("waiting", () => setStatus("נטען…", true));
-    video.addEventListener("stalled", () => setStatus("נטען…", true));
+    video.addEventListener("playing", () => {
+      video.classList.add("has-frame");
+      setStatus("");
+    });
+    video.addEventListener("waiting", () => setStatus(isTv ? "טעינה" : "נטען…", true));
+    video.addEventListener("stalled", () => setStatus(isTv ? "טעינה" : "נטען…", true));
+    video.addEventListener("emptied", () => video.classList.remove("has-frame"));
+    video.addEventListener("loadstart", () => video.classList.remove("has-frame"));
 
     function primePlayback() {
       video.autoplay = true;
@@ -5243,6 +5275,9 @@
         return;
       }
       document.documentElement.classList.add("tv-max");
+      if (!video.classList.contains("has-frame") || video.readyState < 2) {
+        setStatus("", true);
+      }
       syncNativeRtspRect();
     }
 
@@ -5483,7 +5518,7 @@
       showStage(true);
       setNowLogo(picked);
       setMediaSession(picked);
-      setStatus("נטען…", true);
+      setStatus("", true);
       history.replaceState(history.state, "", `#${picked.id}`);
       paintRecent({ keep: isTv });
       syncActive();
@@ -5500,7 +5535,7 @@
           stopLocalPlayback();
           if (playNativeRtsp(currentUrl)) {
             setCameraOpen("");
-            setStatus("נטען…", true);
+            setStatus("", true);
             holdTvFocus();
             return;
           }
@@ -6502,7 +6537,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=153").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=154").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
