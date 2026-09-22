@@ -1076,14 +1076,18 @@
       display: grid;
       justify-items: center;
       gap: 0;
-      margin: 12px 0 4px;
-      padding: 12px;
+      margin: 12px auto 4px;
+      padding: 20px;
       background: #fff;
-      border-radius: 16px;
+      border-radius: 20px;
       line-height: 0;
     }
     .qr-card[hidden] { display: none !important; }
-    .qr-card canvas, .qr-card img, .qr-target { width: 220px; height: 220px; }
+    .qr-card canvas, .qr-card img, .qr-target {
+      width: min(72vw, 280px);
+      height: min(72vw, 280px);
+      image-rendering: pixelated;
+    }
     .qr-card p {
       margin: 10px 0 2px;
       color: #243044;
@@ -1092,15 +1096,28 @@
       text-align: center;
       font-weight: 600;
     }
-    #scanDlg { width: min(420px, calc(100% - 24px)); }
-    #scanVideo {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
-      border-radius: 12px;
+    #scanDlg { width: min(520px, calc(100% - 20px)); }
+    .scan-frame {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
       background: #000;
     }
-    #scanHint { color: var(--muted); font-size: 14px; margin: 10px 0 12px; text-align: center; }
+    #scanVideo {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
+      background: #000;
+    }
+    .scan-reticle {
+      position: absolute;
+      inset: 16% 12%;
+      border: 3px solid rgba(255, 255, 255, 0.9);
+      border-radius: 18px;
+      box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.38);
+      pointer-events: none;
+    }
+    #scanHint { color: var(--muted); font-size: 15px; margin: 12px 0; text-align: center; }
     #scanFile { display: none; }
     .icon-btn {
       border: 0;
@@ -1637,29 +1654,42 @@
       scrollbar-width: none;
     }
     html.tv .chips::-webkit-scrollbar, html.tv .cats::-webkit-scrollbar { display: none; }
+    html.tv #gate { padding: 20px; }
     html.tv .login {
-      width: min(480px, 72vw);
-      padding: 18px 22px 16px;
+      width: min(760px, 88vw);
+      padding: 28px 36px 24px;
       text-align: center;
     }
-    html.tv .login h2 { font-size: 22px; }
-    html.tv .login p { font-size: 14px; }
+    html.tv .login h2 { font-size: 28px; }
+    html.tv .login p { font-size: 18px; }
     html.tv .login-qr-icon { width: 44px !important; height: 44px !important; flex-basis: 44px; }
     html.tv .login-qr-icon svg { width: 22px; height: 22px; }
-    html.tv .pair-help { font-size: 15px; margin-bottom: 8px !important; }
-    html.tv .qr-card.login-qr { padding: 10px; margin: 0 auto; }
+    html.tv .pair-help { font-size: 18px; margin-bottom: 10px !important; }
+    html.tv .qr-card.login-qr { padding: 22px; margin: 8px auto 0; border-radius: 24px; }
     html.tv .login-qr .qr-target,
     html.tv .login-qr canvas,
-    html.tv .login-qr img { width: min(28vh, 156px); height: min(28vh, 156px); }
-    html.tv .pair-code { font-size: 16px; margin-top: 6px !important; }
-    html.tv .pair-wait { font-size: 13px; margin-top: 4px !important; }
-    html.tv .license-tile {
-      padding: 10px 12px;
-      margin-top: 10px;
+    html.tv .login-qr img {
+      width: min(52vh, 420px) !important;
+      height: min(52vh, 420px) !important;
+      image-rendering: pixelated;
     }
-    html.tv .license-tile-icon { width: 40px; height: 40px; flex-basis: 40px; }
-    html.tv .license-tile-copy strong { font-size: 16px; }
-    html.tv .license-tile-copy small { font-size: 13px; }
+    html.tv .pair-code {
+      font-size: 34px;
+      letter-spacing: 0.16em;
+      margin-top: 16px !important;
+    }
+    html.tv .pair-wait {
+      font-size: 18px;
+      margin-top: 10px !important;
+      color: #d7e2f3;
+    }
+    html.tv .license-tile {
+      padding: 16px 18px;
+      margin-top: 22px;
+    }
+    html.tv .license-tile-icon { width: 48px; height: 48px; flex-basis: 48px; }
+    html.tv .license-tile-copy strong { font-size: 20px; }
+    html.tv .license-tile-copy small { font-size: 16px; color: #c5d0e0; }
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 3px; }
     html.tv .stage { max-height: 48vh; }
     html.tv.tv-max,
@@ -1856,7 +1886,7 @@
           <div id="pairQr" class="qr-target"></div>
         </div>
         <p class="pair-code" id="pairCode" hidden></p>
-        <p class="pair-wait" id="pairWait">מכינים ברקוד…</p>
+        <p class="pair-wait" id="pairWait">מכינים ברקוד לסריקה מהטלפון…</p>
       </div>
       <p class="err" id="loginErr"></p>
       <button type="button" class="license-tile" id="loginManualBtn">
@@ -2206,8 +2236,11 @@
   </dialog>
   <dialog class="sheet" id="scanDlg">
     <h3>סריקת ברקוד</h3>
-    <video id="scanVideo" autoplay muted playsinline></video>
-    <p id="scanHint">כוונו את המצלמה לברקוד</p>
+    <div class="scan-frame">
+      <video id="scanVideo" autoplay muted playsinline webkit-playsinline></video>
+      <div class="scan-reticle" aria-hidden="true"></div>
+    </div>
+    <p id="scanHint">כוונו את הריבוע לברקוד</p>
     <input id="scanFile" type="file" accept="image/*" />
     <div class="row">
       <button type="button" class="ghost" id="scanFileBtn">בחירה מתמונה</button>
@@ -3006,9 +3039,7 @@
     }
 
     function licenseQrPayload(key) {
-      const url = new URL(location.origin + location.pathname);
-      url.hash = `k=${encodeURIComponent(key)}`;
-      return url.toString();
+      return `k=${stripLicenseSpaces(key)}`;
     }
 
     function parseLicensePayload(text) {
@@ -3024,6 +3055,9 @@
           return stripLicenseSpaces(decodeURIComponent(hash.slice(hash.indexOf("=") + 1)));
         }
       } catch {}
+      if (/^(k|lic)=/i.test(raw)) {
+        return stripLicenseSpaces(raw.slice(raw.indexOf("=") + 1));
+      }
       return stripLicenseSpaces(raw);
     }
 
@@ -3073,9 +3107,7 @@
     }
 
     function pairingQrPayload(pairId) {
-      const url = new URL(location.origin + location.pathname);
-      url.hash = `pair=${normalizePairId(pairId)}`;
-      return url.toString();
+      return `pair=${normalizePairId(pairId)}`;
     }
 
     function formatPairCode(pairId) {
@@ -3095,40 +3127,35 @@
       return pairId;
     }
 
-    async function paintQr(el, key) {
-      if (!key || !window.QRCode) return false;
+    function drawQr(el, text, size) {
+      if (!text || !window.QRCode) return false;
       el.replaceChildren();
       new window.QRCode(el, {
-        text: licenseQrPayload(key),
-        width: 220,
-        height: 220,
-        colorDark: "#070b12",
-        colorLight: "#ffffff",
-        correctLevel: window.QRCode.CorrectLevel.M,
-      });
-      return true;
-    }
-
-    async function paintPairQr(el, pairId) {
-      if (!pairId || !window.QRCode) return false;
-      el.replaceChildren();
-      const size = isTv ? 176 : 220;
-      new window.QRCode(el, {
-        text: pairingQrPayload(pairId),
+        text,
         width: size,
         height: size,
-        colorDark: "#070b12",
+        colorDark: "#000000",
         colorLight: "#ffffff",
         correctLevel: window.QRCode.CorrectLevel.M,
       });
       const canvas = el.querySelector("canvas");
-      el.querySelectorAll("canvas, img").forEach((node) => {
-        const visible = canvas ? node === canvas : true;
+      el.querySelectorAll("canvas, img, table").forEach((node) => {
+        const visible = canvas ? node === canvas : node.tagName !== "TABLE";
         node.style.display = visible ? "block" : "none";
-        node.style.width = `${size}px`;
-        node.style.height = `${size}px`;
+        if (visible) {
+          node.style.width = "100%";
+          node.style.height = "100%";
+        }
       });
       return true;
+    }
+
+    async function paintQr(el, key) {
+      return drawQr(el, licenseQrPayload(key), 280);
+    }
+
+    async function paintPairQr(el, pairId) {
+      return drawQr(el, pairingQrPayload(pairId), isTv ? 512 : 280);
     }
 
     let pendingPairId = "";
@@ -3381,11 +3408,40 @@
       return true;
     }
 
-    function readQrFromCanvas(canvas) {
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
-      const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = window.jsQR?.(image.data, canvas.width, canvas.height, { inversionAttempts: "dontInvert" });
+    function scaleCanvasForQr(source, max = 720) {
+      const scale = Math.min(1, max / Math.max(source.width, source.height));
+      if (scale >= 1) return source;
+      const out = document.createElement("canvas");
+      out.width = Math.max(1, Math.round(source.width * scale));
+      out.height = Math.max(1, Math.round(source.height * scale));
+      const ctx = out.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(source, 0, 0, out.width, out.height);
+      return out;
+    }
+
+    function cropCenter(source, ratio = 0.72) {
+      const side = Math.min(source.width, source.height);
+      const crop = Math.max(80, Math.round(side * ratio));
+      const x = Math.round((source.width - crop) / 2);
+      const y = Math.round((source.height - crop) / 2);
+      const out = document.createElement("canvas");
+      out.width = crop;
+      out.height = crop;
+      out.getContext("2d").drawImage(source, x, y, crop, crop, 0, 0, crop, crop);
+      return out;
+    }
+
+    function decodeQrPixels(canvas) {
+      const scaled = scaleCanvasForQr(canvas);
+      const ctx = scaled.getContext("2d", { willReadFrequently: true });
+      const image = ctx.getImageData(0, 0, scaled.width, scaled.height);
+      const code = window.jsQR?.(image.data, scaled.width, scaled.height, { inversionAttempts: "attemptBoth" });
       return code?.data || "";
+    }
+
+    function readQrFromCanvas(canvas) {
+      return decodeQrPixels(canvas) || decodeQrPixels(cropCenter(canvas, 0.7)) || decodeQrPixels(cropCenter(canvas, 0.5));
     }
 
     async function detectQrFromSource(source) {
@@ -3410,19 +3466,29 @@
         const found = native || readQrFromCanvas(canvas);
         if (found && await applyScannedLicense(found)) return;
       }
-      scanTimer = window.setTimeout(tickScan, 220);
+      scanTimer = window.setTimeout(tickScan, 120);
     }
 
     async function startScan() {
-      scanHint.textContent = "כוונו את המצלמה לברקוד של הרישיון";
+      scanHint.textContent = scanPurpose === "pair"
+        ? "כוונו את הריבוע לברקוד שעל המסך"
+        : "כוונו את הריבוע לברקוד";
       stopScan();
+      scanVideo.setAttribute("playsinline", "");
+      scanVideo.setAttribute("webkit-playsinline", "");
+      scanVideo.playsInline = true;
+      scanVideo.muted = true;
       if (!navigator.mediaDevices?.getUserMedia) {
         scanHint.textContent = "אין מצלמה כאן. בחרו תמונה של הברקוד";
         return;
       }
       try {
         scanStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
           audio: false,
         });
         scanVideo.srcObject = scanStream;
@@ -6630,7 +6696,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=156").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=157").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
