@@ -904,6 +904,11 @@
       color: var(--accent-2);
       font-weight: 700;
     }
+    .stats-chart label span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
     .stats-bars,
     .stats-hours {
       direction: ltr;
@@ -950,6 +955,26 @@
     }
     .stats-hours .col.peak i { background: #ffd36a; }
     .stats-hours .col.peak b { color: #ffd36a; }
+    .stats-bars .col.pick i { background: #ffd36a; }
+    .stats-bars .col.pick b { color: #ffd36a; }
+    #statsDlg .stats-bars .col,
+    #statsDlg .stats-hours .col {
+      width: auto;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      color: inherit;
+      cursor: pointer;
+    }
+    #statsDlg .stats-day-back {
+      height: auto;
+      padding: 0;
+      background: none;
+      color: var(--accent-2);
+      font-size: 11px;
+      font-weight: 700;
+    }
     @media (max-width: 560px) {
       .stats-hours .col:nth-child(even) b { visibility: hidden; }
     }
@@ -3492,6 +3517,35 @@
       }).join("");
     }
 
+    function fillStatsCols(container, items, kind, picked, onPick) {
+      const values = items.map((item) => Number(item.value) || 0);
+      const max = Math.max(1, ...values);
+      const peak = Math.max(0, ...values);
+      container.replaceChildren();
+      items.forEach((item, index) => {
+        const value = values[index];
+        const pct = Math.round(value / max * 100);
+        const isPeak = kind === "hour" && value && value === peak;
+        const col = document.createElement(onPick ? "button" : "span");
+        if (onPick) col.type = "button";
+        col.className = `col${value ? " has" : ""}${isPeak ? " peak" : ""}${picked && item.id === picked ? " pick" : ""}`;
+        col.title = item.title || item.label;
+        col.innerHTML = `<i class="${value ? "has" : ""}" style="height:${Math.max(value ? 10 : 2, pct)}%"></i><b>${escapeHtml(item.label)}</b>`;
+        if (onPick) col.addEventListener("click", () => onPick(item.id));
+        container.append(col);
+      });
+    }
+
+    function statsDayName(day, days) {
+      const last = days.at(-1)?.day;
+      const prev = days.at(-2)?.day;
+      if (day === last) return "היום";
+      if (day === prev) return "אתמול";
+      const parts = String(day || "").split("-");
+      if (parts.length === 3) return `${Number(parts[2])}.${Number(parts[1])}`;
+      return day;
+    }
+
     function formatWatchMinutes(mins) {
       return `${Math.max(0, Math.round(Number(mins) || 0))} דקות`;
     }
@@ -3503,6 +3557,7 @@
     }
 
     let statsFilter = "";
+    const statsDayPick = {};
 
     function statsFilterMatch(user, filter, summary, now) {
       if (!filter || filter === "users") return true;
@@ -3613,14 +3668,25 @@
         const card = document.createElement("article");
         card.className = "stats-card";
         const byMinutes = user.hours_unit === "minutes";
-        const dayItems = Array.isArray(user.days) ? user.days.map((item) => {
+        const days = Array.isArray(user.days) ? user.days : [];
+        const picked = statsDayPick[user.license_key] || "";
+        const pickedDay = days.find((item) => item.day === picked);
+        const dayHours = Array.isArray(pickedDay?.hours) ? pickedDay.hours : user.hours;
+        const dayTotal = pickedDay
+          ? Math.round(Number(pickedDay.minutes ?? pickedDay.count ?? dayHours?.reduce((sum, value) => sum + (Number(value) || 0), 0)) || 0)
+          : userMinutes(user);
+        const dayItems = days.map((item) => {
           const day = String(item.day || "");
-          const label = day.slice(8, 10) || day;
           const value = item.minutes ?? item.count ?? 0;
-          return { value, label, title: `${day}: ${byMinutes ? formatWatchMinutes(value) : `${value} פעמים`}` };
-        }) : [];
+          return {
+            id: day,
+            value,
+            label: day.slice(8, 10) || day,
+            title: `${statsDayName(day, days)} · ${byMinutes ? formatWatchMinutes(value) : `${value} פעמים`}`,
+          };
+        });
         const hourItems = Array.from({ length: 24 }, (_, hour) => {
-          const value = Number(user.hours?.[hour]) || 0;
+          const value = Number(dayHours?.[hour]) || 0;
           const label = String(hour).padStart(2, "0");
           return {
             value,
@@ -3628,34 +3694,67 @@
             title: byMinutes ? `${label}:00 · ${formatWatchMinutes(value)}` : `${label}:00 · ${value} פעמים`,
           };
         });
-        const peak = peakHourLabel(user.hours, user.hours_unit);
+        const peak = peakHourLabel(dayHours, user.hours_unit);
+        const hourTitle = pickedDay
+          ? `${statsDayName(pickedDay.day, days)} · ${byMinutes ? `${dayTotal} דקות סה״כ` : `${dayTotal} פעמים`}`
+          : (byMinutes ? "דקות באפליקציה בכל שעה" : "שעות ביום");
         card.innerHTML = `
           <div class="stats-card-head">
             <div>
               <strong>${escapeHtml(user.note || "בלי שם")}</strong>
-              <small>${user.last_seen ? `נראה ${formatLastSeen(user.last_seen)}` : "עדיין לא נכנס"}</small>
+              <small>${user.last_seen ? `נראה ${formatLastSeen(user.last_seen)}` : "עדיין לא נכנס"} · ${userMinutes(user)} דקות סה״כ</small>
             </div>
             <span class="stats-dot${user.online ? " on" : ""}" title="${user.online ? "מחובר" : "לא מחובר"}"></span>
           </div>
           <div class="stats-meta">
             <span>${keyStatusLabel(user.status)}</span>
             <span>${user.opens || 0} כניסות</span>
-            <span>${user.uses || 0} שימושים</span>
             <span>${userMinutes(user)} דקות באפליקציה</span>
             <span>${userMinutes(user, "today")} דקות היום</span>
             <span>${userMinutes(user, "week")} דקות השבוע</span>
             <span>${user.devices || 0} מכשירים</span>
             <span>${user.days_left == null ? "בלי תפוגה" : user.days_left < 0 ? "פג תוקף" : `תפוגה בעוד ${user.days_left} ימים`}</span>
             <span>${user.first_seen ? `הצטרף ${formatLastSeen(user.first_seen)}` : "עדיין לא נכנס"}</span>
-          </div>
-          <div class="stats-chart">
-            <label>${byMinutes ? "דקות באפליקציה ב־14 הימים" : "14 הימים האחרונים"}</label>
-            <div class="stats-bars">${statsColHtml(dayItems, "day")}</div>
-          </div>
-          <div class="stats-chart">
-            <label>${byMinutes ? "דקות באפליקציה בכל שעה" : "שעות ביום"}<span>${peak ? `<em>${escapeHtml(peak)}</em>` : ""}</span></label>
-            <div class="stats-hours">${statsColHtml(hourItems, "hour")}</div>
           </div>`;
+        const dayChart = document.createElement("div");
+        dayChart.className = "stats-chart";
+        const dayLabel = document.createElement("label");
+        dayLabel.textContent = byMinutes ? "לחצו על יום כדי לראות מה היה בו" : "14 הימים האחרונים · לחצו על יום";
+        const dayBars = document.createElement("div");
+        dayBars.className = "stats-bars";
+        fillStatsCols(dayBars, dayItems, "day", picked, (day) => {
+          if (statsDayPick[user.license_key] === day) delete statsDayPick[user.license_key];
+          else statsDayPick[user.license_key] = day;
+          renderAdminStats();
+        });
+        dayChart.append(dayLabel, dayBars);
+        const hourChart = document.createElement("div");
+        hourChart.className = "stats-chart";
+        const hourLabel = document.createElement("label");
+        hourLabel.append(document.createTextNode(hourTitle));
+        const hourSide = document.createElement("span");
+        if (peak) {
+          const em = document.createElement("em");
+          em.textContent = peak;
+          hourSide.append(em);
+        }
+        if (pickedDay) {
+          const back = document.createElement("button");
+          back.type = "button";
+          back.className = "stats-day-back";
+          back.textContent = "כל הימים";
+          back.addEventListener("click", () => {
+            delete statsDayPick[user.license_key];
+            renderAdminStats();
+          });
+          hourSide.append(back);
+        }
+        if (hourSide.childNodes.length) hourLabel.append(hourSide);
+        const hourBars = document.createElement("div");
+        hourBars.className = "stats-hours";
+        fillStatsCols(hourBars, hourItems, "hour");
+        hourChart.append(hourLabel, hourBars);
+        card.append(dayChart, hourChart);
         list.append(card);
       }
     }
@@ -7645,7 +7744,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=178").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=179").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
