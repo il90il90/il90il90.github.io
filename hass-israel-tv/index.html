@@ -610,9 +610,9 @@
     .login-qr-icon.phone-scan { display: grid !important; }
     html.tv .login-qr-icon.phone-scan,
     html.pair-login .login-qr-icon.phone-scan { display: none !important; }
-    .login-pair-on-tv { display: none; }
+    .login-pair-on-tv { display: none !important; }
     html.tv .login-pair-on-tv,
-    html.pair-login .login-pair-on-tv { display: block; }
+    html.pair-login .login-pair-on-tv { display: flex !important; }
     .login input {
       width: 100%;
       height: 46px;
@@ -6750,7 +6750,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=159").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=160").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
