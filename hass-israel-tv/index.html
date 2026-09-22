@@ -1007,7 +1007,8 @@
     }
     .stats-bars .col b {
       font-size: 7px;
-      white-space: nowrap;
+      white-space: pre-line;
+      text-align: center;
     }
     .stats-hours .col.peak i { background: #ffd36a; }
     .stats-hours .col.peak b { color: #ffd36a; }
@@ -3192,6 +3193,11 @@
       return `נותרו ${hebrewCount(Math.max(1, minutes), "דקה", "דקות")}`;
     }
 
+    function formatDateBar(value) {
+      const date = formatDateDMY(value);
+      return date.length === 8 ? `${date.slice(0, 5)}\n${date.slice(6)}` : (date || String(value || "").slice(8, 10));
+    }
+
     function formatDateDMY(value) {
       if (value instanceof Date && Number.isFinite(value.getTime())) {
         const day = String(value.getDate()).padStart(2, "0");
@@ -3621,7 +3627,7 @@
         return {
           id: day,
           value,
-          label: formatDateDMY(day) || day.slice(8, 10) || day,
+          label: formatDateBar(day),
           title: `${statsDayName(day, days)} · ${byMinutes ? formatWatchMinutes(value) : `${value} פעמים`}`,
         };
       });
