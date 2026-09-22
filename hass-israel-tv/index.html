@@ -1865,6 +1865,32 @@
     html.tv .license-tile-copy strong { font-size: 20px; color: #fff; }
     html.tv .license-tile-copy small { font-size: 16px; color: #c5d0e0; }
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 3px; }
+    html.tv dialog.sheet[open] {
+      display: flex;
+      flex-direction: column;
+      width: min(560px, 86vw);
+      max-height: min(86vh, 720px);
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    html.tv #licenseViewDlg[open] {
+      padding: 0;
+      overflow: hidden;
+    }
+    html.tv #licenseViewDlg .lic-head { flex: 0 0 auto; }
+    html.tv #licenseViewDlg .lic-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    html.tv #licenseViewDlg .qr-card { padding: 12px; }
+    html.tv #licenseViewDlg .qr-target,
+    html.tv #licenseViewDlg .qr-card canvas,
+    html.tv #licenseViewDlg .qr-card img {
+      width: 160px !important;
+      height: 160px !important;
+    }
     html.tv .stage { max-height: 48vh; }
     html.tv.tv-max,
     html.tv.tv-max body,
@@ -2597,6 +2623,10 @@
         if (isTextField(document.activeElement)) {
           document.activeElement.blur();
           title?.focus({ preventScroll: true });
+        }
+        if (isTv) {
+          const first = [...dlg.querySelectorAll(TV_FOCUSABLE)].find(tvVisible);
+          if (first) first.focus({ preventScroll: true });
         }
       });
       window.setTimeout(() => { dlg.dataset.ready = "1"; }, 350);
@@ -6775,6 +6805,39 @@
       return best;
     }
 
+    function tvDialogScrollRoot(dialog) {
+      const body = dialog.querySelector(".lic-body");
+      if (body && body.scrollHeight > body.clientHeight + 4) return body;
+      return dialog;
+    }
+
+    function moveTvDialogFocus(dialog, dx, dy) {
+      const items = tvFocusables();
+      const scroller = tvDialogScrollRoot(dialog);
+      if (!items.length) {
+        scroller.scrollBy({ top: dy * 96, left: 0 });
+        return;
+      }
+      const active = items.includes(document.activeElement) ? document.activeElement : null;
+      if (!active) {
+        focusTvNode(items[0]);
+        return;
+      }
+      if (dx) {
+        const next = moveInRow(items, active, dx);
+        if (next) focusTvNode(next);
+        return;
+      }
+      if (!dy) return;
+      const idx = items.indexOf(active);
+      const next = items[idx + dy];
+      if (next) {
+        focusTvNode(next);
+        return;
+      }
+      scroller.scrollBy({ top: dy * 96, left: 0 });
+    }
+
     function moveTvFocus(dx, dy) {
       if (isTvMax()) {
         if (dx) zapTvChannel(dx > 0 ? 1 : -1);
@@ -6782,17 +6845,7 @@
       }
       const dialog = document.querySelector("dialog[open]");
       if (dialog) {
-        const items = tvFocusables();
-        const active = items.includes(document.activeElement) ? document.activeElement : null;
-        if (!active) {
-          focusTvDefault();
-          return;
-        }
-        if (dx) {
-          focusTvNode(moveInRow(items, active, dx));
-          return;
-        }
-        focusTvNode(pickTvByGeometry(items, active, dx, dy));
+        moveTvDialogFocus(dialog, dx, dy);
         return;
       }
       const strips = tvFocusStrips();
@@ -6977,7 +7030,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=167").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=168").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
