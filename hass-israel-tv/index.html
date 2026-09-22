@@ -875,37 +875,67 @@
     }
     .stats-chart { display: grid; gap: 6px; }
     .stats-chart label {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
       color: var(--muted);
       font-size: 11px;
       font-weight: 650;
     }
-    .stats-bars {
-      display: grid;
-      grid-template-columns: repeat(14, minmax(0, 1fr));
-      align-items: end;
-      gap: 3px;
-      height: 56px;
+    .stats-chart label em {
+      font-style: normal;
+      color: var(--accent-2);
+      font-weight: 700;
     }
-    .stats-bars i {
-      display: block;
-      min-height: 2px;
-      border-radius: 3px 3px 1px 1px;
-      background: rgba(61, 139, 255, 0.35);
-    }
-    .stats-bars i.has { background: var(--accent); }
+    .stats-bars,
     .stats-hours {
+      direction: ltr;
       display: grid;
+      align-items: end;
+      height: 84px;
+    }
+    .stats-bars {
+      grid-template-columns: repeat(14, minmax(0, 1fr));
+      gap: 3px;
+    }
+    .stats-hours {
       grid-template-columns: repeat(24, minmax(0, 1fr));
       gap: 2px;
-      height: 18px;
     }
-    .stats-hours i {
-      display: block;
+    .stats-bars .col,
+    .stats-hours .col {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
       height: 100%;
-      border-radius: 2px;
+      gap: 3px;
+      min-width: 0;
+    }
+    .stats-bars .col i,
+    .stats-hours .col i {
+      display: block;
+      width: 100%;
+      min-height: 2px;
+      border-radius: 3px 3px 1px 1px;
       background: #243044;
     }
-    .stats-hours i.has { background: var(--accent-2); }
+    .stats-bars .col i.has { background: var(--accent); }
+    .stats-hours .col i.has { background: var(--accent-2); }
+    .stats-bars .col b,
+    .stats-hours .col b {
+      display: block;
+      color: var(--muted);
+      font-size: 8px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    .stats-hours .col.peak i { background: #ffd36a; }
+    .stats-hours .col.peak b { color: #ffd36a; }
+    @media (max-width: 560px) {
+      .stats-hours .col:nth-child(even) b { visibility: hidden; }
+    }
     .keys-list { display: grid; gap: 10px; }
     .key-card {
       display: grid;
@@ -3323,12 +3353,27 @@
       }[ch]));
     }
 
-    function statsBarHtml(values, cls) {
+    function statsColHtml(items, kind) {
+      const values = items.map((item) => Number(item.value) || 0);
       const max = Math.max(1, ...values);
-      return values.map((value) => {
-        const pct = Math.round((Number(value) || 0) / max * 100);
-        return `<i class="${value ? "has" : ""}" style="height:${Math.max(value ? 8 : 2, pct)}%"></i>`;
+      const peak = Math.max(0, ...values);
+      return items.map((item) => {
+        const value = Number(item.value) || 0;
+        const pct = Math.round(value / max * 100);
+        const isPeak = kind === "hour" && value && value === peak;
+        return `<span class="col${value ? " has" : ""}${isPeak ? " peak" : ""}" title="${escapeHtml(item.title || item.label)}">
+          <i class="${value ? "has" : ""}" style="height:${Math.max(value ? 10 : 2, pct)}%"></i>
+          <b>${escapeHtml(item.label)}</b>
+        </span>`;
       }).join("");
+    }
+
+    function peakHourLabel(hours) {
+      const list = Array.isArray(hours) ? hours : [];
+      const peak = Math.max(0, ...list);
+      if (!peak) return "";
+      const hits = list.map((value, hour) => ({ value, hour })).filter((item) => item.value === peak);
+      return `שיא ${hits.map((item) => `${String(item.hour).padStart(2, "0")}:00`).join(" · ")}`;
     }
 
     function renderAdminStats() {
@@ -3357,8 +3402,17 @@
       for (const user of rows) {
         const card = document.createElement("article");
         card.className = "stats-card";
-        const days = Array.isArray(user.days) ? user.days.map((item) => item.count) : [];
-        const hours = Array.isArray(user.hours) ? user.hours : [];
+        const dayItems = Array.isArray(user.days) ? user.days.map((item) => {
+          const day = String(item.day || "");
+          const label = day.slice(8, 10) || day;
+          return { value: item.count, label, title: `${day}: ${item.count || 0}` };
+        }) : [];
+        const hourItems = Array.from({ length: 24 }, (_, hour) => {
+          const value = Number(user.hours?.[hour]) || 0;
+          const label = String(hour).padStart(2, "0");
+          return { value, label, title: `${label}:00 · ${value} פעמים` };
+        });
+        const peak = peakHourLabel(user.hours);
         card.innerHTML = `
           <div class="stats-card-head">
             <div>
@@ -3374,11 +3428,11 @@
           </div>
           <div class="stats-chart">
             <label>14 הימים האחרונים</label>
-            <div class="stats-bars">${statsBarHtml(days, "day")}</div>
+            <div class="stats-bars">${statsColHtml(dayItems, "day")}</div>
           </div>
           <div class="stats-chart">
-            <label>שעות פעילות ביום</label>
-            <div class="stats-hours">${hours.map((value) => `<i class="${value ? "has" : ""}" style="opacity:${value ? Math.max(0.35, value / Math.max(1, ...hours)) : 0.25}"></i>`).join("")}</div>
+            <label>שעות ביום<span>${peak ? `<em>${escapeHtml(peak)}</em>` : ""}</span></label>
+            <div class="stats-hours">${statsColHtml(hourItems, "hour")}</div>
           </div>`;
         list.append(card);
       }
@@ -7355,7 +7409,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=173").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=174").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
