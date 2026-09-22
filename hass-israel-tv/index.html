@@ -11,11 +11,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
   <link rel="manifest" href="manifest.webmanifest?v=5" />
-  <link rel="icon" href="favicon.png?v=4" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=4" />
+  <link rel="icon" href="favicon.png?v=5" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=5" />
   <script>
     try {
-      if (sessionStorage.getItem("israel-tv-boot")) document.documentElement.dataset.booted = "1";
+      if (sessionStorage.getItem("israel-tv-boot-2")) document.documentElement.dataset.booted = "1";
     } catch {}
     try {
       const session = JSON.parse(localStorage.getItem("israel-tv-auth") || "null");
@@ -1582,17 +1582,32 @@
     html[data-booted="1"] #bootSplash { display: none !important; }
     #bootSplash.out { opacity: 0; pointer-events: none; }
     .boot-mark {
+      position: relative;
       width: min(46vw, 196px);
-      height: min(46vw, 196px);
+      aspect-ratio: 1;
       filter: drop-shadow(0 0 18px rgba(61, 139, 255, 0.22));
       animation: bootIn 0.7s ease-out both;
+    }
+    .boot-mark img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-radius: 22%;
+    }
+    .boot-arcs {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      pointer-events: none;
     }
     .boot-arc {
       stroke: #101318;
       fill: none;
-      stroke-width: 26;
+      stroke-width: 24;
       stroke-linecap: round;
-      opacity: 0.22;
+      opacity: 0.2;
       animation: bootArc 1.35s ease-in-out infinite;
     }
     .boot-arc:nth-of-type(1) { animation-delay: 0s; }
@@ -1610,21 +1625,20 @@
 </head>
 <body>
   <div id="bootSplash" aria-hidden="true">
-    <svg class="boot-mark" viewBox="0 0 512 512" role="img">
-      <rect width="512" height="512" rx="112" fill="#0c5aa8"/>
-      <polygon points="256,74 99,347 413,347" fill="none" stroke="#101318" stroke-width="26" stroke-linejoin="round"/>
-      <polygon points="256,438 99,165 413,165" fill="none" stroke="#101318" stroke-width="26" stroke-linejoin="round"/>
-      <polygon points="228,216 228,296 304,256" fill="#101318"/>
-      <path class="boot-arc" d="M428 198 A44 44 0 0 1 458 154"/>
-      <path class="boot-arc" d="M436 214 A86 86 0 0 1 496 132"/>
-      <path class="boot-arc" d="M444 230 A129 129 0 0 1 534 110"/>
-    </svg>
+    <div class="boot-mark">
+      <img src="icon-base.png?v=5" alt="" />
+      <svg class="boot-arcs" viewBox="0 0 512 512" aria-hidden="true">
+        <path class="boot-arc" d="M 451.08 119.59 A 44.03 44.03 0 0 1 465.88 178.94"/>
+        <path class="boot-arc" d="M 473.33 83.98 A 86.02 86.02 0 0 1 502.24 199.94"/>
+        <path class="boot-arc" d="M 496.12 47.51 A 129.02 129.02 0 0 1 539.48 221.44"/>
+      </svg>
+    </div>
   </div>
   <script>
     (function bootSplash() {
       const el = document.getElementById("bootSplash");
       if (!el || document.documentElement.dataset.booted === "1") return;
-      try { sessionStorage.setItem("israel-tv-boot", "1"); } catch {}
+      try { sessionStorage.setItem("israel-tv-boot-2", "1"); } catch {}
       window.setTimeout(() => {
         el.classList.add("out");
         window.setTimeout(() => {
@@ -1678,7 +1692,7 @@
   <div id="app" hidden>
   <header class="top">
     <button type="button" class="brand" id="homeBtn" title="מסך ראשי" aria-label="מסך ראשי">
-      <img src="favicon.png?v=4" alt="" />
+      <img src="favicon.png?v=5" alt="" />
       <div>
         <h1>Israel TV</h1>
         <span>צפייה ישירה</span>
@@ -5767,7 +5781,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=140").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=141").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;

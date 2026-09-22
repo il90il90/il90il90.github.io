@@ -1,4 +1,4 @@
-const CACHE = "israel-tv-v140";
+const CACHE = "israel-tv-v141";
 const SHELL = [
   "./",
   "./index.html",
@@ -9,6 +9,7 @@ const SHELL = [
   "./favicon.png",
   "./icon-192.png",
   "./icon-512.png",
+  "./icon-base.png",
   "./apple-touch-icon.png",
 ];
 
