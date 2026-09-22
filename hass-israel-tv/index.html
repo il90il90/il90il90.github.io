@@ -1867,32 +1867,28 @@
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 3px; }
     html.tv dialog.sheet[open] {
       position: fixed;
-      inset: 0;
-      width: auto;
+      inset: unset;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(560px, 86vw);
       height: auto;
-      max-width: none;
-      max-height: none;
+      max-height: 86vh;
       margin: 0;
-      border: 0;
-      border-radius: 0;
-      background: #070b12;
-      overflow-x: hidden;
-      overflow-y: scroll;
-      padding: 28px 48px 80px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
     html.tv #licenseViewDlg[open] {
-      padding: 0 0 80px;
+      padding: 0;
+      overflow: hidden;
+    }
+    html.tv #licenseViewDlg .lic-head { flex: 0 0 auto; }
+    html.tv #licenseViewDlg .lic-body {
+      flex: 1 1 auto;
+      min-height: 0;
       overflow-x: hidden;
       overflow-y: scroll;
-    }
-    html.tv #licenseViewDlg .lic-head {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    html.tv #licenseViewDlg .lic-body {
-      overflow: visible;
-      min-height: 0;
     }
     html.tv #licenseViewDlg .qr-card { padding: 12px; }
     html.tv #licenseViewDlg .qr-target,
@@ -2620,21 +2616,26 @@
 
     function lockTvSheetScroll(dlg) {
       if (!isTv || !dlg) return;
-      const h = Math.max(320, window.innerHeight || 720);
+      const max = Math.round(Math.max(320, window.innerHeight || 720) * 0.86);
       dlg.style.position = "fixed";
-      dlg.style.inset = "0px";
-      dlg.style.width = "100vw";
-      dlg.style.height = `${h}px`;
-      dlg.style.maxHeight = `${h}px`;
+      dlg.style.top = "50%";
+      dlg.style.left = "50%";
+      dlg.style.right = "auto";
+      dlg.style.bottom = "auto";
+      dlg.style.transform = "translate(-50%, -50%)";
+      dlg.style.width = `${Math.min(560, Math.round((window.innerWidth || 1280) * 0.86))}px`;
+      dlg.style.maxHeight = `${max}px`;
+      dlg.style.height = "auto";
       dlg.style.margin = "0";
-      dlg.style.overflowX = "hidden";
-      dlg.style.overflowY = "scroll";
-      const body = dlg.querySelector(".lic-body");
-      if (body) {
-        body.style.overflow = "visible";
-        body.style.height = "auto";
-        body.style.maxHeight = "none";
-      }
+      dlg.style.overflow = "hidden";
+      const head = dlg.querySelector(".lic-head");
+      const body = dlg.querySelector(".lic-body") || dlg;
+      const headH = head ? head.offsetHeight : 0;
+      const bodyH = Math.max(200, max - headH);
+      body.style.height = `${bodyH}px`;
+      body.style.maxHeight = `${bodyH}px`;
+      body.style.overflowX = "hidden";
+      body.style.overflowY = "scroll";
     }
 
     function openSheet(dlg) {
@@ -2642,10 +2643,7 @@
       dlg.dataset.ready = "";
       const title = dlg.querySelector("h3");
       if (title && !title.hasAttribute("tabindex")) title.tabIndex = -1;
-      if (!dlg.open) {
-        if (isTv) dlg.show();
-        else dlg.showModal();
-      }
+      if (!dlg.open) dlg.showModal();
       lockTvSheetScroll(dlg);
       title?.focus({ preventScroll: true });
       if (isTextField(document.activeElement)) {
@@ -6846,23 +6844,14 @@
     }
 
     function tvDialogScrollRoot(dialog) {
-      if (!dialog) return null;
-      if (dialog.scrollHeight > dialog.clientHeight + 4) return dialog;
-      const body = dialog.querySelector(".lic-body");
-      if (body && body.scrollHeight > body.clientHeight + 4) return body;
-      return dialog;
+      return dialog?.querySelector(".lic-body") || dialog;
     }
 
     function scrollTvDialog(dialog, dy) {
       if (!dialog || !dy) return;
-      const step = Math.max(180, Math.round((window.innerHeight || 720) * 0.34));
-      const delta = dy * step;
-      const roots = [dialog, dialog.querySelector(".lic-body")].filter(Boolean);
-      for (const root of roots) {
-        const before = root.scrollTop;
-        root.scrollTop = before + delta;
-        if (Math.abs(root.scrollTop - before) > 2) return;
-      }
+      const step = Math.max(140, Math.round((window.innerHeight || 720) * 0.28));
+      const root = tvDialogScrollRoot(dialog);
+      root.scrollTop += dy * step;
     }
 
     function moveTvDialogFocus(dialog, dx, dy) {
