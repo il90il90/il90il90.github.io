@@ -3253,35 +3253,31 @@
       currentPairId = "";
     }
 
-    async function startScreenPairing() {
+    async function startScreenPairing(forceNew = false) {
       if (!wantPairQr || readSession()) return;
       const wait = document.getElementById("pairWait");
       const code = document.getElementById("pairCode");
-      const pairId = randomPairId();
+      const pairId = (!forceNew && currentPairId) || randomPairId();
       currentPairId = pairId;
       wait.textContent = "מכינים ברקוד…";
+      code.hidden = true;
+      const created = await pwfAction({ action: "pair-create", pair_id: pairId });
+      if (currentPairId !== pairId || readSession()) return;
+      if (!created.ok) {
+        wait.textContent = "אין חיבור כרגע. מנסים שוב…";
+        pairPollTimer = window.setTimeout(() => startScreenPairing(), 3000);
+        return;
+      }
       await waitForQrLib();
+      if (currentPairId !== pairId || readSession()) return;
       const painted = await paintPairQr(document.getElementById("pairQr"), pairId);
       code.textContent = formatPairCode(pairId);
       code.hidden = !painted;
       wait.textContent = painted ? "ממתינים לחיבור מהטלפון…" : "לא ניתן לצייר ברקוד";
-      registerPairSession(pairId);
+      pollPairStatus(pairId, 0);
     }
 
-    async function registerPairSession(pairId) {
-      if (currentPairId !== pairId || readSession()) return;
-      const created = await pwfAction({ action: "pair-create", pair_id: pairId });
-      if (currentPairId !== pairId || readSession()) return;
-      if (!created.ok) {
-        document.getElementById("pairWait").textContent = "אין חיבור כרגע. מנסים שוב…";
-        pairPollTimer = window.setTimeout(() => registerPairSession(pairId), 3000);
-        return;
-      }
-      document.getElementById("pairWait").textContent = "ממתינים לחיבור מהטלפון…";
-      pollPairStatus(pairId);
-    }
-
-    async function pollPairStatus(pairId) {
+    async function pollPairStatus(pairId, misses = 0) {
       window.clearTimeout(pairPollTimer);
       if (currentPairId !== pairId || readSession()) return;
       const status = await pwfAction({ action: "pair-status", pair_id: pairId });
@@ -3293,10 +3289,14 @@
         return;
       }
       if (status.data?.status === "expired" || status.status === 404) {
-        startScreenPairing();
+        if (misses < 4) {
+          pairPollTimer = window.setTimeout(() => pollPairStatus(pairId, misses + 1), 1500);
+          return;
+        }
+        startScreenPairing(true);
         return;
       }
-      pairPollTimer = window.setTimeout(() => pollPairStatus(pairId), 2000);
+      pairPollTimer = window.setTimeout(() => pollPairStatus(pairId, 0), 2000);
     }
 
     async function applyPairedSession(data) {
@@ -3356,7 +3356,11 @@
         }
         return false;
       }
-      const claimed = await pwfAction(body);
+      let claimed = await pwfAction(body);
+      if (!claimed.ok && claimed.status === 404) {
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        claimed = await pwfAction(body);
+      }
       if (!claimed.ok) {
         const message = pairErrorMessage(claimed.data);
         if (!silent) {
@@ -6746,7 +6750,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=158").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=159").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
