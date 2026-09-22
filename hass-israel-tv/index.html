@@ -860,18 +860,60 @@
     .stats-list { display: grid; gap: 10px; }
     .stats-card {
       display: grid;
-      gap: 10px;
-      padding: 12px;
+      gap: 0;
+      padding: 0;
       background: var(--bg-soft);
       border: 1px solid var(--line);
       border-radius: 14px;
+      overflow: hidden;
     }
     .stats-card-head {
       display: flex;
       justify-content: space-between;
       gap: 10px;
       align-items: flex-start;
+      padding: 10px 12px;
+      cursor: pointer;
     }
+    .stats-card.open .stats-card-head { border-bottom: 1px solid var(--line); }
+    #statsDlg .stats-name {
+      display: block;
+      width: auto;
+      max-width: 100%;
+      height: auto;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      color: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      text-align: start;
+    }
+    #statsDlg .stats-name:hover { color: var(--accent-2); }
+    .stats-detail {
+      display: none;
+      gap: 10px;
+      padding: 12px;
+    }
+    .stats-card.open .stats-detail { display: grid; }
+    .stats-device {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      background: #0b1220;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .stats-device-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .stats-device-head strong { display: block; font-size: 14px; }
+    .stats-device-head small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
     .stats-card-head strong { display: block; font-size: 15px; }
     .stats-card-head small { display: block; margin-top: 2px; color: var(--muted); font-size: 12px; }
     .stats-dot {
@@ -3552,6 +3594,79 @@
       });
     }
 
+    function appendUsageCharts(parent, source, pickKey, hint) {
+      const byMinutes = source.hours_unit === "minutes";
+      const days = Array.isArray(source.days) ? source.days : [];
+      const picked = statsDayPick[pickKey] || "";
+      const pickedDay = days.find((item) => item.day === picked);
+      const dayHours = Array.isArray(pickedDay?.hours) ? pickedDay.hours : source.hours;
+      const dayTotal = pickedDay
+        ? Math.round(Number(pickedDay.minutes ?? pickedDay.count ?? 0) || 0)
+        : userMinutes(source);
+      const dayItems = days.map((item) => {
+        const day = String(item.day || "");
+        const value = item.minutes ?? item.count ?? 0;
+        return {
+          id: day,
+          value,
+          label: day.slice(8, 10) || day,
+          title: `${statsDayName(day, days)} · ${byMinutes ? formatWatchMinutes(value) : `${value} פעמים`}`,
+        };
+      });
+      const hourItems = Array.from({ length: 24 }, (_, hour) => {
+        const value = Number(dayHours?.[hour]) || 0;
+        const label = String(hour).padStart(2, "0");
+        return {
+          value,
+          label,
+          title: byMinutes ? `${label}:00 · ${formatWatchMinutes(value)}` : `${label}:00 · ${value} פעמים`,
+        };
+      });
+      const peak = peakHourLabel(dayHours, source.hours_unit);
+      const hourTitle = pickedDay
+        ? `${statsDayName(pickedDay.day, days)} · ${byMinutes ? `${dayTotal} דקות סה״כ` : `${dayTotal} פעמים`}`
+        : (byMinutes ? "דקות באפליקציה בכל שעה" : "שעות ביום");
+      const dayChart = document.createElement("div");
+      dayChart.className = "stats-chart";
+      const dayLabel = document.createElement("label");
+      dayLabel.textContent = hint || (byMinutes ? "לחצו על יום כדי לראות מה היה בו" : "14 הימים האחרונים · לחצו על יום");
+      const dayBars = document.createElement("div");
+      dayBars.className = "stats-bars";
+      fillStatsCols(dayBars, dayItems, "day", picked, (day) => {
+        if (statsDayPick[pickKey] === day) delete statsDayPick[pickKey];
+        else statsDayPick[pickKey] = day;
+        renderAdminStats();
+      });
+      dayChart.append(dayLabel, dayBars);
+      const hourChart = document.createElement("div");
+      hourChart.className = "stats-chart";
+      const hourLabel = document.createElement("label");
+      hourLabel.append(document.createTextNode(hourTitle));
+      const hourSide = document.createElement("span");
+      if (peak) {
+        const em = document.createElement("em");
+        em.textContent = peak;
+        hourSide.append(em);
+      }
+      if (pickedDay) {
+        const back = document.createElement("button");
+        back.type = "button";
+        back.className = "stats-day-back";
+        back.textContent = "כל הימים";
+        back.addEventListener("click", () => {
+          delete statsDayPick[pickKey];
+          renderAdminStats();
+        });
+        hourSide.append(back);
+      }
+      if (hourSide.childNodes.length) hourLabel.append(hourSide);
+      const hourBars = document.createElement("div");
+      hourBars.className = "stats-hours";
+      fillStatsCols(hourBars, hourItems, "hour");
+      hourChart.append(hourLabel, hourBars);
+      parent.append(dayChart, hourChart);
+    }
+
     function statsDayName(day, days) {
       const last = days.at(-1)?.day;
       const prev = days.at(-2)?.day;
@@ -3573,6 +3688,7 @@
     }
 
     let statsFilter = "";
+    let statsOpenUser = "";
     const statsDayPick = {};
 
     function statsFilterMatch(user, filter, summary, now) {
@@ -3681,96 +3797,81 @@
         : (statsFilter ? `אין אנשים ב־${filterLabel}` : (query ? "אין תוצאות לחיפוש" : "אין נתונים עדיין"));
       list.replaceChildren();
       for (const user of rows) {
+        const open = statsOpenUser === user.license_key;
         const card = document.createElement("article");
-        card.className = "stats-card";
-        const byMinutes = user.hours_unit === "minutes";
-        const days = Array.isArray(user.days) ? user.days : [];
-        const picked = statsDayPick[user.license_key] || "";
-        const pickedDay = days.find((item) => item.day === picked);
-        const dayHours = Array.isArray(pickedDay?.hours) ? pickedDay.hours : user.hours;
-        const dayTotal = pickedDay
-          ? Math.round(Number(pickedDay.minutes ?? pickedDay.count ?? dayHours?.reduce((sum, value) => sum + (Number(value) || 0), 0)) || 0)
-          : userMinutes(user);
-        const dayItems = days.map((item) => {
-          const day = String(item.day || "");
-          const value = item.minutes ?? item.count ?? 0;
-          return {
-            id: day,
-            value,
-            label: day.slice(8, 10) || day,
-            title: `${statsDayName(day, days)} · ${byMinutes ? formatWatchMinutes(value) : `${value} פעמים`}`,
-          };
+        card.className = `stats-card${open ? " open" : ""}`;
+        const devices = Array.isArray(user.device_list) ? user.device_list : [];
+        const head = document.createElement("div");
+        head.className = "stats-card-head";
+        head.addEventListener("click", () => {
+          statsOpenUser = open ? "" : user.license_key;
+          renderAdminStats();
         });
-        const hourItems = Array.from({ length: 24 }, (_, hour) => {
-          const value = Number(dayHours?.[hour]) || 0;
-          const label = String(hour).padStart(2, "0");
-          return {
-            value,
-            label,
-            title: byMinutes ? `${label}:00 · ${formatWatchMinutes(value)}` : `${label}:00 · ${value} פעמים`,
-          };
-        });
-        const peak = peakHourLabel(dayHours, user.hours_unit);
-        const hourTitle = pickedDay
-          ? `${statsDayName(pickedDay.day, days)} · ${byMinutes ? `${dayTotal} דקות סה״כ` : `${dayTotal} פעמים`}`
-          : (byMinutes ? "דקות באפליקציה בכל שעה" : "שעות ביום");
-        card.innerHTML = `
-          <div class="stats-card-head">
-            <div>
-              <strong>${escapeHtml(user.note || "בלי שם")}</strong>
-              <small>${user.last_seen ? `נראה ${formatLastSeen(user.last_seen)}` : "עדיין לא נכנס"} · ${userMinutes(user)} דקות סה״כ</small>
-            </div>
-            <span class="stats-dot${user.online ? " on" : ""}" title="${user.online ? "מחובר" : "לא מחובר"}"></span>
-          </div>
-          <div class="stats-meta">
+        const title = document.createElement("div");
+        const name = document.createElement("button");
+        name.type = "button";
+        name.className = "stats-name";
+        name.textContent = user.note || "בלי שם";
+        name.setAttribute("aria-expanded", open ? "true" : "false");
+        const sub = document.createElement("small");
+        const deviceHint = devices.length
+          ? devices.map((item) => item.name || "מכשיר").join(" · ")
+          : `${user.devices || 0} מכשירים`;
+        sub.textContent = `${user.last_seen ? `נראה ${formatLastSeen(user.last_seen)}` : "עדיין לא נכנס"} · ${userMinutes(user)} דקות · ${deviceHint}`;
+        title.append(name, sub);
+        const dot = document.createElement("span");
+        dot.className = `stats-dot${user.online ? " on" : ""}`;
+        dot.title = user.online ? "מחובר" : "לא מחובר";
+        head.append(title, dot);
+        card.append(head);
+        if (open) {
+          const detail = document.createElement("div");
+          detail.className = "stats-detail";
+          const meta = document.createElement("div");
+          meta.className = "stats-meta";
+          meta.innerHTML = `
             <span>${keyStatusLabel(user.status)}</span>
             <span>${user.opens || 0} כניסות</span>
             <span>${userMinutes(user)} דקות באפליקציה</span>
             <span>${userMinutes(user, "today")} דקות היום</span>
             <span>${userMinutes(user, "week")} דקות השבוע</span>
-            <span>${user.devices || 0} מכשירים</span>
+            <span>${devices.length || user.devices || 0} מכשירים</span>
             <span>${user.days_left == null ? "בלי תפוגה" : user.days_left < 0 ? "פג תוקף" : `תפוגה בעוד ${user.days_left} ימים`}</span>
-            <span>${user.first_seen ? `הצטרף ${formatLastSeen(user.first_seen)}` : "עדיין לא נכנס"}</span>
-          </div>`;
-        const dayChart = document.createElement("div");
-        dayChart.className = "stats-chart";
-        const dayLabel = document.createElement("label");
-        dayLabel.textContent = byMinutes ? "לחצו על יום כדי לראות מה היה בו" : "14 הימים האחרונים · לחצו על יום";
-        const dayBars = document.createElement("div");
-        dayBars.className = "stats-bars";
-        fillStatsCols(dayBars, dayItems, "day", picked, (day) => {
-          if (statsDayPick[user.license_key] === day) delete statsDayPick[user.license_key];
-          else statsDayPick[user.license_key] = day;
-          renderAdminStats();
-        });
-        dayChart.append(dayLabel, dayBars);
-        const hourChart = document.createElement("div");
-        hourChart.className = "stats-chart";
-        const hourLabel = document.createElement("label");
-        hourLabel.append(document.createTextNode(hourTitle));
-        const hourSide = document.createElement("span");
-        if (peak) {
-          const em = document.createElement("em");
-          em.textContent = peak;
-          hourSide.append(em);
+            <span>${user.first_seen ? `הצטרף ${formatLastSeen(user.first_seen)}` : "עדיין לא נכנס"}</span>`;
+          detail.append(meta);
+          appendUsageCharts(detail, user, user.license_key, "כל המכשירים יחד · לחצו על יום");
+          if (devices.length) {
+            const devicesTitle = document.createElement("label");
+            devicesTitle.textContent = devices.length === 1 ? "מכשיר אחד" : `${devices.length} מכשירים`;
+            devicesTitle.style.color = "var(--muted)";
+            devicesTitle.style.fontSize = "11px";
+            devicesTitle.style.fontWeight = "650";
+            detail.append(devicesTitle);
+          }
+          for (const device of devices) {
+            const box = document.createElement("div");
+            box.className = "stats-device";
+            const dhead = document.createElement("div");
+            dhead.className = "stats-device-head";
+            dhead.innerHTML = `
+              <div>
+                <strong>${escapeHtml(device.name || "מכשיר")}</strong>
+                <small>${device.online ? "מחובר עכשיו" : "לא מחובר"} · ${device.last_seen ? formatLastSeen(device.last_seen) : "עדיין לא נראה"} · ${userMinutes(device)} דקות</small>
+              </div>
+              <span class="stats-dot${device.online ? " on" : ""}"></span>`;
+            box.append(dhead);
+            const dmeta = document.createElement("div");
+            dmeta.className = "stats-meta";
+            dmeta.innerHTML = `
+              <span>${userMinutes(device)} דקות במכשיר</span>
+              <span>${userMinutes(device, "today")} דקות היום</span>
+              <span>${userMinutes(device, "week")} דקות השבוע</span>`;
+            box.append(dmeta);
+            appendUsageCharts(box, device, `${user.license_key}:${device.hwid}`, `שימוש ב${device.name || "מכשיר"} · לחצו על יום`);
+            detail.append(box);
+          }
+          card.append(detail);
         }
-        if (pickedDay) {
-          const back = document.createElement("button");
-          back.type = "button";
-          back.className = "stats-day-back";
-          back.textContent = "כל הימים";
-          back.addEventListener("click", () => {
-            delete statsDayPick[user.license_key];
-            renderAdminStats();
-          });
-          hourSide.append(back);
-        }
-        if (hourSide.childNodes.length) hourLabel.append(hourSide);
-        const hourBars = document.createElement("div");
-        hourBars.className = "stats-hours";
-        fillStatsCols(hourBars, hourItems, "hour");
-        hourChart.append(hourLabel, hourBars);
-        card.append(dayChart, hourChart);
         list.append(card);
       }
     }
@@ -7760,7 +7861,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=180").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=181").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
