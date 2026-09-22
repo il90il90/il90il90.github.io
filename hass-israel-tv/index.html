@@ -1708,13 +1708,40 @@
       z-index: 60;
       background: #000;
     }
-    html.tv .status.is-loading p {
-      color: #fff;
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
+    html.tv .status.is-loading {
+      gap: 14px;
     }
-    html.tv.tv-max .status.is-loading p { font-size: 28px; }
+    html.tv .status-logo {
+      display: none;
+      width: 160px;
+      height: 160px;
+      object-fit: contain;
+      object-position: center;
+      image-rendering: auto;
+      background: transparent;
+    }
+    html.tv .status.is-loading .status-logo:not([hidden]) { display: block; }
+    html.tv .status-name {
+      display: none;
+      margin: 0;
+      color: #fff;
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    html.tv .status.is-loading .status-name:not([hidden]) { display: block; }
+    html.tv .status.is-loading p {
+      color: #c5d0e0;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+    html.tv.tv-max .status-logo {
+      width: 200px;
+      height: 200px;
+    }
+    html.tv.tv-max .status-name { font-size: 34px; }
+    html.tv.tv-max .status.is-loading p { font-size: 20px; }
     html.tv video::-webkit-media-controls,
     html.tv video::-webkit-media-controls-enclosure,
     html.tv video::-webkit-media-controls-start-playback-button {
@@ -1912,6 +1939,8 @@
         <p id="castBannerName">בחרו ערוץ כדי לשלוח ל-Cast</p>
       </div>
       <div class="status hidden" id="status">
+        <img class="status-logo" id="statusLogo" alt="" hidden />
+        <strong class="status-name" id="statusName" hidden></strong>
         <div class="status-spinner" aria-hidden="true"></div>
         <p></p>
         <a class="camera-open" id="cameraOpen" hidden>פתח מצלמה</a>
@@ -3963,6 +3992,30 @@
       return `https://${CDN}/_cat/${jwt}/${path.replace(/^\/+/, "")}`;
     }
 
+    function paintStatusChannel(channel) {
+      const logo = document.getElementById("statusLogo");
+      const name = document.getElementById("statusName");
+      if (!isTv || !channel) {
+        logo.removeAttribute("src");
+        logo.hidden = true;
+        name.textContent = "";
+        name.hidden = true;
+        return;
+      }
+      const src = logoSrc(channel.logo);
+      if (src) {
+        logo.decoding = "sync";
+        logo.src = src;
+        logo.alt = channel.name || "";
+        logo.hidden = false;
+      } else {
+        logo.removeAttribute("src");
+        logo.hidden = true;
+      }
+      name.textContent = channel.name || "";
+      name.hidden = !channel.name;
+    }
+
     function setStatus(text, loading = false, kind = "") {
       const line = status.querySelector("p");
       theater.classList.toggle("is-buffering", Boolean(loading));
@@ -3971,10 +4024,12 @@
         video.classList.remove("has-frame");
         status.classList.add("is-loading");
         status.classList.remove("hidden", "is-error", "is-camera");
+        paintStatusChannel(current);
         line.textContent = text || (isTv ? "טעינה" : "נטען…");
         return;
       }
       status.classList.remove("is-loading");
+      paintStatusChannel(null);
       if (!isTv) video.controls = true;
       if (!text) {
         status.classList.add("hidden");
@@ -6575,7 +6630,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=155").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=156").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
