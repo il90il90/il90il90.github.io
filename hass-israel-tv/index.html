@@ -147,6 +147,64 @@
     }
     .install[hidden] { display: none !important; }
     #iosHint, .ios-hint { display: none !important; }
+    .gate-install {
+      display: none;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--bg-soft);
+      color: inherit;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .gate-install:not([hidden]) { display: flex; }
+    .gate-install svg { width: 18px; height: 18px; }
+    html.tv .gate-install { display: none !important; }
+    .ios-install {
+      margin: 0 0 16px;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+    .ios-install li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--bg-soft);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .ios-install b { font-weight: 800; }
+    .ios-step {
+      flex: 0 0 28px;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(61, 139, 255, 0.16);
+      color: var(--accent-2);
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .ios-share-icon {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 18px;
+      margin-top: 2px;
+      color: var(--accent-2);
+    }
 
     .header-search {
       flex: 1 1 100%;
@@ -1501,6 +1559,9 @@
     @media (max-width: 1024px) {
       .install:not([hidden]) { display: grid !important; }
     }
+    @supports (-webkit-touch-callout: none) {
+      .install:not([hidden]) { display: grid !important; }
+    }
 
     .tv-only { display: none !important; }
     .tv-hint { display: none; }
@@ -1724,6 +1785,10 @@
         <div class="login-spinner" aria-hidden="true"></div>
         <strong id="loginBusyText">מתחברים…</strong>
       </div>
+      <button type="button" class="gate-install" id="installGateBtn" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+        התקנה באייפון
+      </button>
     </form>
   </div>
   <div id="app" hidden>
@@ -1938,8 +2003,24 @@
     </div>
   </dialog>
   <dialog class="sheet" id="installDlg">
-    <h3>התקנת האפליקציה</h3>
-    <p style="color:var(--muted);margin:0 0 14px">להתקין את Israel TV במסך הבית?</p>
+    <h3 id="installTitle">התקנת האפליקציה</h3>
+    <p id="installLead" style="color:var(--muted);margin:0 0 14px">להתקין את Israel TV במסך הבית?</p>
+    <ol class="ios-install" id="installIosSteps" hidden>
+      <li>
+        <span class="ios-step">1</span>
+        <span>לחצו על <b>שיתוף</b> בספארי
+          <svg class="ios-share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+        </span>
+      </li>
+      <li>
+        <span class="ios-step">2</span>
+        <span>גללו ובחרו <b>הוספה למסך הבית</b></span>
+      </li>
+      <li>
+        <span class="ios-step">3</span>
+        <span>לחצו <b>הוסף</b> — האייקון יופיע במסך הבית</span>
+      </li>
+    </ol>
     <div class="row">
       <button type="button" id="installYes">התקן</button>
       <button type="button" class="ghost" id="installNo">לא עכשיו</button>
@@ -5805,9 +5886,12 @@
     }
 
     const installBtn = document.getElementById("installBtn");
+    const installGateBtn = document.getElementById("installGateBtn");
     const installDlg = document.getElementById("installDlg");
     const standaloneMedia = window.matchMedia("(display-mode: standalone)");
     let deferredPrompt;
+    const isIosDevice = /iPad|iPhone|iPod/i.test(navigator.userAgent || "")
+      || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
     function isInstalledApp() {
       const modes = ["standalone", "fullscreen", "minimal-ui"];
@@ -5821,8 +5905,30 @@
     }
 
     function syncInstallButton() {
-      installBtn.hidden = isTv || isInstalledApp() || !deferredPrompt;
-      if (installBtn.hidden && installDlg.open) installDlg.close();
+      const installed = isInstalledApp();
+      const canPrompt = Boolean(deferredPrompt);
+      installBtn.hidden = isTv || installed || !(canPrompt || isIosDevice);
+      if (installGateBtn) installGateBtn.hidden = isTv || installed || !isIosDevice;
+      if (installBtn.hidden && installDlg.open && !isIosDevice) installDlg.close();
+    }
+
+    function openInstallDialog() {
+      if (isInstalledApp()) {
+        syncInstallButton();
+        return;
+      }
+      const ios = isIosDevice;
+      const steps = document.getElementById("installIosSteps");
+      const lead = document.getElementById("installLead");
+      const title = document.getElementById("installTitle");
+      const yes = document.getElementById("installYes");
+      const no = document.getElementById("installNo");
+      if (steps) steps.hidden = !ios;
+      if (lead) lead.hidden = ios;
+      if (title) title.textContent = ios ? "התקנה באייפון" : "התקנת האפליקציה";
+      if (yes) yes.hidden = ios;
+      if (no) no.textContent = ios ? "הבנתי" : "לא עכשיו";
+      openSheet(installDlg);
     }
 
     syncInstallButton();
@@ -5839,13 +5945,8 @@
       syncInstallButton();
     });
 
-    installBtn.addEventListener("click", () => {
-      if (isInstalledApp()) {
-        syncInstallButton();
-        return;
-      }
-      openSheet(installDlg);
-    });
+    installBtn.addEventListener("click", openInstallDialog);
+    installGateBtn?.addEventListener("click", openInstallDialog);
     document.getElementById("installNo").addEventListener("click", () => {
       installDlg.close();
     });
@@ -5855,6 +5956,7 @@
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       deferredPrompt = undefined;
+      syncInstallButton();
     });
 
     document.getElementById("iosHint")?.remove();
@@ -6271,7 +6373,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=147").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=148").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
