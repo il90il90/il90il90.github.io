@@ -10,10 +10,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
-  <link rel="manifest" href="manifest.webmanifest?v=4" />
-  <link rel="icon" href="favicon.png?v=3" />
-  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=3" />
+  <link rel="manifest" href="manifest.webmanifest?v=5" />
+  <link rel="icon" href="favicon.png?v=4" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=4" />
   <script>
+    try {
+      if (sessionStorage.getItem("israel-tv-boot")) document.documentElement.dataset.booted = "1";
+    } catch {}
     try {
       const session = JSON.parse(localStorage.getItem("israel-tv-auth") || "null");
       const end = session && (session.licenseExp || session.exp);
@@ -1566,9 +1569,71 @@
     }
     html.tv .card:focus, html.tv .chip:focus, html.tv .cat:focus { background: var(--card-hover); }
     html.tv .chip.active:focus, html.tv .cat.active:focus { filter: brightness(1.12); }
+    #bootSplash {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      background: #070b12;
+      transition: opacity 0.45s ease;
+    }
+    #bootSplash[hidden],
+    html[data-booted="1"] #bootSplash { display: none !important; }
+    #bootSplash.out { opacity: 0; pointer-events: none; }
+    .boot-mark {
+      width: min(46vw, 196px);
+      height: min(46vw, 196px);
+      filter: drop-shadow(0 0 18px rgba(61, 139, 255, 0.22));
+      animation: bootIn 0.7s ease-out both;
+    }
+    .boot-arc {
+      stroke: #101318;
+      fill: none;
+      stroke-width: 26;
+      stroke-linecap: round;
+      opacity: 0.22;
+      animation: bootArc 1.35s ease-in-out infinite;
+    }
+    .boot-arc:nth-of-type(1) { animation-delay: 0s; }
+    .boot-arc:nth-of-type(2) { animation-delay: 0.18s; }
+    .boot-arc:nth-of-type(3) { animation-delay: 0.36s; }
+    @keyframes bootIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    @keyframes bootArc {
+      0%, 100% { opacity: 0.18; }
+      35% { opacity: 1; }
+    }
   </style>
 </head>
 <body>
+  <div id="bootSplash" aria-hidden="true">
+    <svg class="boot-mark" viewBox="0 0 512 512" role="img">
+      <rect width="512" height="512" rx="112" fill="#0c5aa8"/>
+      <polygon points="256,74 99,347 413,347" fill="none" stroke="#101318" stroke-width="26" stroke-linejoin="round"/>
+      <polygon points="256,438 99,165 413,165" fill="none" stroke="#101318" stroke-width="26" stroke-linejoin="round"/>
+      <polygon points="228,216 228,296 304,256" fill="#101318"/>
+      <path class="boot-arc" d="M428 198 A44 44 0 0 1 458 154"/>
+      <path class="boot-arc" d="M436 214 A86 86 0 0 1 496 132"/>
+      <path class="boot-arc" d="M444 230 A129 129 0 0 1 534 110"/>
+    </svg>
+  </div>
+  <script>
+    (function bootSplash() {
+      const el = document.getElementById("bootSplash");
+      if (!el || document.documentElement.dataset.booted === "1") return;
+      try { sessionStorage.setItem("israel-tv-boot", "1"); } catch {}
+      window.setTimeout(() => {
+        el.classList.add("out");
+        window.setTimeout(() => {
+          el.hidden = true;
+          document.documentElement.dataset.booted = "1";
+        }, 450);
+      }, 1500);
+    })();
+  </script>
   <div id="gate">
     <form class="login" id="loginForm">
       <div class="login-head">
@@ -1613,7 +1678,7 @@
   <div id="app" hidden>
   <header class="top">
     <button type="button" class="brand" id="homeBtn" title="מסך ראשי" aria-label="מסך ראשי">
-      <img src="favicon.png?v=3" alt="" />
+      <img src="favicon.png?v=4" alt="" />
       <div>
         <h1>Israel TV</h1>
         <span>צפייה ישירה</span>
@@ -5702,7 +5767,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=139").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=140").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
