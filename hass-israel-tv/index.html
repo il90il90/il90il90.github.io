@@ -1106,6 +1106,29 @@
     .pair-steps li { margin: 0 0 10px; }
     .pair-steps a { color: var(--accent-2); font-weight: 700; }
     .pair-phone p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+    .pair-busy {
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 16px;
+      min-height: 160px;
+      text-align: center;
+    }
+    .pair-busy[hidden] { display: none !important; }
+    .pair-busy strong {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .pair-dots::after {
+      content: "";
+      animation: pair-dots 1.2s steps(4, end) infinite;
+    }
+    @keyframes pair-dots {
+      0% { content: ""; }
+      25% { content: "."; }
+      50% { content: ".."; }
+      75% { content: "..."; }
+    }
     .pair-phone .pair-row { display: flex; align-items: stretch; gap: 8px; min-width: 0; }
     .pair-phone input {
       flex: 1;
@@ -1115,7 +1138,10 @@
       background: #0b1220;
       color: inherit;
       padding: 10px 12px;
-      font-size: 15px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-align: center;
     }
     .pair-phone .pair-row button {
       flex: 0 0 auto;
@@ -2194,7 +2220,7 @@
         </div>
         <p>לחבר את הטלוויזיה לרישיון שלכם?</p>
         <div class="pair-row">
-          <input id="pairCodeInput" type="text" maxlength="16" placeholder="קוד מהמסך" dir="ltr" spellcheck="false" autocomplete="off" inputmode="text" />
+          <input id="pairCodeInput" type="text" maxlength="11" placeholder="XXX-XXX-XXX" dir="ltr" spellcheck="false" autocomplete="off" inputmode="text" autocapitalize="characters" />
           <button type="button" id="pairCodeGo">חבר</button>
         </div>
       </div>
@@ -2356,12 +2382,18 @@
     </div>
   </dialog>
   <dialog class="sheet" id="pairDlg">
-    <h3>חיבור למסך</h3>
-    <p style="color:var(--muted);margin:0 0 14px">לחבר את הטלוויזיה לרישיון שלכם?</p>
-    <p class="err" id="pairErr"></p>
-    <div class="row">
-      <button type="button" id="pairYes">חבר</button>
-      <button type="button" class="ghost" id="pairNo">ביטול</button>
+    <div id="pairAsk">
+      <h3>חיבור למסך</h3>
+      <p style="color:var(--muted);margin:0 0 14px">לחבר את הטלוויזיה לרישיון שלכם?</p>
+      <p class="err" id="pairErr"></p>
+      <div class="row">
+        <button type="button" id="pairYes">חבר</button>
+        <button type="button" class="ghost" id="pairNo">ביטול</button>
+      </div>
+    </div>
+    <div class="pair-busy" id="pairBusy" hidden>
+      <div class="login-spinner" aria-hidden="true"></div>
+      <strong>הטלפון מתחבר<span class="pair-dots" aria-hidden="true"></span></strong>
     </div>
   </dialog>
   <dialog class="sheet" id="scanDlg">
@@ -3254,7 +3286,36 @@
 
     function formatPairCode(pairId) {
       const id = normalizePairId(pairId);
-      return id.length === 9 ? `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}` : id;
+      const chunks = [];
+      for (let i = 0; i < id.length; i += 3) chunks.push(id.slice(i, i + 3));
+      return chunks.join("-");
+    }
+
+    function showPairBusy(on) {
+      const ask = document.getElementById("pairAsk");
+      const busy = document.getElementById("pairBusy");
+      if (ask) ask.hidden = Boolean(on);
+      if (busy) busy.hidden = !on;
+    }
+
+    async function connectPhoneToScreen(pairId) {
+      const id = normalizePairId(pairId);
+      if (!id) return false;
+      claimingPairId = id;
+      const dlg = document.getElementById("pairDlg");
+      document.getElementById("pairErr").textContent = "";
+      showPairBusy(true);
+      if (dlg && !dlg.open) openSheet(dlg);
+      const ok = await claimPair(id, { silent: true });
+      if (ok) {
+        dlg?.close();
+        showPairBusy(false);
+        showToast("המסך מחובר");
+        return true;
+      }
+      showPairBusy(false);
+      document.getElementById("pairErr").textContent = lastPairError || "לא הצלחנו לחבר. בדקו שהברקוד במסך עדיין פעיל ונסו שוב";
+      return false;
     }
 
     function consumePairLink() {
@@ -3423,28 +3484,32 @@
       return pwfErrorMessage(data);
     }
 
+    let lastPairError = "";
     async function claimPair(pairId, { silent = false } = {}) {
       const id = normalizePairId(pairId);
+      lastPairError = "";
       if (!id) return false;
       const session = readSession();
       if (!session) {
         pendingPairId = id;
-        if (!silent) showToast("התחברו ואז נחבר את המסך");
+        lastPairError = "התחברו ואז נחבר את המסך";
+        if (!silent) showToast(lastPairError);
         return false;
       }
       if (!canShareLicense(session)) {
-        if (!silent) showToast("הרישיון הזה למכשיר אחד, בלי חיבור למסך נוסף");
+        lastPairError = "הרישיון הזה למכשיר אחד, בלי חיבור למסך נוסף";
+        if (!silent) showToast(lastPairError);
         return false;
       }
       const body = pairClaimBody(id);
       if (!body.license_key && !body.token && !body.admin) {
-        const message = session.role === "admin"
+        lastPairError = session.role === "admin"
           ? "התחברו שוב כמנהל ואז חברו את המסך."
           : "חסר רישיון בטלפון. היכנסו עם הרישיון ואז חברו את המסך.";
         if (!silent) {
           const err = document.getElementById("pairErr");
-          if (err) err.textContent = message;
-          else showToast(message);
+          if (err) err.textContent = lastPairError;
+          else showToast(lastPairError);
         }
         return false;
       }
@@ -3454,11 +3519,11 @@
         claimed = await pwfAction(body);
       }
       if (!claimed.ok) {
-        const message = pairErrorMessage(claimed.data);
+        lastPairError = pairErrorMessage(claimed.data);
         if (!silent) {
           const err = document.getElementById("pairErr");
-          if (err) err.textContent = message;
-          else showToast(message);
+          if (err) err.textContent = lastPairError;
+          else showToast(lastPairError);
         }
         return false;
       }
@@ -3537,7 +3602,7 @@
       if (pairId) {
         stopScan();
         if (scanDlg.open) scanDlg.close();
-        if (readSession()) askClaimPair(pairId);
+        if (readSession()) connectPhoneToScreen(pairId);
         else {
           pendingPairId = pairId;
           showToast("התחברו ואז נחבר את המסך");
@@ -3686,18 +3751,26 @@
     document.getElementById("pairHelpDlg").addEventListener("click", (event) => {
       if (event.target === event.currentTarget) event.currentTarget.close();
     });
+    const pairCodeInput = document.getElementById("pairCodeInput");
+    pairCodeInput.addEventListener("input", () => {
+      const formatted = formatPairCode(pairCodeInput.value);
+      if (pairCodeInput.value !== formatted) pairCodeInput.value = formatted;
+    });
+    pairCodeInput.addEventListener("paste", (event) => {
+      const text = event.clipboardData?.getData("text/plain") || event.clipboardData?.getData("text") || "";
+      if (!text) return;
+      event.preventDefault();
+      pairCodeInput.value = formatPairCode(parsePairId(text) || text);
+    });
     document.getElementById("pairCodeGo").addEventListener("click", () => {
-      const pairId = parsePairId(document.getElementById("pairCodeInput").value);
+      const pairId = parsePairId(pairCodeInput.value);
       if (!pairId) {
         showToast("הזינו את הקוד שעל המסך");
         return;
       }
-      askClaimPair(pairId);
+      connectPhoneToScreen(pairId);
     });
-    document.getElementById("pairYes").addEventListener("click", async () => {
-      const ok = await claimPair(claimingPairId);
-      if (ok) document.getElementById("pairDlg").close();
-    });
+    document.getElementById("pairYes").addEventListener("click", () => connectPhoneToScreen(claimingPairId));
     document.getElementById("pairNo").addEventListener("click", () => document.getElementById("pairDlg").close());
     document.getElementById("pairDlg").addEventListener("click", (event) => {
       if (event.target === event.currentTarget) event.currentTarget.close();
@@ -6325,7 +6398,7 @@
         if (document.getElementById("app")?.hidden) unlockApp(session);
         else applyFreshSession(session);
       });
-      if (linkedPair) askClaimPair(linkedPair);
+      if (linkedPair) connectPhoneToScreen(linkedPair);
     } else if (linkedLicense) {
       if (linkedPair) pendingPairId = linkedPair;
       licenseInput.value = linkedLicense;
@@ -6877,7 +6950,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=165").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=166").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
