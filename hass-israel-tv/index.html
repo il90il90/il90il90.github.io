@@ -914,6 +914,8 @@
       direction: ltr;
       display: grid;
       align-items: end;
+      width: 100%;
+      min-width: 0;
       height: 84px;
     }
     .stats-bars {
@@ -930,15 +932,23 @@
       flex-direction: column;
       justify-content: flex-end;
       align-items: center;
-      height: 100%;
-      gap: 3px;
+      width: 100%;
       min-width: 0;
+      height: 84px;
+      gap: 3px;
+      padding: 0;
+      margin: 0;
+      border: 0;
+      background: none;
+      color: inherit;
+      cursor: pointer;
     }
     .stats-bars .col i,
     .stats-hours .col i {
       display: block;
       width: 100%;
-      min-height: 2px;
+      height: 4px;
+      flex: 0 0 auto;
       border-radius: 3px 3px 1px 1px;
       background: #243044;
     }
@@ -957,16 +967,6 @@
     .stats-hours .col.peak b { color: #ffd36a; }
     .stats-bars .col.pick i { background: #ffd36a; }
     .stats-bars .col.pick b { color: #ffd36a; }
-    #statsDlg .stats-bars .col,
-    #statsDlg .stats-hours .col {
-      width: auto;
-      padding: 0;
-      border: 0;
-      border-radius: 0;
-      background: none;
-      color: inherit;
-      cursor: pointer;
-    }
     #statsDlg .stats-day-back {
       height: auto;
       padding: 0;
@@ -976,7 +976,8 @@
       font-weight: 700;
     }
     @media (max-width: 560px) {
-      .stats-hours .col:nth-child(even) b { visibility: hidden; }
+      .stats-hours .col b { visibility: hidden; }
+      .stats-hours .col:nth-child(3n+1) b { visibility: visible; }
     }
     .keys-list { display: grid; gap: 8px; }
     .key-card {
@@ -3524,14 +3525,29 @@
       container.replaceChildren();
       items.forEach((item, index) => {
         const value = values[index];
-        const pct = Math.round(value / max * 100);
+        const bar = value ? Math.max(8, Math.round(value / max * 58)) : 4;
         const isPeak = kind === "hour" && value && value === peak;
-        const col = document.createElement(onPick ? "button" : "span");
-        if (onPick) col.type = "button";
+        const col = document.createElement("span");
         col.className = `col${value ? " has" : ""}${isPeak ? " peak" : ""}${picked && item.id === picked ? " pick" : ""}`;
         col.title = item.title || item.label;
-        col.innerHTML = `<i class="${value ? "has" : ""}" style="height:${Math.max(value ? 10 : 2, pct)}%"></i><b>${escapeHtml(item.label)}</b>`;
-        if (onPick) col.addEventListener("click", () => onPick(item.id));
+        if (onPick) {
+          col.setAttribute("role", "button");
+          col.tabIndex = 0;
+          const pick = () => onPick(item.id);
+          col.addEventListener("click", pick);
+          col.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              pick();
+            }
+          });
+        }
+        const i = document.createElement("i");
+        if (value) i.className = "has";
+        i.style.height = `${bar}px`;
+        const label = document.createElement("b");
+        label.textContent = item.label;
+        col.append(i, label);
         container.append(col);
       });
     }
@@ -7744,7 +7760,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=179").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=180").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
