@@ -1507,6 +1507,10 @@
       --header: 64px;
       --video-max-h: min(42vh, 460px);
       --radius: 14px;
+      scroll-behavior: auto;
+    }
+    html.tv .card, html.tv .chip, html.tv .cat, html.tv .icon-btn {
+      contain: layout style;
     }
     html.tv body { font-size: 15px; }
     html.tv #app, html.tv main { max-width: none; }
@@ -4663,7 +4667,46 @@
       try { return new URL(value, document.baseURI).href; } catch { return value; }
     }
 
-    function paintLogo(box, channel) {
+    let logoObserver;
+    function resetLogoObserver() {
+      logoObserver?.disconnect();
+      logoObserver = null;
+    }
+
+    function observeLogo(img) {
+      const show = () => {
+        if (!img.dataset.src) return;
+        img.src = img.dataset.src;
+        delete img.dataset.src;
+        logoObserver?.unobserve(img);
+      };
+      if (!("IntersectionObserver" in window)) {
+        show();
+        return;
+      }
+      const catalog = document.querySelector(".catalog");
+      if (!logoObserver) {
+        logoObserver = new IntersectionObserver((entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            const node = entry.target;
+            if (node.dataset.src) {
+              node.src = node.dataset.src;
+              delete node.dataset.src;
+            }
+            logoObserver.unobserve(node);
+          }
+        }, { root: catalog || null, rootMargin: "280px 0px", threshold: 0.01 });
+      }
+      logoObserver.observe(img);
+      requestAnimationFrame(() => {
+        if (!img.dataset.src) return;
+        const box = img.getBoundingClientRect();
+        if (box.bottom > 0 && box.top < window.innerHeight + 280) show();
+      });
+    }
+
+    function paintLogo(box, channel, eager = false) {
       const initials = String(channel.name || "").slice(0, 2);
       const src = logoSrc(channel.logo);
       box.replaceChildren();
@@ -4675,11 +4718,18 @@
       img.alt = "";
       img.draggable = false;
       try { img.decoding = "async"; } catch {}
-      try { img.loading = (isTv || isAndroid) ? "eager" : "lazy"; } catch {}
       img.addEventListener("error", () => {
         box.replaceChildren();
         box.textContent = initials;
       }, { once: true });
+      if ((isTv || isAndroid) && !eager) {
+        try { img.loading = "eager"; } catch {}
+        img.dataset.src = src;
+        box.append(img);
+        observeLogo(img);
+        return;
+      }
+      try { img.loading = (isTv || isAndroid || eager) ? "eager" : "lazy"; } catch {}
       img.src = src;
       box.append(img);
     }
@@ -4693,10 +4743,21 @@
     }
 
     function bindTap(el, onTap) {
+      let lastTap = 0;
+      const run = (event) => {
+        event.preventDefault();
+        const now = Date.now();
+        if (now - lastTap < 320) return;
+        lastTap = now;
+        onTap();
+      };
+      if (isTv) {
+        el.addEventListener("click", run);
+        return;
+      }
       let startX = 0;
       let startY = 0;
       let armed = false;
-      let lastTap = 0;
       el.addEventListener("pointerdown", (event) => {
         if (event.pointerType === "mouse" && event.button !== 0) return;
         startX = event.clientX;
@@ -4709,14 +4770,14 @@
         if (!armed) return;
         armed = false;
         if (Math.hypot(event.clientX - startX, event.clientY - startY) > 12) return;
-        event.preventDefault();
-        lastTap = Date.now();
-        onTap();
+        run(event);
       });
       el.addEventListener("click", (event) => {
-        event.preventDefault();
-        if (Date.now() - lastTap < 400) return;
-        onTap();
+        if (Date.now() - lastTap < 400) {
+          event.preventDefault();
+          return;
+        }
+        run(event);
       });
     }
 
@@ -4727,7 +4788,7 @@
       btn.className = `chip chip-logo${current?.id === channel.id ? " active" : ""}`;
       btn.title = channel.name;
       btn.setAttribute("aria-label", channel.name);
-      paintLogo(btn, channel);
+      paintLogo(btn, channel, true);
       bindTap(btn, () => {
         launchRtspIfNeeded(channel);
         playChannel(channel);
@@ -4735,18 +4796,50 @@
       return btn;
     }
 
-    function paintRecent() {
+    function recentChip(id) {
+      return [...recentEl.querySelectorAll(".chip")].find((el) => el.dataset.id === id);
+    }
+
+    function paintRecent(options = {}) {
       const query = document.getElementById("q").value.trim().toLowerCase();
-      recentEl.innerHTML = "";
       const recent = loadRecent()
         .map((id) => CHANNELS.find((item) => item.id === id))
         .filter((channel) => channel && matches(channel, query));
       recentSection.hidden = recent.length === 0;
-      for (const channel of recent) recentEl.append(makeRecentChip(channel));
+      const keep = Boolean(options.keep) && !query && recentEl.childElementCount > 0;
+      if (keep) {
+        const seen = new Set();
+        for (const el of [...recentEl.querySelectorAll(".chip")]) {
+          if (seen.has(el.dataset.id)) {
+            el.remove();
+            continue;
+          }
+          seen.add(el.dataset.id);
+        }
+        for (const channel of [...recent].reverse()) {
+          if (recentChip(channel.id)) continue;
+          recentEl.prepend(makeRecentChip(channel));
+        }
+        while (recentEl.querySelectorAll(".chip").length > RECENT_LIMIT) {
+          recentEl.querySelector(".chip:last-of-type")?.remove();
+        }
+        recentSection.hidden = !recentEl.querySelector(".chip");
+        syncActive();
+        return;
+      }
+      const focusedId = recentEl.contains(document.activeElement) ? document.activeElement.dataset.id : "";
+      const frag = document.createDocumentFragment();
+      for (const channel of recent) frag.append(makeRecentChip(channel));
+      recentEl.replaceChildren(frag);
+      if (isTv && focusedId) {
+        const el = recentChip(focusedId);
+        if (el) focusTvNode(el);
+      }
     }
 
     function render() {
       const query = document.getElementById("q").value.trim().toLowerCase();
+      resetLogoObserver();
       paintRecent();
 
       catsEl.innerHTML = "";
@@ -4812,7 +4905,7 @@
             : channel.nameEn;
           card.append(sub);
         }
-        paintLogo(logo, channel);
+        paintLogo(logo, channel, isTv && cardIndex < 24);
         bindTap(card, () => {
           launchRtspIfNeeded(channel);
           playChannel(channel);
@@ -4893,13 +4986,26 @@
         return startPlayback();
       }
       if (window.Hls?.isSupported()) {
-        hls = new Hls({ enableWorker: true, lowLatencyMode: false });
+        hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          capLevelToPlayerSize: true,
+          maxBufferLength: isTv ? 12 : 30,
+          maxMaxBufferLength: isTv ? 24 : 60,
+          backBufferLength: isTv ? 8 : 30,
+          startLevel: isTv ? 0 : -1,
+        });
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (requestId !== playSeq) return;
+          if (isTv && hls?.autoLevelEnabled !== false) {
+            try { hls.nextLevel = -1; } catch {}
+          }
           startPlayback();
         });
         hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (requestId !== playSeq) return;
           if (data?.fatal) setStatus("השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.");
         });
         return;
@@ -4933,10 +5039,17 @@
       setNowLogo();
       setStatus("");
       setOpenButton("");
-      document.getElementById("q").value = "";
-      category = "all";
       history.replaceState(history.state, "", location.pathname + location.search);
       syncCastUi();
+      syncActive();
+      const catalog = document.querySelector(".catalog");
+      catalog?.scrollTo(0, 0);
+      if (isTv) {
+        requestAnimationFrame(() => focusTvDefault());
+        return;
+      }
+      document.getElementById("q").value = "";
+      category = "all";
       render();
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -5129,12 +5242,15 @@
     }
 
     function refreshRecent() {
-      paintRecent();
+      paintRecent({ keep: isTv });
     }
 
     let playSeq = 0;
     async function playChannel(channel) {
+      if (!channel) return;
       const requestId = ++playSeq;
+      const fromRecent = isTv && recentEl.contains(document.activeElement);
+      stopLocalPlayback();
       current = channel;
       saveRecent(channel.id);
       showStage(true);
@@ -5142,8 +5258,14 @@
       setMediaSession(channel);
       setStatus("נטען…", true);
       history.replaceState(history.state, "", `#${channel.id}`);
+      paintRecent({ keep: isTv });
       syncActive();
-      refreshRecent();
+      if (fromRecent) {
+        const chip = recentChip(channel.id);
+        if (chip) focusTvNode(chip);
+      } else {
+        syncActive();
+      }
       try {
         currentUrl = channel.path ? await buildCatUrl(channel.path) : String(channel.url || "");
         if (!currentUrl) throw new Error("no-url");
@@ -6063,7 +6185,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=144").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=145").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
