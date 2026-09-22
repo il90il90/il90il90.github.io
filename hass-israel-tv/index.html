@@ -577,19 +577,40 @@
     .login-head {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 12px;
-      margin: 0 0 6px;
+      margin: 0 0 18px;
     }
+    .login-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #0d5994;
+      object-fit: cover;
+      flex: 0 0 44px;
+    }
+    html.tv .login-mark { display: none; }
+    .login-head > div { min-width: 0; }
     .login h2 { margin: 0; font-size: 22px; }
-    .login p { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
-    .login-field-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .login p { margin: 0; color: var(--muted); font-size: 14px; }
+    .login-head #loginLead { margin-top: 4px; }
+    .login-field {
+      position: relative;
       margin-bottom: 12px;
     }
-    .login-field-row input { flex: 1; margin-bottom: 0; }
+    .login-field input {
+      width: 100%;
+      margin-bottom: 0;
+      padding-inline-end: 92px;
+    }
+    .login-field-tools {
+      position: absolute;
+      inset-inline-end: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
     .login-qr-icon {
       flex: 0 0 36px;
       width: 36px !important;
@@ -934,9 +955,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 18px;
+      gap: 0;
       text-align: center;
-      margin: 0 0 8px;
+      margin: 0 0 16px;
     }
     .pair-meta {
       display: flex;
@@ -944,6 +965,8 @@
       align-items: center;
       gap: 8px;
       width: 100%;
+      margin: 0 0 18px;
+      color: var(--text);
     }
     html.tv #loginLead, html.pair-login #loginLead { display: none; }
     html.tv #loginType, html.pair-login #loginType:not(.open) { display: none; }
@@ -1696,22 +1719,28 @@
       scrollbar-width: none;
     }
     html.tv .chips::-webkit-scrollbar, html.tv .cats::-webkit-scrollbar { display: none; }
-    html.tv #gate { padding: 20px; }
+    html.tv #gate { padding: 24px; }
     html.tv .login {
-      width: min(760px, 88vw);
-      padding: 28px 36px 24px;
+      width: min(640px, 86vw);
+      max-height: 94dvh;
+      overflow: auto;
+      padding: 28px 32px 24px;
       text-align: center;
     }
+    html.tv .login-head { justify-content: center; margin-bottom: 18px; }
     html.tv .login h2 { font-size: 28px; }
     html.tv .login p { font-size: 18px; }
     html.tv .login-qr-icon { width: 44px !important; height: 44px !important; flex-basis: 44px; }
     html.tv .login-qr-icon svg { width: 22px; height: 22px; }
     html.tv .pair-help { font-size: 18px; margin-bottom: 10px !important; }
-    html.tv .pair-box { gap: 22px; }
-    html.tv .qr-card.login-qr { padding: 22px; border-radius: 24px; }
+    html.tv .qr-card.login-qr {
+      padding: 18px;
+      border-radius: 24px;
+      background: #fff;
+    }
     html.tv .login-qr .qr-target {
-      width: min(46vh, 380px);
-      height: min(46vh, 380px);
+      width: min(36vh, 300px);
+      height: min(36vh, 300px);
     }
     html.tv .login-qr canvas,
     html.tv .login-qr img {
@@ -1719,20 +1748,28 @@
       height: 100% !important;
       image-rendering: pixelated;
     }
+    html.tv .pair-meta { margin: 18px 0 8px; }
     html.tv .pair-code {
-      font-size: 34px;
+      display: inline-block;
+      font-size: 30px;
       letter-spacing: 0.16em;
+      color: #fff;
+      background: #0b1220;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px 18px;
     }
     html.tv .pair-wait {
       font-size: 18px;
-      color: #d7e2f3;
+      color: #c5d0e0;
     }
     html.tv .license-tile {
       padding: 16px 18px;
-      margin-top: 22px;
+      margin-top: 10px;
+      background: #0b1220 !important;
     }
     html.tv .license-tile-icon { width: 48px; height: 48px; flex-basis: 48px; }
-    html.tv .license-tile-copy strong { font-size: 20px; }
+    html.tv .license-tile-copy strong { font-size: 20px; color: #fff; }
     html.tv .license-tile-copy small { font-size: 16px; color: #c5d0e0; }
     html.tv .pair-box:focus { outline: 3px solid var(--accent-2); outline-offset: 3px; }
     html.tv .stage { max-height: 48vh; }
@@ -1922,17 +1959,20 @@
   <div id="gate">
     <form class="login" id="loginForm">
       <div class="login-head">
-        <h2>כניסה</h2>
+        <img class="login-mark" src="favicon.png?v=5" alt="" />
+        <div>
+          <h2>כניסה</h2>
+          <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
+        </div>
       </div>
-      <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
       <div class="pair-box login-pair-on-tv" id="loginPairBox" tabindex="0">
         <div class="qr-card login-qr">
           <div id="pairQr" class="qr-target"></div>
         </div>
-        <div class="pair-meta">
-          <p class="pair-code" id="pairCode" hidden></p>
-          <p class="pair-wait" id="pairWait">מכינים ברקוד לסריקה מהטלפון…</p>
-        </div>
+      </div>
+      <div class="pair-meta login-pair-on-tv">
+        <p class="pair-code" id="pairCode" hidden></p>
+        <p class="pair-wait" id="pairWait">מכינים ברקוד לסריקה מהטלפון…</p>
       </div>
       <p class="err" id="loginErr"></p>
       <button type="button" class="license-tile" id="loginManualBtn">
@@ -1946,14 +1986,16 @@
         <span class="license-tile-go" aria-hidden="true">‹</span>
       </button>
       <div class="license-panel" id="loginType">
-      <div class="login-field-row">
+      <div class="login-field">
         <input id="licenseInput" type="text" dir="ltr" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="רישיון" inputmode="text" enterkeyhint="go" />
+        <div class="login-field-tools">
         <button type="button" class="login-qr-icon paste-license" id="pasteLicenseBtn" title="הדבקת רישיון" aria-label="הדבקת רישיון">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
         </button>
         <button type="button" class="login-qr-icon phone-scan" id="scanBtn" title="סריקת ברקוד" aria-label="סריקת ברקוד">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 8h8v8H8z"/></svg>
         </button>
+        </div>
       </div>
       <div class="login-btns">
         <button type="submit">כניסה</button>
@@ -6750,7 +6792,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=160").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=161").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
