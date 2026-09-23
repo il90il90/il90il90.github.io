@@ -51,6 +51,11 @@
     (function detectTv() {
       const params = new URLSearchParams(location.search);
       const tvHost = /^tv\./i.test(location.hostname || "");
+      const pair = String(params.get("pair") || "").trim();
+      if (pair && tvHost) {
+        location.replace("https://israeltv.net/?pair=" + encodeURIComponent(pair));
+        return;
+      }
       if (tvHost || params.get("tv") === "1") localStorage.setItem("israel-tv-tv", "1");
       if (params.get("tv") === "0") localStorage.removeItem("israel-tv-tv");
       const ua = navigator.userAgent || "";
@@ -5066,7 +5071,7 @@
     }
 
     function pairingQrPayload(pairId) {
-      const url = publicPlayerUrl();
+      const url = new URL("https://israeltv.net/");
       url.searchParams.set("pair", normalizePairId(pairId));
       return url.toString();
     }
@@ -9913,7 +9918,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=221").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=222").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
