@@ -3866,7 +3866,6 @@
         const hour = summary.peak_hour;
         return hour != null && (Number(user.hours?.[hour]) || 0) > 0;
       }
-      if (filter === "top_user") return userMinutes(user, "week") > 0 || userMinutes(user) > 0 || (user.week || 0) > 0;
       return true;
     }
 
@@ -3904,11 +3903,6 @@
         ["watch_minutes_total", "דקות סה״כ", formatWatchMinutes(summary.watch_minutes_total || 0)],
         ["avg_devices", "ממוצע מכשירים", summary.avg_devices || 0],
         ["peak_hour", "שעת שיא", peakHour],
-        ["top_user", "הכי פעיל", summary.top_user
-          ? (summary.top_user_minutes
-            ? `${summary.top_user} · ${formatWatchMinutes(summary.top_user_minutes)}`
-            : summary.top_user)
-          : "—"],
       ];
       summaryEl.replaceChildren();
       for (const [id, label, value] of metrics) {
@@ -3946,10 +3940,6 @@
         if (sort === "name") return String(a.note || "").localeCompare(String(b.note || ""), "he");
         if (statsFilter === "watch_minutes_7d") return userMinutes(b, "week") - userMinutes(a, "week");
         if (statsFilter === "watch_minutes_total") return userMinutes(b) - userMinutes(a);
-        if (statsFilter === "top_user") {
-          const week = userMinutes(b, "week") - userMinutes(a, "week");
-          return week || (userMinutes(b) - userMinutes(a));
-        }
         if (statsFilter === "quiet_7d" || statsFilter === "never_seen") return (a.last_seen || 0) - (b.last_seen || 0);
         if (statsFilter === "peak_hour") return (Number(b.hours?.[summary.peak_hour]) || 0) - (Number(a.hours?.[summary.peak_hour]) || 0);
         if (statsFilter === "avg_devices") return (b.devices || 0) - (a.devices || 0);
@@ -8307,7 +8297,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=188").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=189").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
