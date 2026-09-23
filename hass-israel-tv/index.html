@@ -3417,8 +3417,8 @@
             <li>לוחצים על שורת הכתובת למעלה ומקלידים את הכתובת הבאה בדיוק:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlSamsung" style="font-size:13px;letter-spacing:0">il90il90.github.io/hass-israel-tv/?tv=1</strong>
-            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/hass-israel-tv/?tv=1">העתק</button>
+            <strong dir="ltr" id="tvWebUrlSamsung">il90il90.github.io/tv</strong>
+            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/tv">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
             <li>לוחצים כניסה / Go. נפתח נגן Israel TV במסך מלא לטלוויזיה.</li>
@@ -3439,8 +3439,8 @@
             <li>בשורת הכתובת מקלידים:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlLg" style="font-size:13px;letter-spacing:0">il90il90.github.io/hass-israel-tv/?tv=1</strong>
-            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/hass-israel-tv/?tv=1">העתק</button>
+            <strong dir="ltr" id="tvWebUrlLg">il90il90.github.io/tv</strong>
+            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/tv">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
             <li>לוחצים כניסה. נפתח נגן Israel TV המותאם לשלט.</li>
@@ -5602,7 +5602,7 @@
     });
     document.querySelectorAll(".copy-tv-web").forEach((button) => {
       button.addEventListener("click", async () => {
-        const url = button.dataset.url || "https://il90il90.github.io/hass-israel-tv/?tv=1";
+        const url = button.dataset.url || "https://il90il90.github.io/tv";
         try { await navigator.clipboard.writeText(url); } catch {}
         showToast("הכתובת הועתקה · מקלידים אותה בדפדפן של הטלוויזיה");
       });
@@ -9869,7 +9869,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=218").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=219").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
