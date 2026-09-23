@@ -369,6 +369,30 @@
       display: block;
     }
     .now-logo[hidden] { display: none !important; }
+    .now-meta {
+      flex: 1 1 140px;
+      min-width: 0;
+      display: grid;
+      gap: 1px;
+    }
+    .now-meta[hidden] { display: none !important; }
+    .now-meta strong {
+      font-size: 14px;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .now-prog {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .now-prog[hidden] { display: none !important; }
+    .card .sub.is-now { color: #c5d4e8; }
     #toast {
       position: fixed;
       left: 50%;
@@ -2097,6 +2121,16 @@
       white-space: nowrap;
     }
     html.tv .card .sub { display: none; }
+    html.tv .card .sub.is-now {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      white-space: normal;
+      font-size: 10px;
+      line-height: 1.2;
+      margin-top: 2px;
+    }
     html.tv .chip, html.tv .cat { min-height: 40px; font-size: 14px; padding: 7px 12px; }
     html.tv .chip.chip-logo {
       width: 40px;
@@ -2491,6 +2525,10 @@
 
     <div class="now">
       <img class="now-logo" id="nowLogo" alt="" hidden />
+      <div class="now-meta" id="nowMeta" hidden>
+        <strong id="nowName"></strong>
+        <span class="now-prog" id="nowProg" hidden></span>
+      </div>
       <div class="actions">
         <button type="button" id="pipBtn" title="נגן בחלונית" aria-label="נגן בחלונית">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="11" y="11" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg>
@@ -6229,12 +6267,84 @@
       });
     }
 
+    let nowPlaying = {};
+    let nowPlayingAt = 0;
+    let nowPlayingTimer = 0;
+
+    function nowTitle(id) {
+      const item = nowPlaying[id];
+      if (!item?.title) return "";
+      if (item.stop && item.stop < Date.now() / 1000) return "";
+      return item.title;
+    }
+
+    function channelNowLabel(channel) {
+      const title = nowTitle(channel?.id);
+      return title ? `${channel.name} · ${title}` : (channel?.name || "");
+    }
+
+    function paintNowTitles() {
+      document.querySelectorAll("#grid .card").forEach((card) => {
+        const title = nowTitle(card.dataset.id);
+        let sub = card.querySelector(".sub");
+        if (title) {
+          if (!sub) {
+            sub = document.createElement("div");
+            sub.className = "sub";
+            card.append(sub);
+          }
+          sub.classList.add("is-now");
+          sub.textContent = title;
+          const name = card.querySelector(".title")?.textContent || "";
+          card.title = name ? `${name} · ${title}` : title;
+        }
+      });
+      document.querySelectorAll("#recent .chip").forEach((chip) => {
+        const title = nowTitle(chip.dataset.id);
+        const name = chip.getAttribute("aria-label") || chip.title || "";
+        chip.title = title ? `${name} · ${title}` : name;
+      });
+      setNowProgram(current);
+    }
+
+    async function loadNowPlaying(force = false) {
+      if (!force && Date.now() - nowPlayingAt < 60_000 && Object.keys(nowPlaying).length) {
+        paintNowTitles();
+        return;
+      }
+      const abort = new AbortController();
+      const timer = window.setTimeout(() => abort.abort(), 25000);
+      try {
+        const res = await fetch(PWF_CHECK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "now" }),
+          signal: abort.signal,
+        });
+        const data = await res.json().catch(() => ({}));
+        if (data?.success && data.now && typeof data.now === "object") {
+          nowPlaying = data.now;
+          nowPlayingAt = Date.now();
+          paintNowTitles();
+        }
+      } catch {
+      } finally {
+        window.clearTimeout(timer);
+      }
+    }
+
+    function startNowPlayingClock() {
+      if (nowPlayingTimer) return;
+      void loadNowPlaying(true);
+      nowPlayingTimer = window.setInterval(() => void loadNowPlaying(true), 3 * 60 * 1000);
+    }
+
     function makeRecentChip(channel) {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.dataset.id = channel.id;
       btn.className = `chip chip-logo${current?.id === channel.id ? " active" : ""}`;
-      btn.title = channel.name;
+      btn.title = channelNowLabel(channel);
       btn.setAttribute("aria-label", channel.name);
       paintLogo(btn, channel, true);
       bindTap(btn, () => {
@@ -6346,14 +6456,19 @@
         title.className = "title";
         title.textContent = channel.name;
         card.append(logo, title);
-        if (!isTv) {
-          const sub = document.createElement("div");
-          sub.className = "sub";
+        const sub = document.createElement("div");
+        sub.className = "sub";
+        const liveTitle = nowTitle(channel.id);
+        if (liveTitle) {
+          sub.classList.add("is-now");
+          sub.textContent = liveTitle;
+          card.title = `${channel.name} · ${liveTitle}`;
+        } else if (!isTv) {
           sub.textContent = String(channel.id || "").startsWith("custom_")
             ? (customView ? (channel.group || channel.folder || "") : (channel.folder || ""))
             : channel.nameEn;
-          card.append(sub);
         }
+        if (sub.textContent) card.append(sub);
         paintLogo(logo, channel, isTv && cardIndex < 24);
         bindTap(card, () => {
           const picked = CHANNELS.find((item) => item.id === card.dataset.id) || channel;
@@ -6367,6 +6482,7 @@
       gridTitle.textContent = query || category !== "all"
         ? `${list.length} ערוצים`
         : `כל הערוצים (${CHANNELS.length})`;
+      paintNowTitles();
     }
 
     function syncVideoFrame() {
@@ -6472,18 +6588,38 @@
       setStatus("השידור לא נטען. נסו שוב עוד רגע.");
     }
 
+    function setNowProgram(channel) {
+      const meta = document.getElementById("nowMeta");
+      const nameEl = document.getElementById("nowName");
+      const progEl = document.getElementById("nowProg");
+      if (!meta || !nameEl || !progEl) return;
+      if (!channel) {
+        meta.hidden = true;
+        nameEl.textContent = "";
+        progEl.textContent = "";
+        progEl.hidden = true;
+        return;
+      }
+      const title = nowTitle(channel.id);
+      nameEl.textContent = channel.name || "";
+      progEl.textContent = title;
+      progEl.hidden = !title;
+      meta.hidden = false;
+    }
+
     function setNowLogo(channel) {
       if (channel?.logo) {
         nowLogo.src = logoSrc(channel.logo);
         nowLogo.alt = channel.name || "";
-        nowLogo.title = channel.name || "";
+        nowLogo.title = channelNowLabel(channel);
         nowLogo.hidden = false;
-        return;
+      } else {
+        nowLogo.removeAttribute("src");
+        nowLogo.alt = "";
+        nowLogo.title = "";
+        nowLogo.hidden = true;
       }
-      nowLogo.removeAttribute("src");
-      nowLogo.alt = "";
-      nowLogo.title = "";
-      nowLogo.hidden = true;
+      setNowProgram(channel);
     }
 
     function showStage(show) {
@@ -6920,6 +7056,7 @@
       if (playerReady) return;
       playerReady = true;
       render();
+      startNowPlayingClock();
       const startId = decodeURIComponent((location.hash || "").replace(/^#/, ""));
       const start = CHANNELS.find((channel) => channel.id === startId)
         || (startId && CHANNELS.find((channel) => ALIASES[startId] === channel.id));
@@ -7936,7 +8073,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=185").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=186").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
