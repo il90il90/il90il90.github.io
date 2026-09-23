@@ -169,7 +169,14 @@
     }
     .gate-install:not([hidden]) { display: flex; }
     .gate-install svg { width: 18px; height: 18px; }
-    html.tv .gate-install { display: none !important; }
+    html.tv .gate-install,
+    html.tv #installBtn { display: none !important; }
+    html.tv #pairPhoneBox { display: none !important; }
+    html.ios #installAndroidSteps,
+    html.android #installIosSteps,
+    html.tv #installIosSteps,
+    html.tv #installAndroidSteps { display: none !important; }
+    .install-steps,
     .ios-install {
       margin: 0 0 16px;
       padding: 0;
@@ -177,6 +184,9 @@
       display: grid;
       gap: 10px;
     }
+    .install-steps[hidden],
+    .ios-install[hidden] { display: none !important; }
+    .install-steps li,
     .ios-install li {
       display: flex;
       align-items: flex-start;
@@ -189,7 +199,15 @@
       font-size: 14px;
       line-height: 1.45;
     }
+    .install-steps b,
     .ios-install b { font-weight: 800; }
+    .help-block { margin: 0 0 16px; }
+    .help-block h4 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text);
+    }
     .ios-step {
       flex: 0 0 28px;
       width: 28px;
@@ -2469,7 +2487,7 @@
         </div>
         <div class="pair-meta">
           <p class="pair-code" id="pairCode" hidden></p>
-          <p class="pair-wait" id="pairWait">ממתינים לחיבור מהטלפון…</p>
+          <p class="pair-wait" id="pairWait">סרקו את הברקוד באייפון או באנדרואיד</p>
         </div>
       </div>
       <p class="err" id="loginErr"></p>
@@ -2503,7 +2521,7 @@
       </div>
       <button type="button" class="gate-install" id="installGateBtn" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
-        התקנה באייפון
+        <span id="installGateLabel">התקנת האפליקציה</span>
       </button>
     </form>
   </div>
@@ -2732,20 +2750,34 @@
   <dialog class="sheet" id="installDlg">
     <h3 id="installTitle">התקנת האפליקציה</h3>
     <p id="installLead" style="color:var(--muted);margin:0 0 14px">להתקין את Israel TV במסך הבית?</p>
-    <ol class="ios-install" id="installIosSteps" hidden>
+    <ol class="install-steps ios-install" id="installIosSteps" hidden>
       <li>
         <span class="ios-step">1</span>
-        <span>לחצו על <b>שיתוף</b> בספארי
+        <span>בספארי בלבד, לחצו על <b>שיתוף</b>
           <svg class="ios-share-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
         </span>
       </li>
       <li>
         <span class="ios-step">2</span>
-        <span>גללו ובחרו <b>הוספה למסך הבית</b></span>
+        <span>גללו ובחרו <b>הוספה למסך הבית</b> — לא סימנייה רגילה</span>
       </li>
       <li>
         <span class="ios-step">3</span>
-        <span>לחצו <b>הוסף</b> — האייקון יופיע במסך הבית</span>
+        <span>לחצו <b>הוסף</b> — הסימנייה תישב במסך הבית כמו אפליקציה</span>
+      </li>
+    </ol>
+    <ol class="install-steps ios-install" id="installAndroidSteps" hidden>
+      <li>
+        <span class="ios-step">1</span>
+        <span>בכרום, לחצו על <b>התפריט</b> ⋮ בפינה</span>
+      </li>
+      <li>
+        <span class="ios-step">2</span>
+        <span>בחרו <b>התקן אפליקציה</b> או <b>הוספה למסך הבית</b></span>
+      </li>
+      <li>
+        <span class="ios-step">3</span>
+        <span>לחצו <b>התקן</b> — האייקון יופיע במסך הבית</span>
       </li>
     </ol>
     <div class="row">
@@ -2839,14 +2871,22 @@
   </dialog>
   <dialog class="sheet" id="pairHelpDlg">
     <h3>חיבור למסך</h3>
-    <p style="color:var(--muted);margin:0 0 12px">כך מעדכנים את הטלוויזיה עם הרישיון מהטלפון:</p>
-    <ol class="pair-steps">
-      <li>במסך מתקינים את אפליקציית Israel TV מ־<a href="https://github.com/il90il90/hass-israel-tv-release/releases/latest/download/israel-tv-tv.apk" download>הורדה לטלוויזיה</a>.</li>
-      <li>פותחים את האפליקציה בטלוויזיה — הברקוד מופיע במסך הכניסה.</li>
-      <li>בטלפון, בהגדרות, סריקת הברקוד או הזנת הקוד מחברת את המסך.</li>
-      <li>הטלוויזיה נכנסת לאותו רישיון כמו בטלפון, כולל הערוצים שלכם.</li>
-      <li>לחיבור מחדש או לעדכון מסך נוסף — שוב סריקה של הברקוד שעל המסך.</li>
-    </ol>
+    <p id="pairHelpLead" style="color:var(--muted);margin:0 0 12px">הטלוויזיה והטלפון הם שני מסכים שונים.</p>
+    <div class="help-block" id="pairHelpTv">
+      <h4>בטלוויזיה</h4>
+      <ol class="pair-steps">
+        <li>מתקינים את אפליקציית Israel TV לטלוויזיה מ־<a href="https://github.com/il90il90/hass-israel-tv-release/releases/latest/download/israel-tv-tv.apk" download>הורדה לטלוויזיה</a> — לא סימנייה ולא התקנת דפדפן.</li>
+        <li>פותחים את האפליקציה בטלוויזיה. במסך הכניסה מופיע ברקוד.</li>
+      </ol>
+    </div>
+    <div class="help-block" id="pairHelpPhone">
+      <h4 id="pairHelpPhoneTitle">בטלפון</h4>
+      <ol class="pair-steps">
+        <li>כאן בהגדרות, סורקים את הברקוד שעל הטלוויזיה או מזינים את הקוד.</li>
+        <li>הטלוויזיה נכנסת לאותו רישיון כמו בטלפון, כולל הערוצים שלכם.</li>
+        <li>לחיבור מחדש או למסך נוסף — שוב סריקה של הברקוד שעל המסך.</li>
+      </ol>
+    </div>
     <div class="row">
       <button type="button" class="ghost" id="pairHelpClose">סגור</button>
     </div>
@@ -2970,6 +3010,9 @@
       || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     if (isIos) document.documentElement.classList.add("ios");
     const isTv = document.documentElement.classList.contains("tv");
+    if (isAndroid && !isTv) document.documentElement.classList.add("android");
+    const isIosSafari = isIos && /Safari/i.test(navigator.userAgent || "")
+      && !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(navigator.userAgent || "");
     if (isTv) document.getElementById("scanBtn").hidden = true;
     const wantPairQr = isTv;
     if (wantPairQr) document.documentElement.classList.add("pair-login");
@@ -4433,7 +4476,7 @@
       const painted = await paintPairQr(document.getElementById("pairQr"), pairId);
       code.textContent = formatPairCode(pairId);
       code.hidden = !painted;
-      wait.textContent = painted ? "ממתינים לחיבור מהטלפון…" : "לא ניתן לצייר ברקוד";
+      wait.textContent = painted ? "סרקו את הברקוד באייפון או באנדרואיד" : "לא ניתן לצייר ברקוד";
       pollPairStatus(pairId, 0);
     }
 
@@ -4750,6 +4793,16 @@
     document.getElementById("scanBtn").addEventListener("click", () => openScan("login"));
     document.getElementById("pairScanBtn").addEventListener("click", () => openScan("pair"));
     document.getElementById("pairHelpBtn").addEventListener("click", () => {
+      const title = document.getElementById("pairHelpPhoneTitle");
+      const lead = document.getElementById("pairHelpLead");
+      if (title) title.textContent = isIos ? "באייפון" : isAndroid ? "באנדרואיד" : "בטלפון";
+      if (lead) {
+        lead.textContent = isIos
+          ? "הטלוויזיה היא אפליקציה נפרדת. באייפון רק סורקים את הברקוד — בלי סימנייה ובלי הוספה למסך הבית."
+          : isAndroid
+            ? "הטלוויזיה היא אפליקציה נפרדת. באנדרואיד רק סורקים את הברקוד — בלי התקנת האתר למסך הבית."
+            : "הטלוויזיה והטלפון הם שני מסכים שונים.";
+      }
       openSheet(document.getElementById("pairHelpDlg"));
     });
     document.getElementById("pairHelpClose").addEventListener("click", () => {
@@ -7651,10 +7704,12 @@
 
     const installBtn = document.getElementById("installBtn");
     const installGateBtn = document.getElementById("installGateBtn");
+    const installGateLabel = document.getElementById("installGateLabel");
     const installDlg = document.getElementById("installDlg");
     const standaloneMedia = window.matchMedia("(display-mode: standalone)");
     let deferredPrompt;
     const isIosDevice = isIos;
+    const isAndroidPhone = isAndroid && !isTv;
 
     function isInstalledApp() {
       const modes = ["standalone", "fullscreen", "minimal-ui"];
@@ -7670,27 +7725,67 @@
     function syncInstallButton() {
       const installed = isInstalledApp();
       const canPrompt = Boolean(deferredPrompt);
-      installBtn.hidden = isTv || installed || !(canPrompt || isIosDevice);
-      if (installGateBtn) installGateBtn.hidden = isTv || installed || !isIosDevice;
-      if (installBtn.hidden && installDlg.open && !isIosDevice) installDlg.close();
+      const phoneInstall = !isTv && !installed && (isIosDevice || isAndroidPhone);
+      installBtn.hidden = isTv || installed || !(phoneInstall || canPrompt);
+      if (installGateBtn) installGateBtn.hidden = !phoneInstall;
+      if (installGateLabel) {
+        installGateLabel.textContent = isIosDevice ? "הוספה למסך הבית" : "התקנה באנדרואיד";
+      }
+      if (isTv && installDlg.open) installDlg.close();
+      if (installBtn.hidden && installDlg.open && !isIosDevice && !isAndroidPhone) installDlg.close();
     }
 
     function openInstallDialog() {
-      if (isInstalledApp()) {
+      if (isTv || isInstalledApp()) {
         syncInstallButton();
         return;
       }
       const ios = isIosDevice;
-      const steps = document.getElementById("installIosSteps");
+      const android = isAndroidPhone;
+      const iosSteps = document.getElementById("installIosSteps");
+      const androidSteps = document.getElementById("installAndroidSteps");
       const lead = document.getElementById("installLead");
       const title = document.getElementById("installTitle");
       const yes = document.getElementById("installYes");
       const no = document.getElementById("installNo");
-      if (steps) steps.hidden = !ios;
-      if (lead) lead.hidden = ios;
-      if (title) title.textContent = ios ? "התקנה באייפון" : "התקנת האפליקציה";
-      if (yes) yes.hidden = ios;
-      if (no) no.textContent = ios ? "הבנתי" : "לא עכשיו";
+      const canPrompt = Boolean(deferredPrompt);
+      if (iosSteps) iosSteps.hidden = !ios;
+      if (androidSteps) androidSteps.hidden = !android;
+      if (ios) {
+        if (title) title.textContent = "הוספה למסך הבית";
+        if (lead) {
+          lead.hidden = false;
+          lead.textContent = isIosSafari
+            ? "באייפון מוסיפים סימנייה למסך הבית מספארי. זה לא התקנת אנדרואיד ולא אפליקציית הטלוויזיה."
+            : "באייפון זה עובד רק מספארי. פתחו שם את האתר, לחצו שיתוף, ואז הוספה למסך הבית — לא סימנייה רגילה.";
+        }
+        if (yes) yes.hidden = true;
+        if (no) no.textContent = "הבנתי";
+      } else if (android) {
+        if (title) title.textContent = "התקנה באנדרואיד";
+        if (lead) {
+          lead.hidden = false;
+          lead.textContent = canPrompt
+            ? "באנדרואיד מתקינים את האפליקציה מכרום. זה לא סימנייה של אייפון ולא אפליקציית הטלוויזיה."
+            : "באנדרואיד מוסיפים למסך הבית מתפריט הכרום. זה לא סימנייה של אייפון ולא אפליקציית הטלוויזיה.";
+        }
+        if (yes) {
+          yes.hidden = !canPrompt;
+          yes.textContent = "התקן";
+        }
+        if (no) no.textContent = canPrompt ? "לא עכשיו" : "הבנתי";
+      } else {
+        if (title) title.textContent = "התקנת האפליקציה";
+        if (lead) {
+          lead.hidden = false;
+          lead.textContent = "במחשב אפשר להתקין מתוך כרום. בטלפון ובטלוויזיה ההסבר שונה.";
+        }
+        if (yes) {
+          yes.hidden = !canPrompt;
+          yes.textContent = "התקן";
+        }
+        if (no) no.textContent = canPrompt ? "לא עכשיו" : "הבנתי";
+      }
       openSheet(installDlg);
     }
 
@@ -8212,7 +8307,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=187").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=188").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
