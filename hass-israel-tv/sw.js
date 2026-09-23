@@ -1,4 +1,4 @@
-const CACHE = "israel-tv-v223";
+const CACHE = "israel-tv-v224";
 const SHELL = [
   "./",
   "./index.html",
@@ -13,6 +13,14 @@ const SHELL = [
   "./apple-touch-icon.png",
   "./apple-touch-icon-precomposed.png",
 ];
+
+function isAsset(url) {
+  return /\.(png|jpe?g|gif|webp|svg|ico|js|css|webmanifest|woff2?)$/i.test(url.pathname);
+}
+
+function looksLikeHtml(response) {
+  return String(response.headers.get("content-type") || "").includes("text/html");
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -47,14 +55,14 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     fetch(request, fresh ? { cache: "no-store" } : undefined)
       .then((response) => {
-        if (response.ok) {
+        if (response.ok && !(isAsset(url) && looksLikeHtml(response))) {
           const copy = response.clone();
           caches.open(CACHE).then((cache) => cache.put(request, copy));
         }
         return response;
       })
       .catch(() => caches.match(request).then((cached) => {
-        if (cached) return cached;
+        if (cached && !(isAsset(url) && looksLikeHtml(cached))) return cached;
         if (request.destination === "image" || /\.(png|jpe?g|gif|webp|svg)$/i.test(url.pathname)) {
           return new Response("", { status: 404, statusText: "Not Found" });
         }

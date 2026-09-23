@@ -11,13 +11,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-  <link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167.png" />
-  <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152.png" />
-  <link rel="apple-touch-icon" sizes="120x120" href="apple-touch-icon-120.png" />
-  <link rel="apple-touch-icon-precomposed" href="apple-touch-icon-precomposed.png" />
-  <link rel="manifest" href="manifest.webmanifest?v=7" />
-  <link rel="icon" href="favicon.png?v=5" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png" />
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
+  <link rel="manifest" href="/manifest.webmanifest?v=8" />
+  <link rel="icon" href="/favicon.png?v=6" />
   <style>
     #bootSplash {
       position: fixed;
@@ -2918,7 +2918,7 @@
   <div id="bootSplash" aria-hidden="true" style="position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;background:#070b12">
     <div class="boot-box">
       <div class="boot-mark">
-        <img src="icon-base.png?v=5" alt="" />
+        <img src="/icon-base.png?v=6" alt="" />
         <svg class="boot-arcs" viewBox="0 0 512 512" aria-hidden="true">
           <path class="boot-arc" d="M 451.08 119.59 A 44.03 44.03 0 0 1 465.88 178.94"/>
           <path class="boot-arc" d="M 473.33 83.98 A 86.02 86.02 0 0 1 502.24 199.94"/>
@@ -2951,7 +2951,7 @@
   <div id="gate">
     <form class="login" id="loginForm">
       <div class="login-head">
-        <img class="login-mark" src="favicon.png?v=5" alt="" />
+        <img class="login-mark" src="/favicon.png?v=6" alt="" />
         <div>
           <h2>כניסה</h2>
           <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
@@ -3004,7 +3004,7 @@
   <div id="app" hidden>
   <header class="top">
     <button type="button" class="brand" id="homeBtn" title="מסך ראשי" aria-label="מסך ראשי">
-      <img src="favicon.png?v=5" alt="" />
+      <img src="/favicon.png?v=6" alt="" />
       <div>
         <h1>Israel TV</h1>
         <span>צפייה ישירה</span>
@@ -3424,8 +3424,8 @@
             <li>לוחצים על שורת הכתובת למעלה ומקלידים את הכתובת הבאה בדיוק:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlSamsung">tv.israeltv.net</strong>
-            <button type="button" class="copy-tv-web" data-url="https://tv.israeltv.net">העתק</button>
+            <strong dir="ltr" id="tvWebUrlSamsung">israeltv.net/tv</strong>
+            <button type="button" class="copy-tv-web" data-url="https://israeltv.net/tv">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
             <li>לוחצים כניסה / Go. נפתח נגן Israel TV במסך מלא לטלוויזיה.</li>
@@ -3446,8 +3446,8 @@
             <li>בשורת הכתובת מקלידים:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlLg">tv.israeltv.net</strong>
-            <button type="button" class="copy-tv-web" data-url="https://tv.israeltv.net">העתק</button>
+            <strong dir="ltr" id="tvWebUrlLg">israeltv.net/tv</strong>
+            <button type="button" class="copy-tv-web" data-url="https://israeltv.net/tv">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
             <li>לוחצים כניסה. נפתח נגן Israel TV המותאם לשלט.</li>
@@ -5645,7 +5645,7 @@
     });
     document.querySelectorAll(".copy-tv-web").forEach((button) => {
       button.addEventListener("click", async () => {
-        const url = button.dataset.url || "https://tv.israeltv.net";
+        const url = button.dataset.url || "https://israeltv.net/tv";
         try { await navigator.clipboard.writeText(url); } catch {}
         showToast("הכתובת הועתקה · מקלידים אותה בדפדפן של הטלוויזיה");
       });
@@ -9898,7 +9898,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=223").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=224").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
