@@ -2459,35 +2459,46 @@
     html.tv.tv-max .status-name { font-size: 34px; }
     html.tv.tv-max .status.is-loading p { font-size: 20px; }
     .tv-warm-hint { display: none !important; }
-    html.tv.tv-max .tv-warm-hint:not([hidden]) {
+    html.tv .tv-warm-hint.is-on:not([hidden]) {
       display: flex !important;
       position: fixed;
-      top: 28px;
-      left: 32px;
-      z-index: 2147483600;
+      top: 22px;
+      left: 22px;
+      z-index: 2147483646;
       align-items: center;
-      gap: 10px;
-      max-width: min(46vw, 420px);
-      padding: 10px 16px 10px 12px;
+      gap: 12px;
+      max-width: min(52vw, 480px);
+      padding: 12px 20px 12px 14px;
       border-radius: 999px;
-      background: rgba(7, 11, 18, 0.72);
+      background: rgba(0, 0, 0, 0.78);
       color: #fff;
-      font-size: 16px;
+      font-size: 20px;
       font-weight: 800;
       line-height: 1.2;
       pointer-events: none;
       direction: rtl;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
     }
-    html.tv.tv-max .tv-warm-spin {
-      width: 18px;
-      height: 18px;
+    html.tv.tv-max .tv-warm-hint.is-on:not([hidden]) {
+      top: 32px;
+      left: 36px;
+      font-size: 24px;
+      padding: 14px 22px 14px 16px;
+    }
+    html.tv .tv-warm-spin {
+      width: 22px;
+      height: 22px;
       flex: 0 0 auto;
-      border: 2px solid rgba(255, 255, 255, 0.28);
+      border: 3px solid rgba(255, 255, 255, 0.28);
       border-top-color: #fff;
       border-radius: 50%;
       animation: tv-warm-spin 0.7s linear infinite;
     }
-    html.tv.tv-max .tv-warm-hint span {
+    html.tv.tv-max .tv-warm-spin {
+      width: 26px;
+      height: 26px;
+    }
+    html.tv .tv-warm-hint span {
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -2912,7 +2923,7 @@
         <a class="camera-open" id="cameraOpen" hidden>פתח מצלמה</a>
       </div>
       <div class="tv-warm-hint" id="tvWarmHint" hidden>
-        <i class="tv-warm-spin" aria-hidden="true"></i>
+        <div class="tv-warm-spin" aria-hidden="true"></div>
         <span id="tvWarmHintText">טוען את הערוץ</span>
       </div>
     </section>
@@ -7332,19 +7343,21 @@
       const hint = document.getElementById("tvWarmHint");
       const line = document.getElementById("tvWarmHintText");
       if (!hint) return;
-      if (!channel) {
+      if (!channel || !isTv) {
         hint.hidden = true;
+        hint.classList.remove("is-on");
         if (line) line.textContent = "טוען את הערוץ";
         return;
       }
       const name = channel.name || "";
       if (line) line.textContent = name ? `טוען את ${name}` : "טוען את הערוץ";
+      if (hint.parentElement !== document.body) document.body.append(hint);
       hint.hidden = false;
+      hint.classList.add("is-on");
     }
 
     function stopWarmPlayback() {
       warmActive = false;
-      setTvWarmHint(null);
       if (nextHls) {
         try { nextHls.destroy(); } catch {}
         nextHls = undefined;
@@ -7453,6 +7466,7 @@
     async function attachHlsWarm(url, requestId = playSeq) {
       stopWarmPlayback();
       warmActive = true;
+      setTvWarmHint(current);
       await waitForHls();
       if (requestId !== playSeq) {
         stopWarmPlayback();
@@ -7461,6 +7475,7 @@
       const target = nextVideo;
       if (!target) {
         warmActive = false;
+        setTvWarmHint(null);
         return attachHls(url, requestId);
       }
       target.autoplay = true;
@@ -7489,6 +7504,7 @@
         });
       } else {
         warmActive = false;
+        setTvWarmHint(null);
         return attachHls(url, requestId);
       }
       const ok = await ready;
@@ -7498,6 +7514,7 @@
         return;
       }
       stopWarmPlayback();
+      setTvWarmHint(null);
       stopLocalPlayback();
       setStatus("", true);
       await attachHls(url, requestId);
@@ -9418,7 +9435,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=207").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=208").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
