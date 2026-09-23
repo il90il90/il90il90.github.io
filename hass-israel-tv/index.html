@@ -6841,6 +6841,14 @@
         ? `${list.length} ערוצים`
         : `כל הערוצים (${CHANNELS.length})`;
       paintNowTitles();
+      if (isTv && !isTvMax() && !document.querySelector("dialog[open]")) {
+        const keepId = current?.id
+          || (tvFocus?.dataset?.id)
+          || (document.activeElement?.closest?.("#grid") && document.activeElement.dataset?.id)
+          || "";
+        const card = tvGridCard(keepId);
+        if (card) focusTvNode(card);
+      }
     }
 
     function isWarming() {
@@ -7430,12 +7438,11 @@
       history.replaceState(history.state, "", location.pathname + location.search);
       syncCastUi();
       syncActive();
-      const catalog = document.querySelector(".catalog");
-      catalog?.scrollTo(0, 0);
       if (isTv) {
         requestAnimationFrame(() => focusTvDefault());
         return;
       }
+      document.querySelector(".catalog")?.scrollTo(0, 0);
       document.getElementById("q").value = "";
       category = "all";
       render();
@@ -8480,6 +8487,15 @@
       return gridEl ? [...gridEl.querySelectorAll(".card")] : [];
     }
 
+    function tvGridCard(id) {
+      const cards = tvCardList();
+      if (id) {
+        const match = cards.find((el) => el.dataset.id === id);
+        if (match) return match;
+      }
+      return cards.find((el) => el.classList.contains("active")) || cards[0] || null;
+    }
+
     function tvLoginItems() {
       if (document.documentElement.dataset.session === "1") return [];
       const items = [];
@@ -8575,19 +8591,19 @@
     }
 
     function focusTvDefault() {
-      const cards = tvCardList();
-      const recent = tvRecentItems();
-      const items = tvFocusables();
-      const preferred = (tvFocus && document.body.contains(tvFocus) && tvVisible(tvFocus) && tvFocus)
-        || recent.find((el) => el.classList.contains("active"))
-        || recent[0]
-        || items.find((el) => el.classList.contains("cat") && el.classList.contains("active"))
-        || items.find((el) => el.classList.contains("cat"))
-        || cards.find((el) => el.classList.contains("active"))
-        || cards[0]
-        || items.find((el) => el.id === "loginPairBox")
-        || items.find((el) => el.id === "loginManualBtn")
-        || items[0];
+      const login = tvLoginItems();
+      if (login.length) {
+        focusTvNode(login.find((el) => el.id === "loginPairBox") || login[0]);
+        return;
+      }
+      const keepId = current?.id
+        || (tvFocus?.closest?.("#grid") && tvFocus.dataset?.id)
+        || (document.activeElement?.closest?.("#grid") && document.activeElement.dataset?.id)
+        || "";
+      const preferred = tvGridCard(keepId)
+        || tvCardList()[0]
+        || tvFocusables().find((el) => el.id === "loginPairBox")
+        || tvFocusables()[0];
       focusTvNode(preferred);
     }
 
@@ -8634,12 +8650,12 @@
       try { theater.blur(); } catch {}
       const active = document.activeElement;
       if (active && active !== video && active !== theater && active !== document.body) return;
-      if (tvFocus && document.body.contains(tvFocus) && tvVisible(tvFocus)) {
+      if (tvFocus?.closest?.("#grid") && document.body.contains(tvFocus) && tvVisible(tvFocus)) {
         focusTvNode(tvFocus);
         return;
       }
-      const chip = current ? recentChip(current.id) : null;
-      if (chip) focusTvNode(chip);
+      const card = tvGridCard(current?.id);
+      if (card) focusTvNode(card);
     }
 
     function activateFocusedChannel() {
@@ -8952,7 +8968,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=199").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=200").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
