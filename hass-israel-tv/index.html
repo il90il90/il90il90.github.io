@@ -687,28 +687,6 @@
       font-size: 11px;
       font-weight: 700;
     }
-    .login-sales-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 0 0 14px;
-    }
-    .login-sales-pills span {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 9px;
-      border-radius: 999px;
-      background: #1a2434;
-      border: 1px solid var(--line);
-      color: var(--text);
-      font-size: 12px;
-      font-weight: 700;
-    }
-    .login-sales-pills b {
-      color: #d4b06a;
-      font-weight: 800;
-    }
     .login-sales-btn {
       display: flex;
       align-items: center;
@@ -2605,7 +2583,6 @@
     }
     html.tv .login-sales h3 { font-size: 22px; }
     html.tv .login-sales-lead { font-size: 16px; }
-    html.tv .login-sales-pills { justify-content: center; }
     html.tv .login-sales-btn { min-height: 52px; font-size: 18px; }
     html.tv .login-sales-list,
     html.tv .login-sales-cta-bottom { display: none !important; }
@@ -3206,7 +3183,6 @@
         <div class="login-sales-stat"><strong id="salesFolders">—</strong><small>קטגוריות</small></div>
         <div class="login-sales-stat"><strong>3</strong><small>מסכים</small></div>
       </div>
-      <div class="login-sales-pills" id="salesCats" aria-label="קטגוריות"></div>
       <a class="login-sales-btn" href="https://t.me/IsraelCohen90" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.8 4.2c.3-.9-.5-1.6-1.4-1.3L2.7 9.1c-.9.3-.9 1.6.1 1.8l4.7 1.4 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.6 3.4c.7.5 1.7.1 1.9-.7l3.8-14.3zM9.6 13.3l-.3 3.3 1.3-2.4 7.2-6.5-8.2 5.6z"/></svg>
         <span>יצירת קשר בטלגרם<small dir="ltr">@IsraelCohen90</small></span>
@@ -3758,12 +3734,10 @@
     function renderLoginSales() {
       const totalEl = document.getElementById("salesTotal");
       const foldersEl = document.getElementById("salesFolders");
-      const catsEl = document.getElementById("salesCats");
       const listEl = document.getElementById("salesFoldersList");
-      if (!totalEl || !catsEl || !listEl) return;
+      if (!totalEl || !listEl) return;
       const groups = Object.entries(BASE_LABELS).map(([id, label]) => ({
         id,
-        label: String(label || "").replace(/^\S+\s/, (chunk) => /[\u{1F300}-\u{1FAFF}]/u.test(chunk) ? "" : chunk),
         raw: label,
         items: [],
       }));
@@ -3780,9 +3754,6 @@
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;");
-      catsEl.innerHTML = filled.map((group) => (
-        `<span>${esc(group.label)}<b>${group.items.length}</b></span>`
-      )).join("");
       listEl.innerHTML = filled.map((group) => (
         `<section class="sales-folder">` +
           `<header><h4>${esc(group.raw)}</h4><b>${group.items.length}</b></header>` +
@@ -10157,7 +10128,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=227").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=228").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
