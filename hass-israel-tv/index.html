@@ -20,7 +20,10 @@
   <link rel="icon" href="favicon.png?v=5" />
   <script>
     try {
-      if (sessionStorage.getItem("israel-tv-boot-2")) document.documentElement.dataset.booted = "1";
+      const tvBoot = new URLSearchParams(location.search).get("tv") === "1"
+        || localStorage.getItem("israel-tv-tv") === "1"
+        || /IsraelTV-AndroidTV/i.test(navigator.userAgent || "");
+      if (!tvBoot && sessionStorage.getItem("israel-tv-boot-2")) document.documentElement.dataset.booted = "1";
     } catch {}
     try {
       const session = JSON.parse(localStorage.getItem("israel-tv-auth") || "null");
@@ -41,7 +44,6 @@
         || (/Android/i.test(ua) && /(Android TV|GoogleTV|SDK_GOOGLE_ATV|AOSP on ATV|BRAVIA|AFT[A-Z0-9]|SHIELD|MIBOX|BeyondTV|SmartTV|Nexus Player|ADT-|AndroidTV)/i.test(ua));
       if (tv) {
         document.documentElement.classList.add("tv");
-        document.documentElement.dataset.booted = "1";
       }
     })();
   </script>
@@ -2458,7 +2460,7 @@
     #bootSplash {
       position: fixed;
       inset: 0;
-      z-index: 80;
+      z-index: 10000;
       display: grid;
       place-items: center;
       background: #070b12;
@@ -2467,6 +2469,19 @@
     #bootSplash[hidden],
     html[data-booted="1"] #bootSplash { display: none !important; }
     #bootSplash.out { opacity: 0; pointer-events: none; }
+    .boot-box {
+      display: grid;
+      justify-items: center;
+      gap: 18px;
+    }
+    .boot-label {
+      margin: 0;
+      color: #93a0b3;
+      font-size: 16px;
+      font-weight: 800;
+    }
+    html.tv .boot-mark { width: min(28vw, 220px); }
+    html.tv .boot-label { font-size: 22px; }
     .boot-mark {
       position: relative;
       width: min(46vw, 196px);
@@ -2511,27 +2526,35 @@
 </head>
 <body>
   <div id="bootSplash" aria-hidden="true">
-    <div class="boot-mark">
-      <img src="icon-base.png?v=5" alt="" />
-      <svg class="boot-arcs" viewBox="0 0 512 512" aria-hidden="true">
-        <path class="boot-arc" d="M 451.08 119.59 A 44.03 44.03 0 0 1 465.88 178.94"/>
-        <path class="boot-arc" d="M 473.33 83.98 A 86.02 86.02 0 0 1 502.24 199.94"/>
-        <path class="boot-arc" d="M 496.12 47.51 A 129.02 129.02 0 0 1 539.48 221.44"/>
-      </svg>
+    <div class="boot-box">
+      <div class="boot-mark">
+        <img src="icon-base.png?v=5" alt="" />
+        <svg class="boot-arcs" viewBox="0 0 512 512" aria-hidden="true">
+          <path class="boot-arc" d="M 451.08 119.59 A 44.03 44.03 0 0 1 465.88 178.94"/>
+          <path class="boot-arc" d="M 473.33 83.98 A 86.02 86.02 0 0 1 502.24 199.94"/>
+          <path class="boot-arc" d="M 496.12 47.51 A 129.02 129.02 0 0 1 539.48 221.44"/>
+        </svg>
+      </div>
+      <p class="boot-label">טוען…</p>
     </div>
   </div>
   <script>
     (function bootSplash() {
       const el = document.getElementById("bootSplash");
       if (!el || document.documentElement.dataset.booted === "1") return;
-      try { sessionStorage.setItem("israel-tv-boot-2", "1"); } catch {}
-      window.setTimeout(() => {
+      const isTv = document.documentElement.classList.contains("tv");
+      window.__dismissBootSplash = function dismissBootSplash() {
+        if (document.documentElement.dataset.booted === "1") return;
+        document.documentElement.dataset.booted = "1";
         el.classList.add("out");
-        window.setTimeout(() => {
-          el.hidden = true;
-          document.documentElement.dataset.booted = "1";
-        }, 450);
-      }, 1500);
+        window.setTimeout(() => { el.hidden = true; }, 450);
+      };
+      if (isTv) {
+        window.setTimeout(() => window.__dismissBootSplash(), 10000);
+        return;
+      }
+      try { sessionStorage.setItem("israel-tv-boot-2", "1"); } catch {}
+      window.setTimeout(() => window.__dismissBootSplash(), 1500);
     })();
   </script>
   <div id="gate">
@@ -4510,6 +4533,7 @@
 
     async function startScreenPairing(forceNew = false) {
       if (!wantPairQr || readSession()) return;
+      dismissBootSplash();
       const wait = document.getElementById("pairWait");
       const code = document.getElementById("pairCode");
       const pairId = (!forceNew && currentPairId) || randomPairId();
@@ -7367,6 +7391,11 @@
     });
 
     let playerReady = false;
+    function dismissBootSplash() {
+      if (typeof window.__dismissBootSplash === "function") window.__dismissBootSplash();
+      else document.documentElement.dataset.booted = "1";
+    }
+
     function bootPlayer() {
       if (playerReady) return;
       playerReady = true;
@@ -7376,6 +7405,7 @@
       const start = CHANNELS.find((channel) => channel.id === startId)
         || (startId && CHANNELS.find((channel) => ALIASES[startId] === channel.id));
       if (start) playChannel(start);
+      requestAnimationFrame(() => requestAnimationFrame(dismissBootSplash));
     }
 
     function setLoginBusy(busy, text) {
@@ -8477,7 +8507,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=192").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=193").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
