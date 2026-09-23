@@ -2498,10 +2498,14 @@
       direction: rtl;
     }
     html.tv.tv-max .tv-zapper.mode-zap .tv-zapper-gate {
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      grid-template-columns: minmax(0, 1fr) auto auto auto auto auto minmax(0, 1fr);
       align-items: end;
-      gap: 28px;
+      gap: 16px;
       direction: ltr;
+    }
+    html.tv.tv-max .tv-zapper.mode-zap .tv-zapper-gate::before,
+    html.tv.tv-max .tv-zapper.mode-zap .tv-zapper-gate::after {
+      content: "";
     }
     html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-zapper-gate {
       display: flex;
@@ -2548,14 +2552,28 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
+    html.tv.tv-max .tv-gate-far {
+      width: min(100px, 12vw);
+      padding: 8px 6px 10px;
+      border-radius: 14px;
+      opacity: 0.42;
+      justify-self: center;
+    }
+    html.tv.tv-max .tv-gate-far .tv-gate-logo {
+      width: 36px;
+      height: 36px;
+    }
+    html.tv.tv-max .tv-gate-far .tv-zapper-name { font-size: 11px; }
     html.tv.tv-max .tv-gate-side {
-      width: min(160px, 18vw);
-      padding: 12px 14px 14px;
+      width: min(150px, 16vw);
+      padding: 12px 12px 14px;
       border-radius: 18px;
       opacity: 0.7;
       justify-self: center;
     }
+    html.tv.tv-max .tv-gate-far.left,
     html.tv.tv-max .tv-gate-left { justify-self: end; }
+    html.tv.tv-max .tv-gate-far.right,
     html.tv.tv-max .tv-gate-right { justify-self: start; }
     html.tv.tv-max .tv-gate-side .tv-gate-logo {
       width: 56px;
@@ -7572,16 +7590,23 @@
         tvZapperIndex = tvZapperIndexOf(current?.id);
       }
       if (tvZapperMode === "zap") {
-        const left = pool[(tvZapperIndex + tvZapStep(-1) + pool.length * 10) % pool.length];
+        const at = (off) => pool[(tvZapperIndex + tvZapStep(off) + pool.length * 10) % pool.length];
+        const farLeft = at(-2);
+        const left = at(-1);
         const main = pool[tvZapperIndex];
-        const right = pool[(tvZapperIndex + tvZapStep(1) + pool.length * 10) % pool.length];
+        const right = at(1);
+        const farRight = at(2);
+        const farLeftBtn = makeTvGate(farLeft, "far left");
         const leftBtn = makeTvGate(left, "side left");
         const mainBtn = makeTvGate(main, "main", true);
         const rightBtn = makeTvGate(right, "side right");
-        if (left.id === main.id) leftBtn.hidden = true;
-        if (right.id === main.id) rightBtn.hidden = true;
-        tvZapperRow.replaceChildren(leftBtn, mainBtn, rightBtn);
-        return [leftBtn, mainBtn, rightBtn];
+        const farRightBtn = makeTvGate(farRight, "far right");
+        if (pool.length < 5 || farLeft.id === main.id || farLeft.id === left.id) farLeftBtn.hidden = true;
+        if (pool.length < 3 || left.id === main.id) leftBtn.hidden = true;
+        if (pool.length < 3 || right.id === main.id) rightBtn.hidden = true;
+        if (pool.length < 5 || farRight.id === main.id || farRight.id === right.id) farRightBtn.hidden = true;
+        tvZapperRow.replaceChildren(farLeftBtn, leftBtn, mainBtn, rightBtn, farRightBtn);
+        return [farLeftBtn, leftBtn, mainBtn, rightBtn, farRightBtn];
       }
       const buttons = [];
       if (tvZapperLevel <= 1) {
@@ -9321,7 +9346,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=205").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=206").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
