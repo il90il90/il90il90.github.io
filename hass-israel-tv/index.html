@@ -7356,14 +7356,17 @@
       );
     }
 
+    let tvWarmHintTimer = 0;
     function setTvWarmHint(channel) {
       const hint = document.getElementById("tvWarmHint");
       const line = document.getElementById("tvWarmHintText");
       const logo = document.getElementById("tvWarmHintLogo");
       if (!hint) return;
+      window.clearTimeout(tvWarmHintTimer);
+      tvWarmHintTimer = 0;
+      hint.hidden = true;
+      hint.classList.remove("is-on");
       if (!channel || !isTv) {
-        hint.hidden = true;
-        hint.classList.remove("is-on");
         if (line) line.textContent = "טוען את הערוץ";
         if (logo) {
           logo.removeAttribute("src");
@@ -7386,8 +7389,11 @@
         }
       }
       if (hint.parentElement !== document.body) document.body.append(hint);
-      hint.hidden = false;
-      hint.classList.add("is-on");
+      tvWarmHintTimer = window.setTimeout(() => {
+        tvWarmHintTimer = 0;
+        hint.hidden = false;
+        hint.classList.add("is-on");
+      }, 1000);
     }
 
     function stopWarmPlayback() {
@@ -9469,7 +9475,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=209").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=210").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
