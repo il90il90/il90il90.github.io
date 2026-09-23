@@ -5478,7 +5478,7 @@
       if (!session?.license || session.role !== "user") return true;
       try {
         const now = Date.now();
-        const elapsed = lastWatchAt ? Math.min(60, Math.round((now - lastWatchAt) / 1000)) : (isTv ? 8 : 12);
+        const elapsed = lastWatchAt ? Math.min(600, Math.round((now - lastWatchAt) / 1000)) : 600;
         lastWatchAt = now;
         const res = await fetch(PWF_CHECK_URL, {
           method: "POST",
@@ -5520,7 +5520,7 @@
       lastWatchAt = Date.now();
       if (appLocked || session?.role !== "user" || !session.license) return session;
       await refreshDeviceLabel();
-      const interval = isTv ? 8000 : 12000;
+      const interval = 10 * 60 * 1000;
       const beat = async () => {
         if (appLocked) {
           stopLiveSession();
@@ -5636,7 +5636,7 @@
       const value = Number(stamp) || 0;
       if (!value) return "עדיין לא נראה";
       const diff = Date.now() - value;
-      if (diff < 45 * 1000) return "מחובר עכשיו";
+      if (diff < 12 * 60 * 1000) return "מחובר עכשיו";
       if (diff < 3600 * 1000) return `לפני ${Math.max(1, Math.round(diff / 60000))} דקות`;
       if (diff < 86400 * 1000) return `לפני ${Math.round(diff / 3600000)} שעות`;
       return `לפני ${Math.round(diff / 86400000)} ימים`;
@@ -9583,7 +9583,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=212").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=213").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
