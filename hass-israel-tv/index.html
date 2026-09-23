@@ -3518,17 +3518,12 @@
   <script src="./jsqr.min.js"></script>
   <script type="module">
     import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=96";
-    import { PWF_CHECK_URL } from "./pwf.js?v=17";
+    import { PWF_CHECK_URL } from "./pwf.js?v=18";
 
     const AUTH_KEY = "israel-tv-auth";
     const HWID_KEY = "israel-tv-hwid";
     const DEVICE_NAME_KEY = "israel-tv-device-name";
-    const LICENSE_SECRET = "israel-tv-license-hs256";
-    const BROADPEAK_KEY = "0123456789ABCDEF0123456789ABCDEF";
-    const DEFAULT_CTI = "50629300e9872d0a6c94a48089a07763";
-    const JWT_TTL_SEC = 86400;
-    const JWT_REFRESH_MARGIN_SEC = 600;
-    const CDN = "stm-hpc-ory-1a.cellcomtvcdn.tv";
+    const ADMIN_SESSION_TTL = 8 * 3600;
     const RECENT_KEY = "israel-tv-recent";
     const RECENT_LIMIT = 12;
     const CUSTOM_KEY = "israel-tv-custom";
@@ -3972,8 +3967,7 @@
 
     function sessionStillValid(session) {
       if (!session?.role) return false;
-      if (session.role === "admin") return true;
-      const end = session.licenseExp || session.exp;
+      const end = session.role === "admin" ? session.exp : (session.licenseExp || session.exp);
       return Number.isFinite(end) && end >= nowSec();
     }
 
@@ -4001,7 +3995,7 @@
         const data = await res.json().catch(() => ({}));
         if (data?.success && data.token) {
           const session = { ...(readSession() || {}), role: "admin", adminToken: data.token };
-          if (!session.exp) session.exp = nowSec() + 3650 * 86400;
+          session.exp = Number(data.exp) || (nowSec() + ADMIN_SESSION_TTL);
           writeSession(session);
           return data.token;
         }
@@ -5208,10 +5202,10 @@
       const abort = canAbort ? new AbortController() : null;
       const timer = window.setTimeout(() => {
         try { abort?.abort(); } catch {}
-      }, 8000);
+      }, 15000);
       try {
         if (typeof fetch !== "function") {
-          return await xhrJson(PWF_CHECK_URL, body, 8000);
+          return await xhrJson(PWF_CHECK_URL, body, 15000);
         }
         const opts = {
           method: "POST",
@@ -5224,7 +5218,7 @@
         return { ok: res.ok && data?.success === true, status: res.status, data };
       } catch {
         try {
-          return await xhrJson(PWF_CHECK_URL, body, 8000);
+          return await xhrJson(PWF_CHECK_URL, body, 15000);
         } catch {
           return { ok: false, status: 0, data: {} };
         }
@@ -5290,7 +5284,7 @@
 
     async function applyPairedSession(data) {
       if (data?.role === "admin" && data.admin_token) {
-        unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, adminToken: data.admin_token });
+        unlockApp({ role: "admin", exp: nowSec() + ADMIN_SESSION_TTL, adminToken: data.admin_token });
         return true;
       }
       if (data?.license_key) {
@@ -5915,21 +5909,6 @@
       leaveLiveSession();
     });
 
-    async function verifyLicense(code) {
-      const parts = String(code || "").trim().split(".");
-      if (parts[0] !== "ITV1" || parts.length !== 3) return null;
-      const expected = await hmacSha256(LICENSE_SECRET, parts[1]);
-      if (expected !== parts[2]) return null;
-      let payload;
-      try {
-        payload = JSON.parse(b64urlDecode(parts[1]));
-      } catch {
-        return null;
-      }
-      if (!payload?.exp || payload.exp < Date.now() / 1000) return null;
-      return payload;
-    }
-
     function parseMaxDevices(key) {
       const n = Number(key?.max_devices ?? key?.device_limit ?? key?.max_hwid);
       if (!Number.isFinite(n) || n < 1) return 1;
@@ -6323,38 +6302,46 @@
       location.reload();
     }
 
-    let cellcomJwt = { token: "", exp: 0 };
-    let cellcomRefreshTimer = 0;
+    let playTicket = { channel: "", url: "", exp: 0 };
 
-    function scheduleCellcomRefresh() {
-      window.clearTimeout(cellcomRefreshTimer);
-      if (!cellcomJwt.exp) return;
-      const waitMs = Math.max(1000, (cellcomJwt.exp - JWT_REFRESH_MARGIN_SEC - nowSec()) * 1000);
-      cellcomRefreshTimer = window.setTimeout(() => {
-        cellcomJwt = { token: "", exp: 0 };
-        if (current?.path) playChannel(current);
-      }, waitMs);
-    }
-
-    async function generateBroadpeakJwt(force = false) {
-      const now = nowSec();
-      if (!force && cellcomJwt.token && cellcomJwt.exp - JWT_REFRESH_MARGIN_SEC > now) {
-        return cellcomJwt.token;
+    async function requireLiveSession() {
+      const session = readSession();
+      if (!session) {
+        if (!appLocked) lockApp();
+        throw new Error("auth");
       }
-      const exp = now + JWT_TTL_SEC;
-      const header = { alg: "HS256", kid: "broadpeak", typ: "JWT" };
-      const payload = { cti: DEFAULT_CTI, exp };
-      const h = b64urlJson(header);
-      const p = b64urlJson(payload);
-      const token = `${h}.${p}.${await hmacSha256(BROADPEAK_KEY, `${h}.${p}`)}`;
-      cellcomJwt = { token, exp };
-      scheduleCellcomRefresh();
-      return token;
+      return session;
     }
 
-    async function buildCatUrl(path) {
-      const jwt = await generateBroadpeakJwt();
-      return `https://${CDN}/_cat/${jwt}/${path.replace(/^\/+/, "")}`;
+    async function resolvePlayUrl(channel) {
+      const session = await requireLiveSession();
+      if (!channel?.path) return String(channel?.url || "");
+      if (playTicket.channel === channel.id && playTicket.url && playTicket.exp - 30 > nowSec()) {
+        return playTicket.url;
+      }
+      const body = {
+        action: "play",
+        channel_id: channel.id,
+        hwid: deviceHwid(),
+      };
+      if (session.role === "admin") {
+        if (session.adminToken) body.token = session.adminToken;
+        if (window.__adminPass) body.admin = window.__adminPass;
+      } else {
+        body.license_key = session.license || "";
+      }
+      const res = await pwfAction(body);
+      if (!res.ok || !res.data?.url) {
+        const code = String(res.data?.error_code || "").toUpperCase();
+        if (["BANNED", "PAUSED", "EXPIRED", "INVALID_KEY", "DEVICE_REMOVED"].includes(code)) lockApp();
+        throw new Error(res.data?.message || "play");
+      }
+      playTicket = {
+        channel: channel.id,
+        url: String(res.data.url),
+        exp: Number(res.data.exp) || (nowSec() + 600),
+      };
+      return playTicket.url;
     }
 
     function paintStatusChannel(channel) {
@@ -8612,7 +8599,7 @@
         if (chip) focusTvNode(chip);
       }
       try {
-        currentUrl = picked.path ? await buildCatUrl(picked.path) : String(picked.url || "");
+        currentUrl = await resolvePlayUrl(picked);
         if (!currentUrl) throw new Error("no-url");
         if (requestId !== playSeq) return;
         setOpenButton(currentUrl);
@@ -8646,7 +8633,7 @@
       } catch (error) {
         if (requestId !== playSeq) return;
         setTvWarmHint(null);
-        const message = picked.path ? "לא ניתן לחתום את הקישור בדפדפן הזה." : "השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.";
+        const message = picked.path ? "אין הרשאה לשידור. היכנסו שוב עם הרישיון." : "השידור לא נטען. נסו ערוץ אחר.";
         if (keepPicture && video.classList.contains("has-frame")) showToast(message);
         else setStatus(message);
       }
@@ -8731,6 +8718,10 @@
     async function copyStreamUrl() {
       if (!currentUrl) {
         showToast("בחרו ערוץ קודם");
+        return;
+      }
+      if (/\/v\/[0-9a-f]{16,}/i.test(currentUrl) || current?.path) {
+        showToast("השידור מוגן ולא ניתן להעתקה");
         return;
       }
       await navigator.clipboard.writeText(currentUrl);
@@ -8821,7 +8812,7 @@
         if (admin.ok && admin.data.token) {
           window.__adminPass = value;
           stopScreenPairing();
-          unlockApp({ role: "admin", exp: nowSec() + 3650 * 86400, adminToken: admin.data.token });
+          unlockApp({ role: "admin", exp: Number(admin.data.exp) || (nowSec() + ADMIN_SESSION_TTL), adminToken: admin.data.token });
           if (pendingPairId) {
             const id = pendingPairId;
             pendingPairId = "";
@@ -8864,19 +8855,8 @@
         await openDevicesDialog(licenseKey, formatSlotsLeft(0, pwf.data.max_devices));
         return false;
       }
-      const license = await verifyLicense(licenseKey);
-      if (!license) {
-        err.textContent = pwfErrorMessage(pwf.data);
-        return false;
-      }
-      stopScreenPairing();
-      unlockApp({ role: "user", exp: license.exp, licenseExp: license.exp, license: licenseKey, note: license.n, maxDevices: 1 });
-      if (pendingPairId) {
-        const id = pendingPairId;
-        pendingPairId = "";
-        await claimPair(id, { silent: true });
-      }
-      return true;
+      err.textContent = pwfErrorMessage(pwf.data);
+      return false;
       } finally {
         if (document.documentElement.dataset.session !== "1") setLoginBusy(false);
       }
@@ -9918,7 +9898,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=222").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=223").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
