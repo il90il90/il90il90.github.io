@@ -2259,27 +2259,32 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    html.tv .card .sub { display: none; }
-    html.tv .card .sub.is-now {
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
+    html.tv .card .sub,
+    html.tv .card .sub.is-now { display: none; }
+    html.tv .chip, html.tv .cat {
+      flex: 0 0 auto;
+      min-width: 0;
+      max-width: 18ch;
+      min-height: 40px;
+      font-size: 14px;
+      padding: 7px 12px;
       overflow: hidden;
-      white-space: normal;
-      font-size: 10px;
-      line-height: 1.2;
-      margin-top: 2px;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
-    html.tv .chip, html.tv .cat { min-height: 40px; font-size: 14px; padding: 7px 12px; }
     html.tv .chip.chip-logo {
       width: 40px;
       height: 40px;
+      max-width: 40px;
       padding: 4px;
       overflow: hidden;
+      font-size: 0;
+      color: transparent;
     }
     html.tv .chips, html.tv .cats {
       flex-wrap: nowrap;
       overflow-x: auto;
+      overflow-y: hidden;
       scrollbar-width: none;
     }
     html.tv .chips::-webkit-scrollbar, html.tv .cats::-webkit-scrollbar { display: none; }
@@ -2453,6 +2458,44 @@
     }
     html.tv.tv-max .status-name { font-size: 34px; }
     html.tv.tv-max .status.is-loading p { font-size: 20px; }
+    .tv-warm-hint { display: none !important; }
+    html.tv.tv-max .tv-warm-hint:not([hidden]) {
+      display: flex !important;
+      position: fixed;
+      top: 28px;
+      left: 32px;
+      z-index: 2147483600;
+      align-items: center;
+      gap: 10px;
+      max-width: min(46vw, 420px);
+      padding: 10px 16px 10px 12px;
+      border-radius: 999px;
+      background: rgba(7, 11, 18, 0.72);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+      line-height: 1.2;
+      pointer-events: none;
+      direction: rtl;
+    }
+    html.tv.tv-max .tv-warm-spin {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+      border: 2px solid rgba(255, 255, 255, 0.28);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: tv-warm-spin 0.7s linear infinite;
+    }
+    html.tv.tv-max .tv-warm-hint span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    @keyframes tv-warm-spin {
+      to { transform: rotate(360deg); }
+    }
     html.tv video::-webkit-media-controls,
     html.tv video::-webkit-media-controls-enclosure,
     html.tv video::-webkit-media-controls-start-playback-button {
@@ -2867,6 +2910,10 @@
         <div class="status-spinner" aria-hidden="true"></div>
         <p></p>
         <a class="camera-open" id="cameraOpen" hidden>פתח מצלמה</a>
+      </div>
+      <div class="tv-warm-hint" id="tvWarmHint" hidden>
+        <i class="tv-warm-spin" aria-hidden="true"></i>
+        <span id="tvWarmHintText">טוען את הערוץ</span>
       </div>
     </section>
 
@@ -7281,8 +7328,23 @@
       );
     }
 
+    function setTvWarmHint(channel) {
+      const hint = document.getElementById("tvWarmHint");
+      const line = document.getElementById("tvWarmHintText");
+      if (!hint) return;
+      if (!channel) {
+        hint.hidden = true;
+        if (line) line.textContent = "טוען את הערוץ";
+        return;
+      }
+      const name = channel.name || "";
+      if (line) line.textContent = name ? `טוען את ${name}` : "טוען את הערוץ";
+      hint.hidden = false;
+    }
+
     function stopWarmPlayback() {
       warmActive = false;
+      setTvWarmHint(null);
       if (nextHls) {
         try { nextHls.destroy(); } catch {}
         nextHls = undefined;
@@ -7347,6 +7409,7 @@
       try { outgoing.load(); } catch {}
       outgoing.muted = true;
       syncVideoFrame();
+      setTvWarmHint(null);
       setStatus("");
       startPlayback();
     }
@@ -7767,6 +7830,7 @@
     function setTvMax(on) {
       if (!isTv || !on || !current || stage.hidden) {
         hideTvZapper();
+        setTvWarmHint(null);
         document.documentElement.classList.remove("tv-max");
         syncNativeRtspRect();
         return;
@@ -8035,8 +8099,13 @@
       showStage(true);
       setNowLogo(picked);
       setMediaSession(picked);
-      if (keepPicture) setStatus("");
-      else setStatus("", true);
+      if (keepPicture) {
+        setStatus("");
+        setTvWarmHint(picked);
+      } else {
+        setTvWarmHint(null);
+        setStatus("", true);
+      }
       history.replaceState(history.state, "", `#${picked.id}`);
       paintRecent({ keep: true });
       syncActive();
@@ -8050,6 +8119,7 @@
         if (requestId !== playSeq) return;
         setOpenButton(currentUrl);
         if (isRtspUrl(currentUrl)) {
+          setTvWarmHint(null);
           stopLocalPlayback();
           if (playNativeRtsp(currentUrl)) {
             setCameraOpen("");
@@ -8063,6 +8133,7 @@
           return;
         }
         if (getCastSession()) {
+          setTvWarmHint(null);
           stopLocalPlayback();
           await loadCastMedia(currentUrl, picked);
           if (requestId !== playSeq) return;
@@ -8076,6 +8147,7 @@
         holdTvFocus();
       } catch (error) {
         if (requestId !== playSeq) return;
+        setTvWarmHint(null);
         const message = picked.path ? "לא ניתן לחתום את הקישור בדפדפן הזה." : "השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.";
         if (keepPicture && video.classList.contains("has-frame")) showToast(message);
         else setStatus(message);
@@ -9346,7 +9418,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=206").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=207").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
