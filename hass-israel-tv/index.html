@@ -11,13 +11,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=7" />
-  <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png?v=7" />
-  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png?v=7" />
-  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png?v=7" />
-  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v=7" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=8" />
+  <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png?v=8" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png?v=8" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png?v=8" />
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v=8" />
   <link rel="manifest" href="/manifest.webmanifest?v=9" />
-  <link rel="icon" href="/favicon.png?v=7" />
+  <link rel="icon" href="/favicon.png?v=8" />
   <style>
     #bootSplash {
       position: fixed;
@@ -3137,6 +3137,8 @@
       position: relative;
       width: min(46vw, 196px);
       aspect-ratio: 1;
+      overflow: hidden;
+      border-radius: 22%;
       filter: drop-shadow(0 0 18px rgba(61, 139, 255, 0.22));
       animation: bootIn 0.7s ease-out both;
     }
@@ -3144,14 +3146,13 @@
       width: 100%;
       height: 100%;
       display: block;
-      border-radius: 22%;
     }
     .boot-arcs {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      overflow: visible;
+      overflow: hidden;
       pointer-events: none;
     }
     .boot-arc {
@@ -3159,19 +3160,23 @@
       fill: none;
       stroke-width: 24;
       stroke-linecap: round;
-      opacity: 0.2;
-      animation: bootArc 1.35s ease-in-out infinite;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      opacity: 0.18;
+      animation: bootArc 1.7s ease-in-out infinite;
     }
     .boot-arc:nth-of-type(1) { animation-delay: 0s; }
-    .boot-arc:nth-of-type(2) { animation-delay: 0.18s; }
-    .boot-arc:nth-of-type(3) { animation-delay: 0.36s; }
+    .boot-arc:nth-of-type(2) { animation-delay: 0.22s; }
+    .boot-arc:nth-of-type(3) { animation-delay: 0.44s; }
     @keyframes bootIn {
       from { transform: scale(0.9); opacity: 0; }
       to { transform: scale(1); opacity: 1; }
     }
     @keyframes bootArc {
-      0%, 100% { opacity: 0.18; }
-      35% { opacity: 1; }
+      0% { stroke-dashoffset: 1; opacity: 0.12; }
+      32% { stroke-dashoffset: 0; opacity: 1; }
+      68% { stroke-dashoffset: 0; opacity: 1; }
+      100% { stroke-dashoffset: 0; opacity: 0.2; }
     }
   </style>
 </head>
@@ -3179,11 +3184,18 @@
   <div id="bootSplash" aria-hidden="true" style="position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;background:#070b12">
     <div class="boot-box">
       <div class="boot-mark">
-        <img src="/icon-base.png?v=7" alt="" />
+        <img src="/icon-base.png?v=8" alt="" />
         <svg class="boot-arcs" viewBox="0 0 512 512" aria-hidden="true">
-          <path class="boot-arc" d="M 451.08 119.59 A 44.03 44.03 0 0 1 465.88 178.94"/>
-          <path class="boot-arc" d="M 473.33 83.98 A 86.02 86.02 0 0 1 502.24 199.94"/>
-          <path class="boot-arc" d="M 496.12 47.51 A 129.02 129.02 0 0 1 539.48 221.44"/>
+          <defs>
+            <clipPath id="bootClip">
+              <rect width="512" height="512" rx="112.64" ry="112.64"/>
+            </clipPath>
+          </defs>
+          <g clip-path="url(#bootClip)">
+            <path class="boot-arc" pathLength="1" d="M 465.88 178.94 A 44.03 44.03 0 0 0 451.08 119.59"/>
+            <path class="boot-arc" pathLength="1" d="M 502.24 199.94 A 86.02 86.02 0 0 0 473.33 83.98"/>
+            <path class="boot-arc" pathLength="1" d="M 539.48 221.44 A 129.02 129.02 0 0 0 496.12 47.51"/>
+          </g>
         </svg>
       </div>
       <p class="boot-label">טוען…</p>
@@ -3206,14 +3218,14 @@
         return;
       }
       try { sessionStorage.setItem("israel-tv-boot-2", "1"); } catch {}
-      window.setTimeout(() => window.__dismissBootSplash(), 1500);
+      window.setTimeout(() => window.__dismissBootSplash(), 2400);
     })();
   </script>
   <div id="gate">
     <div class="gate-stack">
     <form class="login" id="loginForm">
       <div class="login-head">
-        <img class="login-mark" src="/favicon.png?v=7" alt="" />
+        <img class="login-mark" src="/favicon.png?v=8" alt="" />
         <div>
           <h2>כניסה</h2>
           <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
@@ -3327,7 +3339,7 @@
   <div id="app" hidden>
   <header class="top">
     <button type="button" class="brand" id="homeBtn" title="מסך ראשי" aria-label="מסך ראשי">
-      <img src="/favicon.png?v=7" alt="" />
+      <img src="/favicon.png?v=8" alt="" />
       <div>
         <h1>Israel TV</h1>
         <span>צפייה ישירה</span>
@@ -10262,7 +10274,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=231").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=232").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
