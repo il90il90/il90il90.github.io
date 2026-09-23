@@ -2463,12 +2463,13 @@
       display: flex !important;
       position: fixed;
       top: 22px;
-      left: 22px;
+      right: 22px;
+      left: auto;
       z-index: 2147483646;
       align-items: center;
       gap: 12px;
-      max-width: min(52vw, 480px);
-      padding: 12px 20px 12px 14px;
+      max-width: min(52vw, 520px);
+      padding: 10px 12px 10px 18px;
       border-radius: 999px;
       background: rgba(0, 0, 0, 0.78);
       color: #fff;
@@ -2481,9 +2482,24 @@
     }
     html.tv.tv-max .tv-warm-hint.is-on:not([hidden]) {
       top: 32px;
-      left: 36px;
+      right: 36px;
+      left: auto;
       font-size: 24px;
-      padding: 14px 22px 14px 16px;
+      padding: 12px 14px 12px 22px;
+    }
+    html.tv .tv-warm-logo {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      object-fit: contain;
+      background: #0b1018;
+      border-radius: 10px;
+    }
+    html.tv .tv-warm-logo[hidden] { display: none !important; }
+    html.tv.tv-max .tv-warm-logo {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
     }
     html.tv .tv-warm-spin {
       width: 22px;
@@ -2923,8 +2939,9 @@
         <a class="camera-open" id="cameraOpen" hidden>פתח מצלמה</a>
       </div>
       <div class="tv-warm-hint" id="tvWarmHint" hidden>
-        <div class="tv-warm-spin" aria-hidden="true"></div>
+        <img class="tv-warm-logo" id="tvWarmHintLogo" alt="" hidden />
         <span id="tvWarmHintText">טוען את הערוץ</span>
+        <div class="tv-warm-spin" aria-hidden="true"></div>
       </div>
     </section>
 
@@ -7342,15 +7359,32 @@
     function setTvWarmHint(channel) {
       const hint = document.getElementById("tvWarmHint");
       const line = document.getElementById("tvWarmHintText");
+      const logo = document.getElementById("tvWarmHintLogo");
       if (!hint) return;
       if (!channel || !isTv) {
         hint.hidden = true;
         hint.classList.remove("is-on");
         if (line) line.textContent = "טוען את הערוץ";
+        if (logo) {
+          logo.removeAttribute("src");
+          logo.hidden = true;
+        }
         return;
       }
       const name = channel.name || "";
       if (line) line.textContent = name ? `טוען את ${name}` : "טוען את הערוץ";
+      const src = logoSrc(channel.logo);
+      if (logo) {
+        if (src) {
+          logo.decoding = "sync";
+          logo.src = src;
+          logo.alt = name;
+          logo.hidden = false;
+        } else {
+          logo.removeAttribute("src");
+          logo.hidden = true;
+        }
+      }
       if (hint.parentElement !== document.body) document.body.append(hint);
       hint.hidden = false;
       hint.classList.add("is-on");
@@ -9435,7 +9469,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=208").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=209").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
