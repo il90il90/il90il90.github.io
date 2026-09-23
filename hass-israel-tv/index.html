@@ -11,13 +11,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=8" />
-  <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png?v=8" />
-  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png?v=8" />
-  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png?v=8" />
-  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v=8" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=9" />
+  <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png?v=9" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png?v=9" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png?v=9" />
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v=9" />
   <link rel="manifest" href="/manifest.webmanifest?v=9" />
-  <link rel="icon" href="/favicon.png?v=8" />
+  <link rel="icon" href="/favicon.png?v=9" />
   <style>
     #bootSplash {
       position: fixed;
@@ -3160,8 +3160,6 @@
       fill: none;
       stroke-width: 24;
       stroke-linecap: round;
-      stroke-dasharray: 1;
-      stroke-dashoffset: 1;
       opacity: 0.18;
       animation: bootArc 1.7s ease-in-out infinite;
     }
@@ -3173,10 +3171,10 @@
       to { transform: scale(1); opacity: 1; }
     }
     @keyframes bootArc {
-      0% { stroke-dashoffset: 1; opacity: 0.12; }
+      0% { stroke-dashoffset: 100; opacity: 0.12; }
       32% { stroke-dashoffset: 0; opacity: 1; }
       68% { stroke-dashoffset: 0; opacity: 1; }
-      100% { stroke-dashoffset: 0; opacity: 0.2; }
+      100% { stroke-dashoffset: 0; opacity: 0.22; }
     }
   </style>
 </head>
@@ -3184,7 +3182,7 @@
   <div id="bootSplash" aria-hidden="true" style="position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;background:#070b12">
     <div class="boot-box">
       <div class="boot-mark">
-        <img src="/icon-base.png?v=8" alt="" />
+        <img src="/icon-base.png?v=9" alt="" />
         <svg class="boot-arcs" viewBox="0 0 512 512" aria-hidden="true">
           <defs>
             <clipPath id="bootClip">
@@ -3192,9 +3190,9 @@
             </clipPath>
           </defs>
           <g clip-path="url(#bootClip)">
-            <path class="boot-arc" pathLength="1" d="M 465.88 178.94 A 44.03 44.03 0 0 0 451.08 119.59"/>
-            <path class="boot-arc" pathLength="1" d="M 502.24 199.94 A 86.02 86.02 0 0 0 473.33 83.98"/>
-            <path class="boot-arc" pathLength="1" d="M 539.48 221.44 A 129.02 129.02 0 0 0 496.12 47.51"/>
+            <path class="boot-arc" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M 396.95 119.52 A 36.86 36.86 0 0 1 447.74 131.25"/>
+            <path class="boot-arc" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M 380.67 93.47 A 67.58 67.58 0 0 1 473.80 114.97"/>
+            <path class="boot-arc" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M 364.39 67.42 A 98.30 98.30 0 0 1 499.85 98.69"/>
           </g>
         </svg>
       </div>
@@ -3225,7 +3223,7 @@
     <div class="gate-stack">
     <form class="login" id="loginForm">
       <div class="login-head">
-        <img class="login-mark" src="/favicon.png?v=8" alt="" />
+        <img class="login-mark" src="/favicon.png?v=9" alt="" />
         <div>
           <h2>כניסה</h2>
           <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
@@ -3339,7 +3337,7 @@
   <div id="app" hidden>
   <header class="top">
     <button type="button" class="brand" id="homeBtn" title="מסך ראשי" aria-label="מסך ראשי">
-      <img src="/favicon.png?v=8" alt="" />
+      <img src="/favicon.png?v=9" alt="" />
       <div>
         <h1>Israel TV</h1>
         <span>צפייה ישירה</span>
@@ -10274,7 +10272,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=232").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=233").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;

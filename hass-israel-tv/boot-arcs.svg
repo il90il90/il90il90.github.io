@@ -5,8 +5,8 @@
     </clipPath>
   </defs>
   <g clip-path="url(#bootClip)" stroke="#101318" stroke-width="24.00" stroke-linecap="round">
-      <path class="boot-arc" pathLength="1" d="M 465.88 178.94 A 44.03 44.03 0 0 0 451.08 119.59"/>
-      <path class="boot-arc" pathLength="1" d="M 502.24 199.94 A 86.02 86.02 0 0 0 473.33 83.98"/>
-      <path class="boot-arc" pathLength="1" d="M 539.48 221.44 A 129.02 129.02 0 0 0 496.12 47.51"/>
+      <path class="boot-arc" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M 396.95 119.52 A 36.86 36.86 0 0 1 447.74 131.25"/>
+      <path class="boot-arc" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M 380.67 93.47 A 67.58 67.58 0 0 1 473.80 114.97"/>
+      <path class="boot-arc" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" d="M 364.39 67.42 A 98.30 98.30 0 0 1 499.85 98.69"/>
   </g>
 </svg>
