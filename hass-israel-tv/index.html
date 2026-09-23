@@ -240,7 +240,7 @@
       font-size: 13px;
       line-height: 1.5;
     }
-    .login-device .install-steps { margin-bottom: 0; }
+    .login-device .install-steps { margin: 14px 0 0; }
     .login-device-install {
       display: none;
       width: 100%;
@@ -256,7 +256,17 @@
     }
     html:not(.tv):not(.installed).ios .login-device-ios,
     html:not(.tv):not(.installed).android .login-device-android { display: block; }
-    html.android:not(.tv):not(.installed) .login-device-install.is-ready { display: block; }
+    html.android:not(.tv):not(.installed) .login-device-install { display: block; }
+    #installYes.install-direct {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 48px;
+      margin: 0 0 14px;
+      border-radius: 14px;
+      font-weight: 800;
+    }
+    #installYes.install-direct[hidden] { display: none !important; }
     html.tv #pairPhoneBox { display: none !important; }
     html.ios #installAndroidSteps,
     html.android #installIosSteps,
@@ -3291,7 +3301,8 @@
       </div>
       <div class="login-device login-device-android">
         <h3>באנדרואיד</h3>
-        <p>מתקינים כאפליקציה מכרום — לא «הוספה למסך הבית», אחרת יישאר סרגל הכתובת.</p>
+        <p>לחצו להתקנה ישירה. אם זה לא נפתח — השתמשו בשלבים, ובכרום בחרו «התקן אפליקציה» ולא הוספה למסך הבית.</p>
+        <button type="button" class="login-device-install" id="loginDeviceInstall">התקן אפליקציה</button>
         <ol class="install-steps">
           <li>
             <span class="ios-step">1</span>
@@ -3306,7 +3317,6 @@
             <span>לחצו <b>התקן</b> ופתחו מהאייקון במסך הבית</span>
           </li>
         </ol>
-        <button type="button" class="login-device-install" id="loginDeviceInstall">התקן אפליקציה</button>
       </div>
     </form>
     <aside class="login-sales" aria-label="מה יש באפליקציה">
@@ -3570,6 +3580,7 @@
   <dialog class="sheet" id="installDlg">
     <h3 id="installTitle">התקנת האפליקציה</h3>
     <p id="installLead" style="color:var(--muted);margin:0 0 14px">להתקין את Israel TV במסך הבית?</p>
+    <button type="button" class="install-direct" id="installYes">התקן אפליקציה</button>
     <ol class="install-steps ios-install" id="installIosSteps" hidden>
       <li>
         <span class="ios-step">1</span>
@@ -3601,7 +3612,6 @@
       </li>
     </ol>
     <div class="row">
-      <button type="button" id="installYes">התקן</button>
       <button type="button" class="ghost" id="installNo">לא עכשיו</button>
     </div>
   </dialog>
@@ -9636,16 +9646,16 @@
         installGateLabel.textContent = isIosDevice ? "הוספה למסך הבית" : "התקנה באנדרואיד";
       }
       const deviceInstall = document.getElementById("loginDeviceInstall");
-      if (deviceInstall) deviceInstall.classList.toggle("is-ready", canPrompt && !installed && !isTv);
+      if (deviceInstall) {
+        deviceInstall.hidden = installed || isTv || !isAndroidPhone;
+        deviceInstall.classList.toggle("is-ready", canPrompt && !installed && !isTv);
+      }
+      if (installDlg.open) syncInstallDialog();
       if (isTv && installDlg.open) installDlg.close();
       if (installBtn.hidden && installDlg.open && !isIosDevice && !isAndroidPhone) installDlg.close();
     }
 
-    function openInstallDialog() {
-      if (isTv || isInstalledApp()) {
-        syncInstallButton();
-        return;
-      }
+    function syncInstallDialog() {
       const ios = isIosDevice;
       const android = isAndroidPhone;
       const iosSteps = document.getElementById("installIosSteps");
@@ -9671,15 +9681,13 @@
         if (title) title.textContent = "התקנה באנדרואיד";
         if (lead) {
           lead.hidden = false;
-          lead.textContent = canPrompt
-            ? "מתקינים מכרום כאפליקציה, בלי סרגל כתובת למעלה. לא סימנייה ולא אפליקציית הטלוויזיה."
-            : "בכרום בחרו «התקן אפליקציה» — לא הוספה למסך הבית. אחרת יישאר סרגל הכתובת.";
+          lead.textContent = "לחצו להתקנה ישירה. אם זה לא נפתח — השתמשו בשלבים, ובכרום בחרו «התקן אפליקציה» ולא הוספה למסך הבית.";
         }
         if (yes) {
-          yes.hidden = !canPrompt;
-          yes.textContent = "התקן";
+          yes.hidden = false;
+          yes.textContent = "התקן אפליקציה";
         }
-        if (no) no.textContent = canPrompt ? "לא עכשיו" : "הבנתי";
+        if (no) no.textContent = "הבנתי";
       } else {
         if (title) title.textContent = "התקנת האפליקציה";
         if (lead) {
@@ -9688,10 +9696,18 @@
         }
         if (yes) {
           yes.hidden = !canPrompt;
-          yes.textContent = "התקן";
+          yes.textContent = "התקן אפליקציה";
         }
         if (no) no.textContent = canPrompt ? "לא עכשיו" : "הבנתי";
       }
+    }
+
+    function openInstallDialog() {
+      if (isTv || isInstalledApp()) {
+        syncInstallButton();
+        return;
+      }
+      syncInstallDialog();
       openSheet(installDlg);
     }
 
@@ -9715,12 +9731,30 @@
       installDlg.close();
     });
     async function promptInstallApp() {
-      if (installDlg.open) installDlg.close();
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = undefined;
-      syncInstallButton();
+      const yes = document.getElementById("installYes");
+      const lead = document.getElementById("installLead");
+      if (deferredPrompt) {
+        try {
+          if (installDlg.open) installDlg.close();
+          deferredPrompt.prompt();
+          await deferredPrompt.userChoice;
+        } catch {}
+        deferredPrompt = undefined;
+        syncInstallButton();
+        return;
+      }
+      try {
+        if (typeof navigator.install === "function") {
+          await navigator.install();
+          return;
+        }
+      } catch {}
+      if (!installDlg.open) openInstallDialog();
+      else syncInstallDialog();
+      if (lead && isAndroidPhone) {
+        lead.textContent = "ההתקנה הישירה לא נפתחה. השתמשו בשלבים למטה — בכרום «התקן אפליקציה», לא הוספה למסך הבית.";
+      }
+      if (yes) yes.textContent = "התקן אפליקציה";
     }
     document.getElementById("installYes").addEventListener("click", promptInstallApp);
     document.getElementById("loginDeviceInstall")?.addEventListener("click", promptInstallApp);
@@ -10272,7 +10306,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=233").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=234").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
