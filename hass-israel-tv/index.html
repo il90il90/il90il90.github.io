@@ -6896,17 +6896,9 @@
     }
 
     function tvZapperChannels() {
-      const seen = new Set();
-      const out = [];
-      const recents = loadRecent()
-        .map((id) => CHANNELS.find((item) => item.id === id))
-        .filter(Boolean);
-      for (const channel of [...recents, ...visibleChannels(), current].filter(Boolean)) {
-        if (seen.has(channel.id)) continue;
-        seen.add(channel.id);
-        out.push(channel);
-      }
-      return out;
+      const list = visibleChannels();
+      if (current && !list.some((item) => item.id === current.id)) return [current, ...list];
+      return list;
     }
 
     function paintTvZapper() {
@@ -6968,13 +6960,12 @@
     }
 
     function zapTvChannel(dir) {
-      const recent = loadRecent()
-        .map((id) => CHANNELS.find((item) => item.id === id))
-        .filter(Boolean);
-      const pool = recent.length > 1 ? recent : visibleChannels();
+      const pool = tvZapperChannels();
       if (!pool.length) return;
       const idx = pool.findIndex((item) => item.id === current?.id);
-      const next = pool[(idx < 0 ? 0 : idx + dir + pool.length * 10) % pool.length];
+      const rtl = getComputedStyle(document.documentElement).direction === "rtl";
+      const step = rtl ? -dir : dir;
+      const next = pool[(idx < 0 ? 0 : idx + step + pool.length * 10) % pool.length];
       if (next && next.id !== current?.id) playChannel(next);
     }
 
@@ -8486,7 +8477,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=191").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=192").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
