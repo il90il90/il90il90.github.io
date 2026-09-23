@@ -331,11 +331,18 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     }
     .theater video {
+      position: absolute;
+      inset: 0;
       display: block;
       width: 100%;
       height: 100%;
       object-fit: contain;
       background: #000;
+    }
+    .theater video.player-warm {
+      opacity: 0 !important;
+      pointer-events: none;
+      z-index: 0;
     }
     .idle, .status {
       position: absolute;
@@ -2339,6 +2346,10 @@
       object-fit: contain;
       background: #000;
     }
+    html.tv.tv-max .theater video.player-warm {
+      z-index: 41;
+      opacity: 0 !important;
+    }
     html.tv .theater.is-buffering video,
     html.tv video:not(.has-frame) {
       opacity: 0;
@@ -2751,6 +2762,7 @@
     <div class="stage" id="stage" hidden>
     <section class="theater" id="theater" tabindex="-1">
       <video id="player" playsinline webkit-playsinline autoplay x-webkit-airplay="allow" controlslist="nodownload" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="></video>
+      <video id="playerWarm" class="player-warm" muted playsinline webkit-playsinline autoplay controlslist="nodownload"></video>
       <div class="cast-banner" id="castBanner" hidden>
         <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor" aria-hidden="true"><path d="M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
         <strong>משודר בטלוויזיה</strong>
@@ -3167,7 +3179,8 @@
       "14": "ch14",
     };
 
-    const video = document.getElementById("player");
+    let video = document.getElementById("player");
+    let nextVideo = document.getElementById("playerWarm");
     const theater = document.getElementById("theater");
     const stage = document.getElementById("stage");
     const pipBtn = document.getElementById("pipBtn");
@@ -3185,6 +3198,8 @@
     const gridTitle = document.getElementById("gridTitle");
 
     let hls;
+    let nextHls;
+    let warmActive = false;
     let current;
     let currentUrl = "";
     let category = "all";
@@ -3212,6 +3227,14 @@
     video.setAttribute("webkit-playsinline", "");
     video.playsInline = true;
     video.controls = !isTv;
+    if (nextVideo) {
+      nextVideo.setAttribute("playsinline", "");
+      nextVideo.setAttribute("webkit-playsinline", "");
+      nextVideo.playsInline = true;
+      nextVideo.controls = false;
+      nextVideo.muted = true;
+      nextVideo.tabIndex = -1;
+    }
     if (isIos) {
       try { video.controlsList = "nodownload"; } catch {}
       video.disablePictureInPicture = false;
@@ -3235,6 +3258,7 @@
     if (isTv) {
       video.controls = false;
       video.tabIndex = -1;
+      if (nextVideo) nextVideo.tabIndex = -1;
       theater.tabIndex = -1;
       video.poster = "data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=";
     }
@@ -5506,12 +5530,11 @@
         hls = undefined;
       }
       try {
-        const video = document.querySelector("video");
-        if (video) {
-          video.pause();
-          video.removeAttribute("src");
-          video.load();
-        }
+        document.querySelectorAll(".theater video").forEach((el) => {
+          el.pause();
+          el.removeAttribute("src");
+          el.load();
+        });
       } catch {}
       location.hash = "";
       location.reload();
@@ -6850,6 +6873,10 @@
       paintNowTitles();
     }
 
+    function isWarming() {
+      return warmActive;
+    }
+
     function syncVideoFrame() {
       const width = video.videoWidth;
       const height = video.videoHeight;
@@ -6860,17 +6887,35 @@
       theater.style.removeProperty("--video-ar");
     }
 
-    video.addEventListener("loadedmetadata", syncVideoFrame);
-    video.addEventListener("loadeddata", syncVideoFrame);
-    video.addEventListener("resize", syncVideoFrame);
-    video.addEventListener("playing", () => {
-      video.classList.add("has-frame");
-      setStatus("");
-    });
-    video.addEventListener("waiting", () => setStatus(isTv ? "טעינה" : "נטען…", true));
-    video.addEventListener("stalled", () => setStatus(isTv ? "טעינה" : "נטען…", true));
-    video.addEventListener("emptied", () => video.classList.remove("has-frame"));
-    video.addEventListener("loadstart", () => video.classList.remove("has-frame"));
+    function bindPlayerSurface(el) {
+      if (!el) return;
+      el.addEventListener("loadedmetadata", () => { if (el === video) syncVideoFrame(); });
+      el.addEventListener("loadeddata", () => { if (el === video) syncVideoFrame(); });
+      el.addEventListener("resize", () => { if (el === video) syncVideoFrame(); });
+      el.addEventListener("playing", () => {
+        if (el !== video) return;
+        el.classList.add("has-frame");
+        setStatus("");
+      });
+      el.addEventListener("waiting", () => {
+        if (el !== video || isWarming()) return;
+        setStatus(isTv ? "טעינה" : "נטען…", true);
+      });
+      el.addEventListener("stalled", () => {
+        if (el !== video || isWarming()) return;
+        setStatus(isTv ? "טעינה" : "נטען…", true);
+      });
+      el.addEventListener("emptied", () => {
+        if (el !== video) return;
+        el.classList.remove("has-frame");
+      });
+      el.addEventListener("loadstart", () => {
+        if (el !== video || isWarming()) return;
+        el.classList.remove("has-frame");
+      });
+    }
+    bindPlayerSurface(video);
+    bindPlayerSurface(nextVideo);
 
     function primePlayback() {
       video.autoplay = true;
@@ -6909,6 +6954,100 @@
       });
     }
 
+    function hlsPlayerOptions() {
+      return {
+        enableWorker: true,
+        lowLatencyMode: false,
+        capLevelToPlayerSize: true,
+        maxBufferLength: isTv ? 12 : 30,
+        maxMaxBufferLength: isTv ? 24 : 60,
+        backBufferLength: isTv ? 8 : 30,
+        startLevel: isTv ? 0 : -1,
+      };
+    }
+
+    function canWarmSwap() {
+      return Boolean(
+        isTv
+        && nextVideo
+        && video.classList.contains("has-frame")
+        && video.readyState >= 2
+        && !video.paused
+        && !isPipOpen()
+        && !getCastSession()
+      );
+    }
+
+    function stopWarmPlayback() {
+      warmActive = false;
+      if (nextHls) {
+        try { nextHls.destroy(); } catch {}
+        nextHls = undefined;
+      }
+      if (!nextVideo) return;
+      try { nextVideo.pause(); } catch {}
+      nextVideo.removeAttribute("src");
+      try { nextVideo.load(); } catch {}
+      nextVideo.classList.remove("has-frame");
+      nextVideo.classList.add("player-warm");
+      nextVideo.muted = true;
+    }
+
+    function waitWarmReady(el, requestId, timeoutMs = 12000) {
+      return new Promise((resolve) => {
+        let done = false;
+        const finish = (ok) => {
+          if (done) return;
+          done = true;
+          el.removeEventListener("playing", onReady);
+          el.removeEventListener("canplay", onReady);
+          el.removeEventListener("loadeddata", onReady);
+          el.removeEventListener("warmfail", onFail);
+          clearTimeout(timer);
+          resolve(ok);
+        };
+        const onReady = () => {
+          if (requestId !== playSeq) return finish(false);
+          if (el.readyState >= 2 && el.videoWidth > 0) finish(true);
+        };
+        const onFail = () => finish(false);
+        const timer = setTimeout(() => finish(false), timeoutMs);
+        el.addEventListener("playing", onReady);
+        el.addEventListener("canplay", onReady);
+        el.addEventListener("loadeddata", onReady);
+        el.addEventListener("warmfail", onFail);
+        onReady();
+      });
+    }
+
+    function promoteWarmVideo() {
+      if (!nextVideo) return;
+      const outgoing = video;
+      const incoming = nextVideo;
+      outgoing.muted = true;
+      incoming.classList.add("has-frame");
+      incoming.classList.remove("player-warm");
+      outgoing.classList.add("player-warm");
+      outgoing.classList.remove("has-frame");
+      if (hls) {
+        try { hls.destroy(); } catch {}
+        hls = undefined;
+      }
+      hls = nextHls;
+      nextHls = undefined;
+      video = incoming;
+      nextVideo = outgoing;
+      warmActive = false;
+      incoming.muted = false;
+      try { outgoing.pause(); } catch {}
+      outgoing.removeAttribute("src");
+      try { outgoing.load(); } catch {}
+      outgoing.muted = true;
+      syncVideoFrame();
+      setStatus("");
+      startPlayback();
+    }
+
     async function attachHls(url, requestId = playSeq) {
       await waitForHls();
       if (requestId !== playSeq) return;
@@ -6926,15 +7065,7 @@
         return startPlayback();
       }
       if (window.Hls?.isSupported()) {
-        hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: false,
-          capLevelToPlayerSize: true,
-          maxBufferLength: isTv ? 12 : 30,
-          maxMaxBufferLength: isTv ? 24 : 60,
-          backBufferLength: isTv ? 8 : 30,
-          startLevel: isTv ? 0 : -1,
-        });
+        hls = new Hls(hlsPlayerOptions());
         hls.loadSource(url);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
@@ -6951,6 +7082,59 @@
         return;
       }
       setStatus("השידור לא נטען. נסו שוב עוד רגע.");
+    }
+
+    async function attachHlsWarm(url, requestId = playSeq) {
+      stopWarmPlayback();
+      warmActive = true;
+      await waitForHls();
+      if (requestId !== playSeq) {
+        stopWarmPlayback();
+        return;
+      }
+      const target = nextVideo;
+      if (!target) {
+        warmActive = false;
+        return attachHls(url, requestId);
+      }
+      target.autoplay = true;
+      target.playsInline = true;
+      target.muted = true;
+      const ready = waitWarmReady(target, requestId);
+      const useNative = (isIos && target.canPlayType("application/vnd.apple.mpegurl"))
+        || (target.canPlayType("application/vnd.apple.mpegurl") && !window.Hls?.isSupported());
+      if (useNative) {
+        target.src = url;
+        target.play().catch(() => {});
+      } else if (window.Hls?.isSupported()) {
+        nextHls = new Hls(hlsPlayerOptions());
+        nextHls.loadSource(url);
+        nextHls.attachMedia(target);
+        nextHls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (requestId !== playSeq) return;
+          if (isTv && nextHls?.autoLevelEnabled !== false) {
+            try { nextHls.nextLevel = -1; } catch {}
+          }
+          target.play().catch(() => {});
+        });
+        nextHls.on(Hls.Events.ERROR, (_event, data) => {
+          if (requestId !== playSeq || !data?.fatal) return;
+          target.dispatchEvent(new Event("warmfail"));
+        });
+      } else {
+        warmActive = false;
+        return attachHls(url, requestId);
+      }
+      const ok = await ready;
+      if (requestId !== playSeq) return;
+      if (ok && target.videoWidth > 0 && target.readyState >= 2) {
+        promoteWarmVideo();
+        return;
+      }
+      stopWarmPlayback();
+      stopLocalPlayback();
+      setStatus("", true);
+      await attachHls(url, requestId);
     }
 
     function setNowProgram(channel) {
@@ -7280,6 +7464,7 @@
 
     function stopLocalPlayback() {
       stopNativeRtsp();
+      stopWarmPlayback();
       if (hls) {
         hls.destroy();
         hls = undefined;
@@ -7499,14 +7684,17 @@
       const picked = CHANNELS.find((item) => item.id === channel.id) || channel;
       const requestId = ++playSeq;
       const fromRecent = isTv && (recentEl.contains(document.activeElement) || recentEl.contains(tvFocus));
-      stopLocalPlayback();
+      const keepPicture = canWarmSwap();
+      if (keepPicture) stopWarmPlayback();
+      else stopLocalPlayback();
       current = picked;
       lastWatchAt = Date.now();
       saveRecent(picked.id);
       showStage(true);
       setNowLogo(picked);
       setMediaSession(picked);
-      setStatus("", true);
+      if (keepPicture) setStatus("");
+      else setStatus("", true);
       history.replaceState(history.state, "", `#${picked.id}`);
       paintRecent({ keep: true });
       syncActive();
@@ -7541,11 +7729,14 @@
           holdTvFocus();
           return;
         }
-        await attachHls(currentUrl, requestId);
+        if (keepPicture) await attachHlsWarm(currentUrl, requestId);
+        else await attachHls(currentUrl, requestId);
         holdTvFocus();
       } catch (error) {
         if (requestId !== playSeq) return;
-        setStatus(picked.path ? "לא ניתן לחתום את הקישור בדפדפן הזה." : "השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.");
+        const message = picked.path ? "לא ניתן לחתום את הקישור בדפדפן הזה." : "השידור לא נטען. נסו ערוץ אחר או העתיקו את הקישור ל-VLC.";
+        if (keepPicture && video.classList.contains("has-frame")) showToast(message);
+        else setStatus(message);
       }
     }
 
@@ -7578,24 +7769,34 @@
         showToast("לא ניתן לפתוח חלונית");
       }
     });
-    video.addEventListener("enterpictureinpicture", () => setPipMode(true));
-    video.addEventListener("leavepictureinpicture", () => {
-      setPipMode(false);
-      if (current) showStage(true);
-    });
-    video.addEventListener("webkitpresentationmodechanged", () => {
-      setPipMode(video.webkitPresentationMode === "picture-in-picture");
-    });
-
+    function bindPlayerLifecycle(el) {
+      if (!el) return;
+      el.addEventListener("enterpictureinpicture", () => {
+        if (el === video) setPipMode(true);
+      });
+      el.addEventListener("leavepictureinpicture", () => {
+        if (el !== video) return;
+        setPipMode(false);
+        if (current) showStage(true);
+      });
+      el.addEventListener("webkitpresentationmodechanged", () => {
+        if (el !== video) return;
+        setPipMode(el.webkitPresentationMode === "picture-in-picture");
+      });
+      el.addEventListener("play", () => {
+        if (el !== video) return;
+        keepPlaying = true;
+        if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing";
+      });
+      el.addEventListener("pause", () => {
+        if (el !== video) return;
+        if (!document.hidden && !isPipOpen()) keepPlaying = false;
+        if (navigator.mediaSession && !keepPlaying) navigator.mediaSession.playbackState = "paused";
+      });
+    }
     let keepPlaying = false;
-    video.addEventListener("play", () => {
-      keepPlaying = true;
-      if (navigator.mediaSession) navigator.mediaSession.playbackState = "playing";
-    });
-    video.addEventListener("pause", () => {
-      if (!document.hidden && !isPipOpen()) keepPlaying = false;
-      if (navigator.mediaSession && !keepPlaying) navigator.mediaSession.playbackState = "paused";
-    });
+    bindPlayerLifecycle(video);
+    bindPlayerLifecycle(nextVideo);
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden || !keepPlaying || !current) return;
       video.play().catch(() => {});
@@ -8771,7 +8972,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=196").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=197").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
