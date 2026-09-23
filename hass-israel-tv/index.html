@@ -1617,6 +1617,35 @@
       padding: 0 12px;
       font-size: 13px;
     }
+    .tv-brand-pick {
+      display: grid;
+      gap: 10px;
+      margin: 0 0 4px;
+    }
+    .tv-brand-pick button {
+      width: 100%;
+      min-height: 52px !important;
+      height: auto;
+      padding: 12px 14px;
+      text-align: start;
+      border-radius: 14px;
+      background: #151d2b;
+    }
+    .tv-brand-pick button strong { display: block; font-size: 16px; }
+    .tv-brand-pick button span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .tv-install-back {
+      margin: 0 0 12px !important;
+      min-height: 36px !important;
+      height: 36px;
+      padding: 0 12px;
+      background: #243044 !important;
+    }
     .pair-phone p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
     .pair-busy {
       display: grid;
@@ -3298,39 +3327,100 @@
     <h3 id="pairHelpTitle">חיבור למסך</h3>
     <p id="pairHelpLead" style="color:var(--muted);margin:0 0 12px">הטלוויזיה והטלפון הם שני מסכים שונים.</p>
     <div class="help-block" id="tvInstallGuide">
-      <h4>קודם מתקינים בטלוויזיה</h4>
-      <p>האפליקציה בטלפון לא עוברת למסך. צריך להתקין Israel TV על הטלוויזיה, ואז לחבר עם ברקוד. בחרו דרך אחת:</p>
-      <div class="tv-install-card prefer">
-        <span class="tv-install-badge">מומלץ · הכי קל</span>
-        <h5>דרך 1 · Downloader</h5>
-        <p>מתאים ל־Fire TV, Google TV ורוב הטלוויזיות עם אנדרואיד. מורידים מהטלוויזיה בלי USB ובלי מחשב.</p>
-        <ol class="pair-steps">
-          <li>בטלוויזיה פותחים את חנות האפליקציות (Amazon Appstore או Google Play).</li>
-          <li>מחפשים <b>Downloader</b> מאת AFTVnews — אייקון כתום עם חץ — ומתקינים.</li>
-          <li>פותחים את Downloader. במסך הראשון יש שדה לכתובת או לקוד.</li>
-          <li>מזינים את הקוד הזה בדיוק, ואז לוחצים על הכפתור הכתום (Go / Download):</li>
-        </ol>
-        <div class="tv-install-code-row">
-          <strong dir="ltr" id="tvDownloaderCode">99460600</strong>
-          <button type="button" id="copyDlCode">העתק</button>
-        </div>
-        <p>אפשר גם לפתוח בטלוויזיה את <a id="tvDownloaderLink" href="https://aftv.news/99460600" target="_blank" rel="noopener" dir="ltr">aftv.news/99460600</a></p>
-        <ol class="pair-steps" start="5">
-          <li>Downloader יוריד את קובץ ההתקנה של Israel TV. מאשרים הורדה.</li>
-          <li>כשמופיע «התקן» — מאשרים. אם הטלוויזיה שואלת על מקורות לא מוכרים / התקנה ממקור לא ידוע, מפעילים וממשיכים.</li>
-          <li>בסוף פותחים את <b>Israel TV</b>. במסך הכניסה יופיע ברקוד.</li>
-        </ol>
+      <h4 id="tvInstallGuideTitle">קודם בוחרים את סוג הטלוויזיה</h4>
+      <p id="tvInstallGuideIntro">האפליקציה בטלפון לא עוברת למסך לבד. בחרו את המותג — לכל טלוויזיה יש הסבר משלה.</p>
+      <div class="tv-brand-pick" id="tvInstallPicker">
+        <button type="button" data-tv-brand="android">
+          <strong>Android TV / Google TV</strong>
+          <span>Xiaomi, TCL, Sony, Shield, Chromecast, Fire TV ועוד</span>
+        </button>
+        <button type="button" data-tv-brand="samsung">
+          <strong>סמסונג</strong>
+          <span>רוב מסכי Samsung עם Tizen — בלי קובץ APK</span>
+        </button>
+        <button type="button" data-tv-brand="lg">
+          <strong>LG</strong>
+          <span>רוב מסכי LG עם webOS — בלי קובץ APK</span>
+        </button>
       </div>
-      <div class="tv-install-card">
-        <h5>דרך 2 · קובץ APK</h5>
-        <p>אם אין Downloader, או שנוח לכם עם קובץ. זה אותו התקנה כמו היום.</p>
-        <ol class="pair-steps">
-          <li>בטלפון מורידים את הקובץ: <a id="tvApkLink" href="https://github.com/il90il90/hass-israel-tv-release/releases/latest/download/israel-tv-tv.apk" download>הורדת Israel TV לטלוויזיה</a>.</li>
-          <li>מעבירים את הקובץ לטלוויזיה: דיסק און קי, Google Drive, או כבל USB.</li>
-          <li>בטלוויזיה פותחים מנהל קבצים (Files, X-plore או File Commander) ולוחצים על <b>israel-tv-tv.apk</b>.</li>
-          <li>מאשרים התקנה. אם שואלים על מקורות לא מוכרים — מאפשרים.</li>
-          <li>פותחים את Israel TV. במסך הכניסה יופיע ברקוד.</li>
-        </ol>
+      <button type="button" class="tv-install-back" id="tvInstallBack" hidden>חזרה לבחירת טלוויזיה</button>
+      <div id="tvInstallAndroid" hidden>
+        <div class="tv-install-card prefer">
+          <span class="tv-install-badge">מומלץ · הכי קל</span>
+          <h5>דרך 1 · Downloader</h5>
+          <p>מתאים ל־Fire TV, Google TV ורוב הטלוויזיות עם אנדרואיד. מורידים מהטלוויזיה בלי USB ובלי מחשב.</p>
+          <ol class="pair-steps">
+            <li>בטלוויזיה פותחים את חנות האפליקציות (Amazon Appstore או Google Play).</li>
+            <li>מחפשים <b>Downloader</b> מאת AFTVnews — אייקון כתום עם חץ — ומתקינים.</li>
+            <li>פותחים את Downloader. במסך הראשון יש שדה לכתובת או לקוד.</li>
+            <li>מזינים את הקוד הזה בדיוק, ואז לוחצים על הכפתור הכתום (Go / Download):</li>
+          </ol>
+          <div class="tv-install-code-row">
+            <strong dir="ltr" id="tvDownloaderCode">99460600</strong>
+            <button type="button" id="copyDlCode">העתק</button>
+          </div>
+          <p>אפשר גם לפתוח בטלוויזיה את <a id="tvDownloaderLink" href="https://aftv.news/99460600" target="_blank" rel="noopener" dir="ltr">aftv.news/99460600</a></p>
+          <ol class="pair-steps" start="5">
+            <li>Downloader יוריד את קובץ ההתקנה של Israel TV. מאשרים הורדה.</li>
+            <li>כשמופיע «התקן» — מאשרים. אם הטלוויזיה שואלת על מקורות לא מוכרים / התקנה ממקור לא ידוע, מפעילים וממשיכים.</li>
+            <li>בסוף פותחים את <b>Israel TV</b>. במסך הכניסה יופיע ברקוד.</li>
+          </ol>
+        </div>
+        <div class="tv-install-card">
+          <h5>דרך 2 · קובץ APK</h5>
+          <p>אם אין Downloader, או שנוח לכם עם קובץ. זה אותו התקנה כמו היום.</p>
+          <ol class="pair-steps">
+            <li>בטלפון מורידים את הקובץ: <a id="tvApkLink" href="https://github.com/il90il90/hass-israel-tv-release/releases/latest/download/israel-tv-tv.apk" download>הורדת Israel TV לטלוויזיה</a>.</li>
+            <li>מעבירים את הקובץ לטלוויזיה: דיסק און קי, Google Drive, או כבל USB.</li>
+            <li>בטלוויזיה פותחים מנהל קבצים (Files, X-plore או File Commander) ולוחצים על <b>israel-tv-tv.apk</b>.</li>
+            <li>מאשרים התקנה. אם שואלים על מקורות לא מוכרים — מאפשרים.</li>
+            <li>פותחים את Israel TV. במסך הכניסה יופיע ברקוד.</li>
+          </ol>
+        </div>
+      </div>
+      <div id="tvInstallSamsung" hidden>
+        <div class="tv-install-card prefer">
+          <span class="tv-install-badge">סמסונג</span>
+          <h5>פתיחה בדפדפן של הטלוויזיה</h5>
+          <p>ברוב מסכי סמסונג אי אפשר להתקין את קובץ ה־APK. נכנסים דרך הדפדפן המובנה, ואז מחברים מהטלפון.</p>
+          <p>אם על המסך כתוב <b>Google TV</b> או שיש חנות Play — זו בעצם Android TV. לחצו «חזרה לבחירת טלוויזיה» ובחרו Android TV.</p>
+          <ol class="pair-steps">
+            <li>בשלט לוחצים <b>Home</b> ופותחים את אפליקציית <b>Internet</b> (דפדפן, אייקון גלובוס).</li>
+            <li>לוחצים על שורת הכתובת למעלה ומקלידים את הכתובת הבאה בדיוק:</li>
+          </ol>
+          <div class="tv-install-code-row">
+            <strong dir="ltr" id="tvWebUrlSamsung" style="font-size:13px;letter-spacing:0">il90il90.github.io/hass-israel-tv/?tv=1</strong>
+            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/hass-israel-tv/?tv=1">העתק</button>
+          </div>
+          <ol class="pair-steps" start="3">
+            <li>לוחצים כניסה / Go. נפתח נגן Israel TV במסך מלא לטלוויזיה.</li>
+            <li>כדי שלא תצטרכו להקליד שוב: בתפריט הדפדפן בוחרים <b>הוספה למסך הבית</b> / Add to Home.</li>
+            <li>בפעם הבאה פותחים את האייקון ממסך הבית של סמסונג, לא מהדפדפן.</li>
+            <li>במסך הכניסה יופיע ברקוד. חוזרים לטלפון, להגדרות, וסורקים אותו.</li>
+          </ol>
+        </div>
+      </div>
+      <div id="tvInstallLg" hidden>
+        <div class="tv-install-card prefer">
+          <span class="tv-install-badge">LG</span>
+          <h5>פתיחה בדפדפן של הטלוויזיה</h5>
+          <p>ברוב מסכי LG אי אפשר להתקין את קובץ ה־APK. נכנסים דרך הדפדפן של webOS, ואז מחברים מהטלפון.</p>
+          <p>אם זו LG עם Google TV או חנות Play — לחצו «חזרה» ובחרו Android TV.</p>
+          <ol class="pair-steps">
+            <li>בשלט לוחצים <b>Home</b> ופותחים את אפליקציית <b>דפדפן</b> / Web Browser.</li>
+            <li>בשורת הכתובת מקלידים:</li>
+          </ol>
+          <div class="tv-install-code-row">
+            <strong dir="ltr" id="tvWebUrlLg" style="font-size:13px;letter-spacing:0">il90il90.github.io/hass-israel-tv/?tv=1</strong>
+            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/hass-israel-tv/?tv=1">העתק</button>
+          </div>
+          <ol class="pair-steps" start="3">
+            <li>לוחצים כניסה. נפתח נגן Israel TV המותאם לשלט.</li>
+            <li>בתפריט הדפדפן (שלוש נקודות או גלגלת) בוחרים <b>Add to Home</b> / הוספה למסך הבית.</li>
+            <li>בפעם הבאה פותחים את Israel TV ממסך הבית של LG.</li>
+            <li>במסך הכניסה יופיע ברקוד. חוזרים לטלפון, להגדרות, וסורקים אותו.</li>
+          </ol>
+        </div>
       </div>
     </div>
     <div class="help-block" id="pairHelpTv">
@@ -5412,7 +5502,41 @@
     }
     document.getElementById("scanBtn").addEventListener("click", () => openScan("login"));
     document.getElementById("pairScanBtn").addEventListener("click", () => openScan("pair"));
+    let pairHelpInstallMode = false;
+    function showTvInstallBrand(brand = "") {
+      const picker = document.getElementById("tvInstallPicker");
+      const back = document.getElementById("tvInstallBack");
+      const phone = document.getElementById("pairHelpPhone");
+      const title = document.getElementById("tvInstallGuideTitle");
+      const intro = document.getElementById("tvInstallGuideIntro");
+      const panels = {
+        android: document.getElementById("tvInstallAndroid"),
+        samsung: document.getElementById("tvInstallSamsung"),
+        lg: document.getElementById("tvInstallLg"),
+      };
+      if (picker) picker.hidden = Boolean(brand);
+      if (back) back.hidden = !brand;
+      for (const [id, el] of Object.entries(panels)) {
+        if (el) el.hidden = id !== brand;
+      }
+      if (phone) phone.hidden = pairHelpInstallMode && !brand;
+      if (title) {
+        title.textContent = brand === "android"
+          ? "התקנה ב־Android TV"
+          : brand === "samsung"
+            ? "התקנה בסמסונג"
+            : brand === "lg"
+              ? "התקנה ב־LG"
+              : "קודם בוחרים את סוג הטלוויזיה";
+      }
+      if (intro) {
+        intro.textContent = brand
+          ? "אחרי ההתקנה בטלוויזיה — סורקים את הברקוד מהטלפון."
+          : "האפליקציה בטלפון לא עוברת למסך לבד. בחרו את המותג — לכל טלוויזיה יש הסבר משלה.";
+      }
+    }
     function openPairHelp(focusInstall = false) {
+      pairHelpInstallMode = Boolean(focusInstall);
       const title = document.getElementById("pairHelpPhoneTitle");
       const lead = document.getElementById("pairHelpLead");
       const head = document.getElementById("pairHelpTitle");
@@ -5420,25 +5544,40 @@
       if (head) head.textContent = focusInstall ? "התקנה בטלוויזיה" : "חיבור למסך";
       if (lead) {
         lead.textContent = focusInstall
-          ? "שתי דרכים להתקין את האפליקציה על הטלוויזיה. אחר כך מחברים עם ברקוד מהטלפון."
+          ? "בחרו את סוג הטלוויזיה. לכל מותג יש הסבר משלו, ואחר כך מחברים עם ברקוד."
           : isIos
             ? "הטלוויזיה היא אפליקציה נפרדת. באייפון רק סורקים את הברקוד — בלי סימנייה ובלי הוספה למסך הבית."
             : isAndroid
               ? "הטלוויזיה היא אפליקציה נפרדת. באנדרואיד רק סורקים את הברקוד — בלי התקנת האתר למסך הבית."
               : "הטלוויזיה והטלפון הם שני מסכים שונים.";
       }
+      showTvInstallBrand("");
       const dlg = document.getElementById("pairHelpDlg");
       openSheet(dlg);
       if (focusInstall) {
         requestAnimationFrame(() => document.getElementById("tvInstallGuide")?.scrollIntoView({ block: "start" }));
       }
     }
+    document.getElementById("tvInstallPicker")?.addEventListener("click", (event) => {
+      const brand = event.target.closest("[data-tv-brand]")?.dataset.tvBrand;
+      if (!brand) return;
+      showTvInstallBrand(brand);
+      document.getElementById("tvInstallGuide")?.scrollIntoView({ block: "start" });
+    });
+    document.getElementById("tvInstallBack")?.addEventListener("click", () => showTvInstallBrand(""));
     document.getElementById("tvInstallBtn").addEventListener("click", () => openPairHelp(true));
     document.getElementById("pairHelpBtn").addEventListener("click", () => openPairHelp(false));
     document.getElementById("copyDlCode").addEventListener("click", async () => {
       const code = document.getElementById("tvDownloaderCode")?.textContent?.trim() || "99460600";
       try { await navigator.clipboard.writeText(code); } catch {}
       showToast("הקוד הועתק · מזינים אותו ב־Downloader בטלוויזיה");
+    });
+    document.querySelectorAll(".copy-tv-web").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const url = button.dataset.url || "https://il90il90.github.io/hass-israel-tv/?tv=1";
+        try { await navigator.clipboard.writeText(url); } catch {}
+        showToast("הכתובת הועתקה · מקלידים אותה בדפדפן של הטלוויזיה");
+      });
     });
     document.getElementById("pairHelpClose").addEventListener("click", () => {
       document.getElementById("pairHelpDlg").close();
@@ -9686,7 +9825,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=215").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=216").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
