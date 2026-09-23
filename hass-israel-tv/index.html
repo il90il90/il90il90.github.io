@@ -2495,7 +2495,9 @@
       background: #0b1018;
       border-radius: 10px;
     }
-    html.tv .tv-warm-logo[hidden] { display: none !important; }
+    html.tv .tv-warm-logo[hidden],
+    html.tv .tv-warm-logo:not([src]),
+    html.tv .tv-warm-logo[src=""] { display: none !important; }
     html.tv.tv-max .tv-warm-logo {
       width: 52px;
       height: 52px;
@@ -7470,14 +7472,26 @@
       if (line) line.textContent = name ? `טוען את ${name}` : "טוען את הערוץ";
       const src = logoSrc(channel.logo);
       if (logo) {
+        logo.onload = null;
+        logo.onerror = null;
+        logo.removeAttribute("src");
+        logo.hidden = true;
         if (src) {
-          logo.decoding = "sync";
-          logo.src = src;
           logo.alt = name;
-          logo.hidden = false;
-        } else {
-          logo.removeAttribute("src");
-          logo.hidden = true;
+          logo.decoding = "sync";
+          logo.onload = () => {
+            if (logo.naturalWidth > 0) logo.hidden = false;
+            else {
+              logo.removeAttribute("src");
+              logo.hidden = true;
+            }
+          };
+          logo.onerror = () => {
+            logo.removeAttribute("src");
+            logo.hidden = true;
+          };
+          logo.src = src;
+          if (logo.complete && logo.naturalWidth > 0) logo.hidden = false;
         }
       }
       if (hint.parentElement !== document.body) document.body.append(hint);
@@ -9569,7 +9583,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=211").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=212").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
