@@ -1564,6 +1564,59 @@
     }
     .pair-steps li { margin: 0 0 10px; }
     .pair-steps a { color: var(--accent-2); font-weight: 700; }
+    html.tv #tvInstallGuide { display: none !important; }
+    html:not(.tv) #pairHelpTv { display: none !important; }
+    #tvInstallGuide > p { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .tv-install-card {
+      margin: 0 0 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--bg-soft);
+    }
+    .tv-install-card.prefer { border-color: #3d8bff; }
+    .tv-install-badge {
+      display: inline-block;
+      margin: 0 0 8px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(61, 139, 255, 0.18);
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .tv-install-card h5 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .tv-install-card p { margin: 0 0 10px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .tv-install-card ol { margin: 0 0 10px; }
+    .tv-install-code-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #0b1018;
+    }
+    .tv-install-code-row strong {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      direction: ltr;
+      text-align: center;
+    }
+    .tv-install-code-row button {
+      flex: 0 0 auto;
+      min-height: 36px !important;
+      height: 36px;
+      padding: 0 12px;
+      font-size: 13px;
+    }
     .pair-phone p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
     .pair-busy {
       display: grid;
@@ -3037,6 +3090,7 @@
             <button type="button" class="login-qr-icon" id="pairScanBtn" title="סריקת ברקוד" aria-label="סריקת ברקוד">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2"/><path d="M16 4h2a2 2 0 0 1 2 2v2"/><path d="M20 16v2a2 2 0 0 1-2 2h-2"/><path d="M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 8h8v8H8z"/></svg>
             </button>
+            <button type="button" class="pair-help-btn" id="tvInstallBtn">התקנה בטלוויזיה</button>
             <button type="button" class="pair-help-btn" id="pairHelpBtn">הסבר</button>
           </div>
         </div>
@@ -3241,19 +3295,55 @@
     </button>
   </dialog>
   <dialog class="sheet" id="pairHelpDlg">
-    <h3>חיבור למסך</h3>
+    <h3 id="pairHelpTitle">חיבור למסך</h3>
     <p id="pairHelpLead" style="color:var(--muted);margin:0 0 12px">הטלוויזיה והטלפון הם שני מסכים שונים.</p>
+    <div class="help-block" id="tvInstallGuide">
+      <h4>קודם מתקינים בטלוויזיה</h4>
+      <p>האפליקציה בטלפון לא עוברת למסך. צריך להתקין Israel TV על הטלוויזיה, ואז לחבר עם ברקוד. בחרו דרך אחת:</p>
+      <div class="tv-install-card prefer">
+        <span class="tv-install-badge">מומלץ · הכי קל</span>
+        <h5>דרך 1 · Downloader</h5>
+        <p>מתאים ל־Fire TV, Google TV ורוב הטלוויזיות עם אנדרואיד. מורידים מהטלוויזיה בלי USB ובלי מחשב.</p>
+        <ol class="pair-steps">
+          <li>בטלוויזיה פותחים את חנות האפליקציות (Amazon Appstore או Google Play).</li>
+          <li>מחפשים <b>Downloader</b> מאת AFTVnews — אייקון כתום עם חץ — ומתקינים.</li>
+          <li>פותחים את Downloader. במסך הראשון יש שדה לכתובת או לקוד.</li>
+          <li>מזינים את הקוד הזה בדיוק, ואז לוחצים על הכפתור הכתום (Go / Download):</li>
+        </ol>
+        <div class="tv-install-code-row">
+          <strong dir="ltr" id="tvDownloaderCode">99460600</strong>
+          <button type="button" id="copyDlCode">העתק</button>
+        </div>
+        <p>אפשר גם לפתוח בטלוויזיה את <a id="tvDownloaderLink" href="https://aftv.news/99460600" target="_blank" rel="noopener" dir="ltr">aftv.news/99460600</a></p>
+        <ol class="pair-steps" start="5">
+          <li>Downloader יוריד את קובץ ההתקנה של Israel TV. מאשרים הורדה.</li>
+          <li>כשמופיע «התקן» — מאשרים. אם הטלוויזיה שואלת על מקורות לא מוכרים / התקנה ממקור לא ידוע, מפעילים וממשיכים.</li>
+          <li>בסוף פותחים את <b>Israel TV</b>. במסך הכניסה יופיע ברקוד.</li>
+        </ol>
+      </div>
+      <div class="tv-install-card">
+        <h5>דרך 2 · קובץ APK</h5>
+        <p>אם אין Downloader, או שנוח לכם עם קובץ. זה אותו התקנה כמו היום.</p>
+        <ol class="pair-steps">
+          <li>בטלפון מורידים את הקובץ: <a id="tvApkLink" href="https://github.com/il90il90/hass-israel-tv-release/releases/latest/download/israel-tv-tv.apk" download>הורדת Israel TV לטלוויזיה</a>.</li>
+          <li>מעבירים את הקובץ לטלוויזיה: דיסק און קי, Google Drive, או כבל USB.</li>
+          <li>בטלוויזיה פותחים מנהל קבצים (Files, X-plore או File Commander) ולוחצים על <b>israel-tv-tv.apk</b>.</li>
+          <li>מאשרים התקנה. אם שואלים על מקורות לא מוכרים — מאפשרים.</li>
+          <li>פותחים את Israel TV. במסך הכניסה יופיע ברקוד.</li>
+        </ol>
+      </div>
+    </div>
     <div class="help-block" id="pairHelpTv">
       <h4>בטלוויזיה</h4>
       <ol class="pair-steps">
-        <li>מתקינים את אפליקציית Israel TV לטלוויזיה מ־<a href="https://github.com/il90il90/hass-israel-tv-release/releases/latest/download/israel-tv-tv.apk" download>הורדה לטלוויזיה</a> — לא סימנייה ולא התקנת דפדפן.</li>
+        <li>מתקינים את אפליקציית Israel TV לטלוויזיה — Downloader עם הקוד <b dir="ltr">99460600</b>, או <a href="https://github.com/il90il90/hass-israel-tv-release/releases/latest/download/israel-tv-tv.apk" download>הורדה כקובץ</a>. לא סימנייה ולא דפדפן.</li>
         <li>פותחים את האפליקציה בטלוויזיה. במסך הכניסה מופיע ברקוד.</li>
       </ol>
     </div>
     <div class="help-block" id="pairHelpPhone">
       <h4 id="pairHelpPhoneTitle">בטלפון</h4>
       <ol class="pair-steps">
-        <li>כאן בהגדרות, סורקים את הברקוד שעל הטלוויזיה או מזינים את הקוד.</li>
+        <li>אחרי שהאפליקציה פתוחה בטלוויזיה, כאן בהגדרות סורקים את הברקוד או מזינים את הקוד.</li>
         <li>הטלוויזיה נכנסת לאותו רישיון כמו בטלפון, כולל הערוצים שלכם.</li>
         <li>לחיבור מחדש או למסך נוסף — שוב סריקה של הברקוד שעל המסך.</li>
       </ol>
@@ -5322,18 +5412,33 @@
     }
     document.getElementById("scanBtn").addEventListener("click", () => openScan("login"));
     document.getElementById("pairScanBtn").addEventListener("click", () => openScan("pair"));
-    document.getElementById("pairHelpBtn").addEventListener("click", () => {
+    function openPairHelp(focusInstall = false) {
       const title = document.getElementById("pairHelpPhoneTitle");
       const lead = document.getElementById("pairHelpLead");
+      const head = document.getElementById("pairHelpTitle");
       if (title) title.textContent = isIos ? "באייפון" : isAndroid ? "באנדרואיד" : "בטלפון";
+      if (head) head.textContent = focusInstall ? "התקנה בטלוויזיה" : "חיבור למסך";
       if (lead) {
-        lead.textContent = isIos
-          ? "הטלוויזיה היא אפליקציה נפרדת. באייפון רק סורקים את הברקוד — בלי סימנייה ובלי הוספה למסך הבית."
-          : isAndroid
-            ? "הטלוויזיה היא אפליקציה נפרדת. באנדרואיד רק סורקים את הברקוד — בלי התקנת האתר למסך הבית."
-            : "הטלוויזיה והטלפון הם שני מסכים שונים.";
+        lead.textContent = focusInstall
+          ? "שתי דרכים להתקין את האפליקציה על הטלוויזיה. אחר כך מחברים עם ברקוד מהטלפון."
+          : isIos
+            ? "הטלוויזיה היא אפליקציה נפרדת. באייפון רק סורקים את הברקוד — בלי סימנייה ובלי הוספה למסך הבית."
+            : isAndroid
+              ? "הטלוויזיה היא אפליקציה נפרדת. באנדרואיד רק סורקים את הברקוד — בלי התקנת האתר למסך הבית."
+              : "הטלוויזיה והטלפון הם שני מסכים שונים.";
       }
-      openSheet(document.getElementById("pairHelpDlg"));
+      const dlg = document.getElementById("pairHelpDlg");
+      openSheet(dlg);
+      if (focusInstall) {
+        requestAnimationFrame(() => document.getElementById("tvInstallGuide")?.scrollIntoView({ block: "start" }));
+      }
+    }
+    document.getElementById("tvInstallBtn").addEventListener("click", () => openPairHelp(true));
+    document.getElementById("pairHelpBtn").addEventListener("click", () => openPairHelp(false));
+    document.getElementById("copyDlCode").addEventListener("click", async () => {
+      const code = document.getElementById("tvDownloaderCode")?.textContent?.trim() || "99460600";
+      try { await navigator.clipboard.writeText(code); } catch {}
+      showToast("הקוד הועתק · מזינים אותו ב־Downloader בטלוויזיה");
     });
     document.getElementById("pairHelpClose").addEventListener("click", () => {
       document.getElementById("pairHelpDlg").close();
@@ -9581,7 +9686,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=214").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=215").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
