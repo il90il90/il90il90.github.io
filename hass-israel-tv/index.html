@@ -18,6 +18,21 @@
   <link rel="apple-touch-icon-precomposed" href="apple-touch-icon-precomposed.png" />
   <link rel="manifest" href="manifest.webmanifest?v=7" />
   <link rel="icon" href="favicon.png?v=5" />
+  <style>
+    #bootSplash {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483646;
+      display: grid;
+      place-items: center;
+      background: #070b12;
+    }
+    html.tv .boot-mark {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  </style>
   <script>
     try {
       const tvBoot = new URLSearchParams(location.search).get("tv") === "1"
@@ -2466,8 +2481,9 @@
       background: #070b12;
       transition: opacity 0.45s ease;
     }
-    #bootSplash[hidden],
-    html[data-booted="1"] #bootSplash { display: none !important; }
+    #bootSplash[hidden] { display: none !important; }
+    html:not(.tv)[data-booted="1"] #bootSplash { display: none !important; }
+    html.tv .boot-mark { animation: none !important; opacity: 1 !important; transform: none !important; }
     #bootSplash.out { opacity: 0; pointer-events: none; }
     .boot-box {
       display: grid;
@@ -2525,7 +2541,7 @@
   </style>
 </head>
 <body>
-  <div id="bootSplash" aria-hidden="true">
+  <div id="bootSplash" aria-hidden="true" style="position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;background:#070b12">
     <div class="boot-box">
       <div class="boot-mark">
         <img src="icon-base.png?v=5" alt="" />
@@ -2544,10 +2560,11 @@
       if (!el || document.documentElement.dataset.booted === "1") return;
       const isTv = document.documentElement.classList.contains("tv");
       window.__dismissBootSplash = function dismissBootSplash() {
-        if (document.documentElement.dataset.booted === "1") return;
+        if (el.hidden) return;
         document.documentElement.dataset.booted = "1";
         el.classList.add("out");
-        window.setTimeout(() => { el.hidden = true; }, 450);
+        el.hidden = true;
+        try { window.IsraelTV && window.IsraelTV.hideBoot && window.IsraelTV.hideBoot(); } catch {}
       };
       if (isTv) {
         window.setTimeout(() => window.__dismissBootSplash(), 10000);
@@ -7394,6 +7411,7 @@
     function dismissBootSplash() {
       if (typeof window.__dismissBootSplash === "function") window.__dismissBootSplash();
       else document.documentElement.dataset.booted = "1";
+      try { window.IsraelTV && window.IsraelTV.hideBoot && window.IsraelTV.hideBoot(); } catch {}
     }
 
     function bootPlayer() {
@@ -8507,7 +8525,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=193").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=194").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
