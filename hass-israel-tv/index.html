@@ -50,10 +50,12 @@
     } catch {}
     (function detectTv() {
       const params = new URLSearchParams(location.search);
-      if (params.get("tv") === "1") localStorage.setItem("israel-tv-tv", "1");
+      const tvHost = /^tv\./i.test(location.hostname || "");
+      if (tvHost || params.get("tv") === "1") localStorage.setItem("israel-tv-tv", "1");
       if (params.get("tv") === "0") localStorage.removeItem("israel-tv-tv");
       const ua = navigator.userAgent || "";
-      const tv = params.get("tv") === "1"
+      const tv = tvHost
+        || params.get("tv") === "1"
         || localStorage.getItem("israel-tv-tv") === "1"
         || /IsraelTV-AndroidTV/i.test(ua)
         || (/Android/i.test(ua) && /(Android TV|GoogleTV|SDK_GOOGLE_ATV|AOSP on ATV|BRAVIA|AFT[A-Z0-9]|SHIELD|MIBOX|BeyondTV|SmartTV|Nexus Player|ADT-|AndroidTV)/i.test(ua));
@@ -3417,8 +3419,8 @@
             <li>לוחצים על שורת הכתובת למעלה ומקלידים את הכתובת הבאה בדיוק:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlSamsung">il90il90.github.io/tv</strong>
-            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/tv">העתק</button>
+            <strong dir="ltr" id="tvWebUrlSamsung">tv.israeltv.net</strong>
+            <button type="button" class="copy-tv-web" data-url="https://tv.israeltv.net">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
             <li>לוחצים כניסה / Go. נפתח נגן Israel TV במסך מלא לטלוויזיה.</li>
@@ -3439,8 +3441,8 @@
             <li>בשורת הכתובת מקלידים:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlLg">il90il90.github.io/tv</strong>
-            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/tv">העתק</button>
+            <strong dir="ltr" id="tvWebUrlLg">tv.israeltv.net</strong>
+            <button type="button" class="copy-tv-web" data-url="https://tv.israeltv.net">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
             <li>לוחצים כניסה. נפתח נגן Israel TV המותאם לשלט.</li>
@@ -3511,7 +3513,7 @@
   <script src="./jsqr.min.js"></script>
   <script type="module">
     import { CHANNELS as BASE_CHANNELS, CATEGORY_LABELS as BASE_LABELS } from "./channels.js?v=96";
-    import { PWF_CHECK_URL } from "./pwf.js?v=16";
+    import { PWF_CHECK_URL } from "./pwf.js?v=17";
 
     const AUTH_KEY = "israel-tv-auth";
     const HWID_KEY = "israel-tv-hwid";
@@ -5644,7 +5646,7 @@
     });
     document.querySelectorAll(".copy-tv-web").forEach((button) => {
       button.addEventListener("click", async () => {
-        const url = button.dataset.url || "https://il90il90.github.io/tv";
+        const url = button.dataset.url || "https://tv.israeltv.net";
         try { await navigator.clipboard.writeText(url); } catch {}
         showToast("הכתובת הועתקה · מקלידים אותה בדפדפן של הטלוויזיה");
       });
@@ -9911,7 +9913,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=220").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=221").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
