@@ -1331,10 +1331,11 @@
     #keysDlg .key-stepper button:disabled { opacity: 0.4; }
     .key-fields {
       display: grid;
-      grid-template-columns: 132px minmax(0, 1fr) 86px;
+      grid-template-columns: minmax(0, 1fr) 86px;
       gap: 8px;
       align-items: stretch;
     }
+    .key-fields .key-expiry { grid-column: 1 / -1; }
     #deviceDlg {
       width: min(620px, calc(100% - 12px));
       max-height: min(92vh, 860px);
@@ -3872,7 +3873,7 @@
       stepper.append(minus, slotsValue, plus);
       slotsField.append(slotsLabel, stepper);
       const expiryField = document.createElement("div");
-      expiryField.className = "key-field";
+      expiryField.className = "key-field key-expiry";
       const expiryLabel = document.createElement("label");
       expiryLabel.textContent = "תפוגה";
       const expiryInput = document.createElement("input");
@@ -3891,7 +3892,7 @@
         }
         runKeyAction(key, "update", null, slots, nextDate);
       });
-      fields.append(slotsField, expiryField, save);
+      fields.append(slotsField, save, expiryField);
       const actions = document.createElement("div");
       actions.className = "key-actions";
       const banned = key.status === "banned";
@@ -9323,7 +9324,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=202").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=203").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
