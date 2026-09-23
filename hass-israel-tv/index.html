@@ -34,21 +34,8 @@
     }
   </style>
   <script>
-    try {
-      const tvBoot = new URLSearchParams(location.search).get("tv") === "1"
-        || localStorage.getItem("israel-tv-tv") === "1"
-        || /IsraelTV-AndroidTV/i.test(navigator.userAgent || "");
-      if (!tvBoot && sessionStorage.getItem("israel-tv-boot-2")) document.documentElement.dataset.booted = "1";
-    } catch {}
-    try {
-      const session = JSON.parse(localStorage.getItem("israel-tv-auth") || "null");
-      const end = session && (session.licenseExp || session.exp);
-      if (session?.role && end && end > Date.now() / 1000) {
-        document.documentElement.dataset.session = "1";
-        document.documentElement.dataset.admin = session.role === "admin" ? "1" : "0";
-      }
-    } catch {}
-    (function detectTv() {
+    (function () {
+      const ua = navigator.userAgent || "";
       const params = new URLSearchParams(location.search);
       const tvHost = /^tv\./i.test(location.hostname || "");
       const pair = String(params.get("pair") || "").trim();
@@ -56,17 +43,56 @@
         location.replace("https://israeltv.net/?pair=" + encodeURIComponent(pair));
         return;
       }
-      if (tvHost || params.get("tv") === "1") localStorage.setItem("israel-tv-tv", "1");
-      if (params.get("tv") === "0") localStorage.removeItem("israel-tv-tv");
-      const ua = navigator.userAgent || "";
-      const tv = tvHost
-        || params.get("tv") === "1"
-        || localStorage.getItem("israel-tv-tv") === "1"
-        || /IsraelTV-AndroidTV/i.test(ua)
-        || (/Android/i.test(ua) && /(Android TV|GoogleTV|SDK_GOOGLE_ATV|AOSP on ATV|BRAVIA|AFT[A-Z0-9]|SHIELD|MIBOX|BeyondTV|SmartTV|Nexus Player|ADT-|AndroidTV)/i.test(ua));
-      if (tv) {
-        document.documentElement.classList.add("tv");
+      const tvUa = /IsraelTV-AndroidTV/i.test(ua)
+        || /Web0S|WebOS|NETCAST|\bLG Browser\b/i.test(ua)
+        || /SMART-TV|SmartTV|SMART_TV|HbbTV|VIDAA|NETTV/i.test(ua)
+        || (/Tizen/i.test(ua) && /TV|SMART/i.test(ua))
+        || /BRAVIA|SHIELD|MIBOX|BeyondTV|Nexus Player|ADT-|AOSP on ATV|SDK_GOOGLE_ATV/i.test(ua)
+        || /Android TV|GoogleTV|AndroidTV|Google TV/i.test(ua)
+        || /AFT[A-Z0-9]/i.test(ua)
+        || /\bCrKey\b/i.test(ua)
+        || /AppleTV/i.test(ua);
+      const ios = /iPad|iPhone|iPod/i.test(ua)
+        || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const android = /Android/i.test(ua) && !tvUa;
+      const phone = (ios || android) && !tvUa;
+      if (params.get("tv") === "0") {
+        try { localStorage.removeItem("israel-tv-tv"); } catch {}
       }
+      let forced = false;
+      if (!phone) {
+        if (tvHost || params.get("tv") === "1") {
+          try { localStorage.setItem("israel-tv-tv", "1"); } catch {}
+          forced = true;
+        } else {
+          try { forced = localStorage.getItem("israel-tv-tv") === "1"; } catch {}
+        }
+      } else {
+        try { localStorage.removeItem("israel-tv-tv"); } catch {}
+      }
+      const tv = tvUa || forced;
+      const root = document.documentElement;
+      if (tv) root.classList.add("tv");
+      if (ios && !tv) root.classList.add("ios");
+      if (android && !tv) root.classList.add("android");
+      try {
+        if (window.matchMedia("(display-mode: standalone)").matches
+          || window.matchMedia("(display-mode: fullscreen)").matches
+          || window.navigator.standalone === true) {
+          root.classList.add("installed");
+        }
+      } catch {}
+      try {
+        if (!tv && sessionStorage.getItem("israel-tv-boot-2")) root.dataset.booted = "1";
+      } catch {}
+      try {
+        const session = JSON.parse(localStorage.getItem("israel-tv-auth") || "null");
+        const end = session && (session.licenseExp || session.exp);
+        if (session?.role && end && end > Date.now() / 1000) {
+          root.dataset.session = "1";
+          root.dataset.admin = session.role === "admin" ? "1" : "0";
+        }
+      } catch {}
     })();
   </script>
   <style>
@@ -194,7 +220,43 @@
     .gate-install:not([hidden]) { display: flex; }
     .gate-install svg { width: 18px; height: 18px; }
     html.tv .gate-install,
-    html.tv #installBtn { display: none !important; }
+    html.tv #installBtn,
+    html.tv .login-device { display: none !important; }
+    html.ios:not(.tv):not(.installed) #installGateBtn,
+    html.android:not(.tv):not(.installed) #installGateBtn { display: none !important; }
+    .login-device {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+    }
+    .login-device h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+    .login-device p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .login-device .install-steps { margin-bottom: 0; }
+    .login-device-install {
+      display: none;
+      width: 100%;
+      margin-top: 12px;
+      min-height: 48px;
+      border: 0;
+      border-radius: 14px;
+      background: #3d8bff;
+      color: #fff;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    html:not(.tv):not(.installed).ios .login-device-ios,
+    html:not(.tv):not(.installed).android .login-device-android { display: block; }
+    html.android:not(.tv):not(.installed) .login-device-install.is-ready { display: block; }
     html.tv #pairPhoneBox { display: none !important; }
     html.ios #installAndroidSteps,
     html.android #installIosSteps,
@@ -3173,6 +3235,43 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
         <span id="installGateLabel">התקנת האפליקציה</span>
       </button>
+      <div class="login-device login-device-ios">
+        <h3>באייפון</h3>
+        <p>מוסיפים למסך הבית מספארי, כדי שייפתח בלי סרגל כתובת.</p>
+        <ol class="install-steps">
+          <li>
+            <span class="ios-step">1</span>
+            <span>בספארי בלבד, לחצו על <b>שיתוף</b></span>
+          </li>
+          <li>
+            <span class="ios-step">2</span>
+            <span>גללו ובחרו <b>הוספה למסך הבית</b> — לא סימנייה רגילה</span>
+          </li>
+          <li>
+            <span class="ios-step">3</span>
+            <span>לחצו <b>הוסף</b>. בפעם הבאה פותחים מהאייקון במסך הבית.</span>
+          </li>
+        </ol>
+      </div>
+      <div class="login-device login-device-android">
+        <h3>באנדרואיד</h3>
+        <p>מתקינים כאפליקציה מכרום — לא «הוספה למסך הבית», אחרת יישאר סרגל הכתובת.</p>
+        <ol class="install-steps">
+          <li>
+            <span class="ios-step">1</span>
+            <span>בכרום לחצו על <b>התפריט</b> ⋮</span>
+          </li>
+          <li>
+            <span class="ios-step">2</span>
+            <span>בחרו <b>התקן אפליקציה</b></span>
+          </li>
+          <li>
+            <span class="ios-step">3</span>
+            <span>לחצו <b>התקן</b> ופתחו מהאייקון במסך הבית</span>
+          </li>
+        </ol>
+        <button type="button" class="login-device-install" id="loginDeviceInstall">התקן אפליקציה</button>
+      </div>
     </form>
     <aside class="login-sales" aria-label="מה יש באפליקציה">
       <p class="login-sales-kicker">Israel TV</p>
@@ -3622,11 +3721,11 @@
             <li>לוחצים על שורת הכתובת למעלה ומקלידים את הכתובת הבאה בדיוק:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlSamsung">israeltv.net/tv</strong>
-            <button type="button" class="copy-tv-web" data-url="https://israeltv.net/tv">העתק</button>
+            <strong dir="ltr" id="tvWebUrlSamsung">israeltv.net</strong>
+            <button type="button" class="copy-tv-web" data-url="https://israeltv.net">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
-            <li>לוחצים כניסה / Go. נפתח נגן Israel TV במסך מלא לטלוויזיה.</li>
+            <li>לוחצים כניסה / Go. האתר מזהה לבד שזו טלוויזיה סמסונג ופותח את מסך החיבור.</li>
             <li>כדי שלא תצטרכו להקליד שוב: בתפריט הדפדפן בוחרים <b>הוספה למסך הבית</b> / Add to Home.</li>
             <li>בפעם הבאה פותחים את האייקון ממסך הבית של סמסונג, לא מהדפדפן.</li>
             <li>במסך הכניסה יופיע ברקוד. חוזרים לטלפון, להגדרות, וסורקים אותו.</li>
@@ -3644,11 +3743,11 @@
             <li>בשורת הכתובת מקלידים:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlLg">israeltv.net/tv</strong>
-            <button type="button" class="copy-tv-web" data-url="https://israeltv.net/tv">העתק</button>
+            <strong dir="ltr" id="tvWebUrlLg">israeltv.net</strong>
+            <button type="button" class="copy-tv-web" data-url="https://israeltv.net">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
-            <li>לוחצים כניסה. נפתח נגן Israel TV המותאם לשלט.</li>
+            <li>לוחצים כניסה. האתר מזהה לבד שזו טלוויזיה LG ופותח את מסך החיבור.</li>
             <li>בתפריט הדפדפן (שלוש נקודות או גלגלת) בוחרים <b>Add to Home</b> / הוספה למסך הבית.</li>
             <li>בפעם הבאה פותחים את Israel TV ממסך הבית של LG.</li>
             <li>במסך הכניסה יופיע ברקוד. חוזרים לטלפון, להגדרות, וסורקים אותו.</li>
@@ -5875,7 +5974,7 @@
     });
     document.querySelectorAll(".copy-tv-web").forEach((button) => {
       button.addEventListener("click", async () => {
-        const url = button.dataset.url || "https://israeltv.net/tv";
+        const url = button.dataset.url || "https://israeltv.net";
         try { await navigator.clipboard.writeText(url); } catch {}
         showToast("הכתובת הועתקה · מקלידים אותה בדפדפן של הטלוויזיה");
       });
@@ -9490,11 +9589,14 @@
       const installed = isInstalledApp();
       const canPrompt = Boolean(deferredPrompt);
       const phoneInstall = !isTv && !installed && (isIosDevice || isAndroidPhone);
+      document.documentElement.classList.toggle("installed", installed);
       installBtn.hidden = isTv || installed || !(phoneInstall || canPrompt);
       if (installGateBtn) installGateBtn.hidden = !phoneInstall;
       if (installGateLabel) {
         installGateLabel.textContent = isIosDevice ? "הוספה למסך הבית" : "התקנה באנדרואיד";
       }
+      const deviceInstall = document.getElementById("loginDeviceInstall");
+      if (deviceInstall) deviceInstall.classList.toggle("is-ready", canPrompt && !installed && !isTv);
       if (isTv && installDlg.open) installDlg.close();
       if (installBtn.hidden && installDlg.open && !isIosDevice && !isAndroidPhone) installDlg.close();
     }
@@ -9572,14 +9674,16 @@
     document.getElementById("installNo").addEventListener("click", () => {
       installDlg.close();
     });
-    document.getElementById("installYes").addEventListener("click", async () => {
-      installDlg.close();
+    async function promptInstallApp() {
+      if (installDlg.open) installDlg.close();
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
       deferredPrompt = undefined;
       syncInstallButton();
-    });
+    }
+    document.getElementById("installYes").addEventListener("click", promptInstallApp);
+    document.getElementById("loginDeviceInstall")?.addEventListener("click", promptInstallApp);
 
     document.getElementById("iosHint")?.remove();
 
@@ -10128,7 +10232,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=228").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=229").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
