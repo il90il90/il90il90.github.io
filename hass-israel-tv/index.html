@@ -7662,7 +7662,6 @@
         tvZapperIndex = (tvZapperIndex + tvZapStep(dx) + pool.length * 10) % pool.length;
         paintTvZapper();
         focusTvZapperCell();
-        playTvZapperFocus();
         armTvZapperTimer();
         return;
       }
@@ -7672,7 +7671,6 @@
         tvZapperIndex = next;
         paintTvZapper();
         focusTvZapperCell();
-        playTvZapperFocus();
         armTvZapperTimer();
         return;
       }
@@ -7686,7 +7684,6 @@
       tvZapperIndex = next;
       paintTvZapper();
       focusTvZapperCell();
-      playTvZapperFocus();
       armTvZapperTimer();
     }
 
@@ -9324,7 +9321,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=204").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=205").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
