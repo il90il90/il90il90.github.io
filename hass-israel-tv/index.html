@@ -2436,22 +2436,23 @@
     html.tv.tv-max .tv-zapper-row,
     html.tv.tv-max .tv-zapper-gate {
       display: grid;
-      align-items: end;
-      gap: 28px;
-    }
-    html.tv.tv-max .tv-zapper.mode-zap .tv-zapper-gate {
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      direction: ltr;
-    }
-    html.tv.tv-max .tv-zapper.mode-browse .tv-zapper-gate {
-      direction: rtl;
       align-items: start;
       justify-items: stretch;
+      gap: 12px;
+      direction: rtl;
     }
-    html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-zapper-gate {
-      grid-template-columns: repeat(8, minmax(0, 1fr));
+    html.tv.tv-max .tv-zapper.level-1 .tv-zapper-gate {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: stretch;
       gap: 10px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      scroll-snap-type: x mandatory;
     }
+    html.tv.tv-max .tv-zapper.level-1 .tv-zapper-gate::-webkit-scrollbar { display: none; }
     html.tv.tv-max .tv-gate {
       border: 0;
       color: inherit;
@@ -2485,87 +2486,48 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    html.tv.tv-max .tv-gate-side {
-      width: min(160px, 18vw);
-      padding: 12px 14px 14px;
-      border-radius: 18px;
-      opacity: 0.7;
-      justify-self: center;
-    }
-    html.tv.tv-max .tv-gate-left { justify-self: end; }
-    html.tv.tv-max .tv-gate-right { justify-self: start; }
-    html.tv.tv-max .tv-gate-side .tv-gate-logo {
-      width: 56px;
-      height: 56px;
-    }
-    html.tv.tv-max .tv-gate-side .tv-zapper-name { font-size: 14px; }
-    html.tv.tv-max .tv-gate-main {
-      width: min(280px, 32vw);
-      padding: 18px 22px 16px;
-      border-radius: 24px;
-      background: #1d283a;
-      outline: 3px solid #fff;
-      outline-offset: 4px;
-      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-    }
-    html.tv.tv-max .tv-gate-main .tv-gate-logo {
-      width: 108px;
-      height: 108px;
-    }
-    html.tv.tv-max .tv-gate-main .tv-zapper-name { font-size: 24px; }
-    html.tv.tv-max .tv-gate-prog {
-      display: block;
-      width: 100%;
-      direction: rtl;
-      color: #93a0b3;
-      font-size: 14px;
-      font-weight: 700;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    html.tv.tv-max .tv-gate[hidden] { display: none !important; }
-    html.tv.tv-max .tv-zapper.mode-browse.level-2 .tv-zapper-gate {
+    html.tv.tv-max .tv-gate-prog { display: none; }
+    html.tv.tv-max .tv-zapper.level-2 .tv-zapper-gate {
       grid-template-columns: repeat(6, minmax(0, 1fr));
-      gap: 12px;
     }
-    html.tv.tv-max .tv-zapper.mode-browse.level-3 .tv-zapper-gate {
+    html.tv.tv-max .tv-zapper.level-3 .tv-zapper-gate {
       grid-template-columns: repeat(8, minmax(0, 1fr));
       gap: 8px;
     }
-    html.tv.tv-max .tv-zapper.mode-browse .tv-gate {
+    html.tv.tv-max .tv-zapper .tv-gate {
       width: auto;
       justify-self: stretch;
       opacity: 0.78;
       outline: none;
       box-shadow: none;
     }
-    html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-gate {
+    html.tv.tv-max .tv-zapper.level-1 .tv-gate {
+      flex: 0 0 auto;
+      width: min(132px, 14vw);
+      padding: 10px 8px 8px;
+      border-radius: 16px;
+      scroll-snap-align: center;
+    }
+    html.tv.tv-max .tv-zapper.level-2 .tv-gate {
       padding: 10px 8px 8px;
       border-radius: 16px;
     }
-    html.tv.tv-max .tv-zapper.mode-browse.level-2 .tv-gate {
-      padding: 10px 8px 8px;
-      border-radius: 16px;
-    }
-    html.tv.tv-max .tv-zapper.mode-browse.level-3 .tv-gate {
+    html.tv.tv-max .tv-zapper.level-3 .tv-gate {
       padding: 7px 6px 6px;
       border-radius: 12px;
     }
-    html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-gate-logo,
-    html.tv.tv-max .tv-zapper.mode-browse.level-2 .tv-gate-logo {
+    html.tv.tv-max .tv-zapper.level-1 .tv-gate-logo,
+    html.tv.tv-max .tv-zapper.level-2 .tv-gate-logo {
       width: 52px;
       height: 52px;
     }
-    html.tv.tv-max .tv-zapper.mode-browse.level-3 .tv-gate-logo {
+    html.tv.tv-max .tv-zapper.level-3 .tv-gate-logo {
       width: 36px;
       height: 36px;
     }
-    html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-zapper-name,
-    html.tv.tv-max .tv-zapper.mode-browse.level-2 .tv-zapper-name { font-size: 13px; }
-    html.tv.tv-max .tv-zapper.mode-browse.level-3 .tv-zapper-name { font-size: 11px; }
-    html.tv.tv-max .tv-zapper.mode-browse .tv-gate-prog { display: none; }
+    html.tv.tv-max .tv-zapper.level-1 .tv-zapper-name,
+    html.tv.tv-max .tv-zapper.level-2 .tv-zapper-name { font-size: 13px; }
+    html.tv.tv-max .tv-zapper.level-3 .tv-zapper-name { font-size: 11px; }
     html.tv.tv-max .tv-zapper .tv-gate.is-focus {
       opacity: 1;
       background: #243044;
@@ -7193,7 +7155,6 @@
     let tvZapperTimer = 0;
     let tvZapperIndex = 0;
     let tvZapperLevel = 0;
-    let tvZapperMode = "browse";
 
     function isTvZapperOpen() {
       return Boolean(tvZapper && tvZapper.classList.contains("is-open"));
@@ -7203,7 +7164,6 @@
       window.clearTimeout(tvZapperTimer);
       tvZapperTimer = 0;
       tvZapperLevel = 0;
-      tvZapperMode = "browse";
       if (!tvZapper) return;
       tvZapper.hidden = true;
       tvZapper.classList.remove("is-open", "level-1", "level-2", "level-3", "mode-zap", "mode-browse");
@@ -7263,14 +7223,13 @@
     }
 
     function tvZapperCols() {
-      if (tvZapperMode === "zap") return 3;
       if (tvZapperLevel <= 1) return 8;
       if (tvZapperLevel === 2) return 6;
       return 8;
     }
 
     function tvZapperRowsVis() {
-      if (tvZapperMode === "zap" || tvZapperLevel <= 1) return 1;
+      if (tvZapperLevel <= 1) return 1;
       if (tvZapperLevel === 2) return 2;
       return 4;
     }
@@ -7287,7 +7246,6 @@
       const pool = tvZapperChannels();
       tvZapper.classList.remove("level-1", "level-2", "level-3", "mode-zap", "mode-browse");
       if (tvZapperLevel >= 1) tvZapper.classList.add(`level-${tvZapperLevel}`);
-      tvZapper.classList.add(tvZapperMode === "zap" ? "mode-zap" : "mode-browse");
       if (!pool.length) {
         tvZapperRow.replaceChildren();
         return [];
@@ -7295,17 +7253,24 @@
       if (tvZapperIndex < 0 || tvZapperIndex >= pool.length) {
         tvZapperIndex = tvZapperIndexOf(current?.id);
       }
-      if (tvZapperMode === "zap") {
-        const left = pool[(tvZapperIndex + tvZapStep(-1) + pool.length * 10) % pool.length];
-        const main = pool[tvZapperIndex];
-        const right = pool[(tvZapperIndex + tvZapStep(1) + pool.length * 10) % pool.length];
-        const leftBtn = makeTvGate(left, "side left");
-        const mainBtn = makeTvGate(main, "main", true);
-        const rightBtn = makeTvGate(right, "side right");
-        if (left.id === main.id) leftBtn.hidden = true;
-        if (right.id === main.id) rightBtn.hidden = true;
-        tvZapperRow.replaceChildren(leftBtn, mainBtn, rightBtn);
-        return [leftBtn, mainBtn, rightBtn];
+      const buttons = [];
+      if (tvZapperLevel <= 1) {
+        const existing = [...tvZapperRow.querySelectorAll(".tv-gate")];
+        const same = existing.length === pool.length
+          && existing.every((el, i) => el.dataset.id === pool[i].id);
+        if (same) {
+          existing.forEach((el, i) => el.classList.toggle("is-focus", i === tvZapperIndex));
+        } else {
+          for (let i = 0; i < pool.length; i++) {
+            buttons.push(makeTvGate(pool[i], "cell", i === tvZapperIndex));
+          }
+          tvZapperRow.replaceChildren(...buttons);
+        }
+        const chips = same ? existing : buttons;
+        requestAnimationFrame(() => {
+          chips[tvZapperIndex]?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        });
+        return chips;
       }
       const cols = tvZapperCols();
       const rowsVis = tvZapperRowsVis();
@@ -7314,7 +7279,6 @@
       let startRow = Math.max(0, row - (rowsVis - 1));
       if (row >= startRow + rowsVis) startRow = row - rowsVis + 1;
       startRow = Math.max(0, Math.min(startRow, Math.max(0, maxRow - rowsVis + 1)));
-      const buttons = [];
       const from = startRow * cols;
       const to = Math.min(pool.length, (startRow + rowsVis) * cols);
       for (let i = from; i < to; i++) {
@@ -7324,7 +7288,7 @@
       return buttons;
     }
 
-    function openTvZapper(mode) {
+    function openTvZapper() {
       if (!isTv || !tvZapper) return false;
       if (!isTvMax()) {
         if (!current || stage.hidden) return false;
@@ -7332,8 +7296,6 @@
       }
       if (!isTvMax()) return false;
       if (tvZapper.parentElement !== document.body) document.body.append(tvZapper);
-      if (mode === "zap" || mode === "browse") tvZapperMode = mode;
-      if (tvZapperMode !== "zap") tvZapperMode = "browse";
       if (tvZapperLevel < 1) tvZapperLevel = 1;
       tvZapperIndex = tvZapperIndexOf(current?.id);
       const chips = paintTvZapper();
@@ -7346,7 +7308,7 @@
     }
 
     function showTvZapper() {
-      return openTvZapper("browse");
+      return openTvZapper();
     }
 
     function playTvZapperFocus() {
@@ -7358,14 +7320,16 @@
     function moveTvZapper(dx) {
       const pool = tvZapperChannels();
       if (!pool.length) return;
-      if (!isTvZapperOpen() || tvZapperMode === "zap") {
-        tvZapperMode = "zap";
-        tvZapperLevel = 1;
-        if (!isTvZapperOpen()) {
-          tvZapperIndex = tvZapperIndexOf(current?.id);
-          openTvZapper("zap");
-        }
+      if (!isTvZapperOpen()) {
+        tvZapperIndex = tvZapperIndexOf(current?.id);
         tvZapperIndex = (tvZapperIndex + tvZapStep(dx) + pool.length * 10) % pool.length;
+        playTvZapperFocus();
+        return;
+      }
+      if (tvZapperLevel <= 1) {
+        const next = tvZapperIndex + tvZapStep(dx);
+        if (next < 0 || next >= pool.length) return;
+        tvZapperIndex = next;
         paintTvZapper();
         focusTvZapperCell();
         playTvZapperFocus();
@@ -7387,10 +7351,9 @@
     }
 
     function nudgeTvZapperDown() {
-      if (!isTvZapperOpen() || tvZapperMode === "zap") {
-        tvZapperMode = "browse";
+      if (!isTvZapperOpen()) {
         tvZapperLevel = 1;
-        openTvZapper("browse");
+        openTvZapper();
         return;
       }
       const pool = tvZapperChannels();
@@ -8765,9 +8728,8 @@
           return true;
         }
         if (dy > 0) {
-          tvZapperMode = "browse";
           tvZapperLevel = 1;
-          openTvZapper("browse");
+          openTvZapper();
           return true;
         }
         if (isTvMax() && dx) {
@@ -8990,7 +8952,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=198").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=199").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
