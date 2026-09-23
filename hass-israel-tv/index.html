@@ -1825,7 +1825,35 @@
       color: #fff;
       cursor: pointer;
     }
-    dialog.sheet button.ghost { background: #243044; }
+    dialog.sheet button.ghost { background: #243044; color: #eef3f8; }
+    #pairHelpDlg .tv-brand-pick button {
+      background: #1c2636;
+      color: #fff;
+      border: 1px solid #3a4a63;
+      box-shadow: inset 3px 0 0 #3d8bff;
+    }
+    #pairHelpDlg .tv-brand-pick button strong {
+      color: #fff;
+      font-weight: 800;
+    }
+    #pairHelpDlg .tv-brand-pick button span {
+      color: #d5deea;
+    }
+    #pairHelpDlg .tv-install-back {
+      background: #2a364a !important;
+      color: #fff;
+    }
+    #pairHelpDlg #pairHelpLead,
+    #pairHelpDlg #tvInstallGuideIntro,
+    #pairHelpDlg .tv-install-card p,
+    #pairHelpDlg .pair-steps {
+      color: #d7e0ec;
+    }
+    #pairHelpDlg h3,
+    #pairHelpDlg h4,
+    #pairHelpDlg h5 {
+      color: #fff;
+    }
     dialog.sheet button[hidden] { display: none !important; }
     dialog.sheet .lic-make {
       width: 100%;
@@ -9841,7 +9869,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=217").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=218").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
