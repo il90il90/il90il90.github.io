@@ -11,13 +11,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=10" />
-  <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png?v=10" />
-  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png?v=10" />
-  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png?v=10" />
-  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v=10" />
-  <link rel="manifest" href="/manifest.webmanifest?v=10" />
-  <link rel="icon" href="/favicon.png?v=10" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=11" />
+  <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png?v=11" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png?v=11" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png?v=11" />
+  <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v=11" />
+  <link rel="manifest" href="/manifest.webmanifest?v=11" />
+  <link rel="icon" href="/favicon.png?v=11" />
   <style>
     #bootSplash {
       position: fixed;
@@ -3167,7 +3167,7 @@
   <div id="bootSplash" aria-hidden="true" style="position:fixed;inset:0;z-index:2147483646;display:grid;place-items:center;background:#070b12">
     <div class="boot-box">
       <div class="boot-mark">
-        <img src="/icon-base.png?v=10" alt="" />
+        <img src="/icon-base.png?v=11" alt="" />
       </div>
       <p class="boot-label">טוען…</p>
     </div>
@@ -3196,7 +3196,7 @@
     <div class="gate-stack">
     <form class="login" id="loginForm">
       <div class="login-head">
-        <img class="login-mark" src="/favicon.png?v=10" alt="" />
+        <img class="login-mark" src="/favicon.png?v=11" alt="" />
         <div>
           <h2>כניסה</h2>
           <p id="loginLead">הדביקו את הרישיון, או סרקו ברקוד</p>
@@ -3310,7 +3310,7 @@
   <div id="app" hidden>
   <header class="top">
     <button type="button" class="brand" id="homeBtn" title="מסך ראשי" aria-label="מסך ראשי">
-      <img src="/favicon.png?v=10" alt="" />
+      <img src="/favicon.png?v=11" alt="" />
       <div>
         <h1>Israel TV</h1>
         <span>צפייה ישירה</span>
@@ -10269,7 +10269,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=235").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=236").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
