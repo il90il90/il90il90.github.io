@@ -3417,8 +3417,8 @@
             <li>לוחצים על שורת הכתובת למעלה ומקלידים את הכתובת הבאה בדיוק:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlSamsung">il90il90.github.io/t</strong>
-            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/t">העתק</button>
+            <strong dir="ltr" id="tvWebUrlSamsung">il90il90.github.io/tv</strong>
+            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/tv">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
             <li>לוחצים כניסה / Go. נפתח נגן Israel TV במסך מלא לטלוויזיה.</li>
@@ -3439,8 +3439,8 @@
             <li>בשורת הכתובת מקלידים:</li>
           </ol>
           <div class="tv-install-code-row">
-            <strong dir="ltr" id="tvWebUrlLg">il90il90.github.io/t</strong>
-            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/t">העתק</button>
+            <strong dir="ltr" id="tvWebUrlLg">il90il90.github.io/tv</strong>
+            <button type="button" class="copy-tv-web" data-url="https://il90il90.github.io/tv">העתק</button>
           </div>
           <ol class="pair-steps" start="3">
             <li>לוחצים כניסה. נפתח נגן Israel TV המותאם לשלט.</li>
@@ -5117,26 +5117,30 @@
     }
 
     function drawQr(el, text, size) {
-      if (!text || !window.QRCode) return false;
-      el.replaceChildren();
-      new window.QRCode(el, {
-        text,
-        width: size,
-        height: size,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: window.QRCode.CorrectLevel.M,
-      });
-      const canvas = el.querySelector("canvas");
-      el.querySelectorAll("canvas, img, table").forEach((node) => {
-        const visible = canvas ? node === canvas : node.tagName !== "TABLE";
-        node.style.display = visible ? "block" : "none";
-        if (visible) {
-          node.style.width = "100%";
-          node.style.height = "100%";
-        }
-      });
-      return true;
+      if (!text || !window.QRCode || !el) return false;
+      try {
+        el.innerHTML = "";
+        new window.QRCode(el, {
+          text,
+          width: size,
+          height: size,
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+          correctLevel: window.QRCode.CorrectLevel.M,
+        });
+        const canvas = el.querySelector("canvas");
+        el.querySelectorAll("canvas, img, table").forEach((node) => {
+          const visible = canvas ? node === canvas : node.tagName !== "TABLE";
+          node.style.display = visible ? "block" : "none";
+          if (visible) {
+            node.style.width = "100%";
+            node.style.height = "100%";
+          }
+        });
+        return Boolean(el.querySelector("canvas, img, table"));
+      } catch {
+        return false;
+      }
     }
 
     async function paintQr(el, key) {
@@ -5155,8 +5159,12 @@
 
     function randomPairId() {
       const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const bytes = crypto.getRandomValues(new Uint8Array(9));
-      return [...bytes].map((byte) => alphabet[byte % 36]).join("");
+      const bytes = new Uint8Array(9);
+      if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(bytes);
+      else for (let i = 0; i < 9; i++) bytes[i] = Math.floor(Math.random() * 256);
+      let out = "";
+      for (let i = 0; i < 9; i++) out += alphabet[bytes[i] % 36];
+      return out;
     }
 
     async function waitForQrLib() {
@@ -5167,20 +5175,52 @@
       return Boolean(window.QRCode);
     }
 
+    function xhrJson(url, body, timeoutMs) {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", url, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.timeout = timeoutMs;
+        xhr.onload = () => {
+          let data = {};
+          try { data = JSON.parse(xhr.responseText || "{}"); } catch {}
+          resolve({
+            ok: xhr.status >= 200 && xhr.status < 300 && data?.success === true,
+            status: xhr.status,
+            data,
+          });
+        };
+        xhr.onerror = () => reject(new Error("network"));
+        xhr.ontimeout = () => reject(new Error("timeout"));
+        xhr.send(JSON.stringify(body));
+      });
+    }
+
     async function pwfAction(body) {
-      const abort = new AbortController();
-      const timer = window.setTimeout(() => abort.abort(), 8000);
+      const canAbort = typeof AbortController === "function";
+      const abort = canAbort ? new AbortController() : null;
+      const timer = window.setTimeout(() => {
+        try { abort?.abort(); } catch {}
+      }, 8000);
       try {
-        const res = await fetch(PWF_CHECK_URL, {
+        if (typeof fetch !== "function") {
+          return await xhrJson(PWF_CHECK_URL, body, 8000);
+        }
+        const opts = {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
-          signal: abort.signal,
-        });
+        };
+        if (abort) opts.signal = abort.signal;
+        const res = await fetch(PWF_CHECK_URL, opts);
         const data = await res.json().catch(() => ({}));
         return { ok: res.ok && data?.success === true, status: res.status, data };
       } catch {
-        return { ok: false, status: 0, data: {} };
+        try {
+          return await xhrJson(PWF_CHECK_URL, body, 8000);
+        } catch {
+          return { ok: false, status: 0, data: {} };
+        }
       } finally {
         window.clearTimeout(timer);
       }
@@ -5204,16 +5244,18 @@
       const created = await pwfAction({ action: "pair-create", pair_id: pairId });
       if (currentPairId !== pairId || readSession()) return;
       if (!created.ok) {
-        wait.textContent = "אין חיבור כרגע. מנסים שוב…";
-        pairPollTimer = window.setTimeout(() => startScreenPairing(), 3000);
+        code.textContent = formatPairCode(pairId);
+        code.hidden = false;
+        wait.textContent = "אין חיבור כרגע. מנסים שוב… אפשר גם להזין רישיון למטה.";
+        pairPollTimer = window.setTimeout(() => startScreenPairing(), 4000);
         return;
       }
       await waitForQrLib();
       if (currentPairId !== pairId || readSession()) return;
       const painted = await paintPairQr(document.getElementById("pairQr"), pairId);
       code.textContent = formatPairCode(pairId);
-      code.hidden = !painted;
-      wait.textContent = painted ? "סרקו את הברקוד באייפון או באנדרואיד" : "לא ניתן לצייר ברקוד";
+      code.hidden = false;
+      wait.textContent = painted ? "סרקו את הברקוד באייפון או באנדרואיד" : "הזינו את הקוד בטלפון, או רישיון למטה";
       pollPairStatus(pairId, 0);
     }
 
@@ -5602,7 +5644,7 @@
     });
     document.querySelectorAll(".copy-tv-web").forEach((button) => {
       button.addEventListener("click", async () => {
-        const url = button.dataset.url || "https://il90il90.github.io/t";
+        const url = button.dataset.url || "https://il90il90.github.io/tv";
         try { await navigator.clipboard.writeText(url); } catch {}
         showToast("הכתובת הועתקה · מקלידים אותה בדפדפן של הטלוויזיה");
       });
