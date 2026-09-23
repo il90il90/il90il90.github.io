@@ -2436,10 +2436,21 @@
     html.tv.tv-max .tv-zapper-row,
     html.tv.tv-max .tv-zapper-gate {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: end;
       gap: 28px;
+    }
+    html.tv.tv-max .tv-zapper.mode-zap .tv-zapper-gate {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       direction: ltr;
+    }
+    html.tv.tv-max .tv-zapper.mode-browse .tv-zapper-gate {
+      direction: rtl;
+      align-items: start;
+      justify-items: stretch;
+    }
+    html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-zapper-gate {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 10px;
     }
     html.tv.tv-max .tv-gate {
       border: 0;
@@ -2515,49 +2526,46 @@
       text-overflow: ellipsis;
     }
     html.tv.tv-max .tv-gate[hidden] { display: none !important; }
-    html.tv.tv-max .tv-zapper.level-2 .tv-zapper-gate,
-    html.tv.tv-max .tv-zapper.level-3 .tv-zapper-gate {
-      display: grid;
-      direction: rtl;
-      align-items: start;
-      justify-items: stretch;
-    }
-    html.tv.tv-max .tv-zapper.level-2 .tv-zapper-gate {
+    html.tv.tv-max .tv-zapper.mode-browse.level-2 .tv-zapper-gate {
       grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 12px;
     }
-    html.tv.tv-max .tv-zapper.level-3 .tv-zapper-gate {
+    html.tv.tv-max .tv-zapper.mode-browse.level-3 .tv-zapper-gate {
       grid-template-columns: repeat(8, minmax(0, 1fr));
       gap: 8px;
     }
-    html.tv.tv-max .tv-zapper.level-2 .tv-gate,
-    html.tv.tv-max .tv-zapper.level-3 .tv-gate {
+    html.tv.tv-max .tv-zapper.mode-browse .tv-gate {
       width: auto;
       justify-self: stretch;
       opacity: 0.78;
       outline: none;
       box-shadow: none;
     }
-    html.tv.tv-max .tv-zapper.level-2 .tv-gate {
+    html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-gate {
       padding: 10px 8px 8px;
       border-radius: 16px;
     }
-    html.tv.tv-max .tv-zapper.level-3 .tv-gate {
+    html.tv.tv-max .tv-zapper.mode-browse.level-2 .tv-gate {
+      padding: 10px 8px 8px;
+      border-radius: 16px;
+    }
+    html.tv.tv-max .tv-zapper.mode-browse.level-3 .tv-gate {
       padding: 7px 6px 6px;
       border-radius: 12px;
     }
-    html.tv.tv-max .tv-zapper.level-2 .tv-gate-logo {
+    html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-gate-logo,
+    html.tv.tv-max .tv-zapper.mode-browse.level-2 .tv-gate-logo {
       width: 52px;
       height: 52px;
     }
-    html.tv.tv-max .tv-zapper.level-3 .tv-gate-logo {
+    html.tv.tv-max .tv-zapper.mode-browse.level-3 .tv-gate-logo {
       width: 36px;
       height: 36px;
     }
-    html.tv.tv-max .tv-zapper.level-2 .tv-zapper-name { font-size: 13px; }
-    html.tv.tv-max .tv-zapper.level-3 .tv-zapper-name { font-size: 11px; }
-    html.tv.tv-max .tv-zapper.level-2 .tv-gate-prog,
-    html.tv.tv-max .tv-zapper.level-3 .tv-gate-prog { display: none; }
+    html.tv.tv-max .tv-zapper.mode-browse.level-1 .tv-zapper-name,
+    html.tv.tv-max .tv-zapper.mode-browse.level-2 .tv-zapper-name { font-size: 13px; }
+    html.tv.tv-max .tv-zapper.mode-browse.level-3 .tv-zapper-name { font-size: 11px; }
+    html.tv.tv-max .tv-zapper.mode-browse .tv-gate-prog { display: none; }
     html.tv.tv-max .tv-zapper .tv-gate.is-focus {
       opacity: 1;
       background: #243044;
@@ -7185,6 +7193,7 @@
     let tvZapperTimer = 0;
     let tvZapperIndex = 0;
     let tvZapperLevel = 0;
+    let tvZapperMode = "browse";
 
     function isTvZapperOpen() {
       return Boolean(tvZapper && tvZapper.classList.contains("is-open"));
@@ -7194,9 +7203,10 @@
       window.clearTimeout(tvZapperTimer);
       tvZapperTimer = 0;
       tvZapperLevel = 0;
+      tvZapperMode = "browse";
       if (!tvZapper) return;
       tvZapper.hidden = true;
-      tvZapper.classList.remove("is-open", "level-1", "level-2", "level-3");
+      tvZapper.classList.remove("is-open", "level-1", "level-2", "level-3", "mode-zap", "mode-browse");
     }
 
     function armTvZapperTimer() {
@@ -7253,13 +7263,14 @@
     }
 
     function tvZapperCols() {
-      if (tvZapperLevel <= 1) return 3;
+      if (tvZapperMode === "zap") return 3;
+      if (tvZapperLevel <= 1) return 8;
       if (tvZapperLevel === 2) return 6;
       return 8;
     }
 
     function tvZapperRowsVis() {
-      if (tvZapperLevel <= 1) return 1;
+      if (tvZapperMode === "zap" || tvZapperLevel <= 1) return 1;
       if (tvZapperLevel === 2) return 2;
       return 4;
     }
@@ -7274,8 +7285,9 @@
     function paintTvZapper() {
       if (!tvZapperRow || !tvZapper) return [];
       const pool = tvZapperChannels();
-      tvZapper.classList.remove("level-1", "level-2", "level-3");
+      tvZapper.classList.remove("level-1", "level-2", "level-3", "mode-zap", "mode-browse");
       if (tvZapperLevel >= 1) tvZapper.classList.add(`level-${tvZapperLevel}`);
+      tvZapper.classList.add(tvZapperMode === "zap" ? "mode-zap" : "mode-browse");
       if (!pool.length) {
         tvZapperRow.replaceChildren();
         return [];
@@ -7283,7 +7295,7 @@
       if (tvZapperIndex < 0 || tvZapperIndex >= pool.length) {
         tvZapperIndex = tvZapperIndexOf(current?.id);
       }
-      if (tvZapperLevel <= 1) {
+      if (tvZapperMode === "zap") {
         const left = pool[(tvZapperIndex + tvZapStep(-1) + pool.length * 10) % pool.length];
         const main = pool[tvZapperIndex];
         const right = pool[(tvZapperIndex + tvZapStep(1) + pool.length * 10) % pool.length];
@@ -7312,7 +7324,7 @@
       return buttons;
     }
 
-    function openTvZapper() {
+    function openTvZapper(mode) {
       if (!isTv || !tvZapper) return false;
       if (!isTvMax()) {
         if (!current || stage.hidden) return false;
@@ -7320,6 +7332,8 @@
       }
       if (!isTvMax()) return false;
       if (tvZapper.parentElement !== document.body) document.body.append(tvZapper);
+      if (mode === "zap" || mode === "browse") tvZapperMode = mode;
+      if (tvZapperMode !== "zap") tvZapperMode = "browse";
       if (tvZapperLevel < 1) tvZapperLevel = 1;
       tvZapperIndex = tvZapperIndexOf(current?.id);
       const chips = paintTvZapper();
@@ -7332,7 +7346,7 @@
     }
 
     function showTvZapper() {
-      return openTvZapper();
+      return openTvZapper("browse");
     }
 
     function playTvZapperFocus() {
@@ -7344,11 +7358,12 @@
     function moveTvZapper(dx) {
       const pool = tvZapperChannels();
       if (!pool.length) return;
-      if (!isTvZapperOpen() || tvZapperLevel <= 1) {
+      if (!isTvZapperOpen() || tvZapperMode === "zap") {
+        tvZapperMode = "zap";
+        tvZapperLevel = 1;
         if (!isTvZapperOpen()) {
-          tvZapperLevel = 1;
           tvZapperIndex = tvZapperIndexOf(current?.id);
-          openTvZapper();
+          openTvZapper("zap");
         }
         tvZapperIndex = (tvZapperIndex + tvZapStep(dx) + pool.length * 10) % pool.length;
         paintTvZapper();
@@ -7367,13 +7382,15 @@
       tvZapperIndex = next;
       paintTvZapper();
       focusTvZapperCell();
+      playTvZapperFocus();
       armTvZapperTimer();
     }
 
     function nudgeTvZapperDown() {
-      if (!isTvZapperOpen()) {
+      if (!isTvZapperOpen() || tvZapperMode === "zap") {
+        tvZapperMode = "browse";
         tvZapperLevel = 1;
-        openTvZapper();
+        openTvZapper("browse");
         return;
       }
       const pool = tvZapperChannels();
@@ -8748,8 +8765,9 @@
           return true;
         }
         if (dy > 0) {
+          tvZapperMode = "browse";
           tvZapperLevel = 1;
-          showTvZapper();
+          openTvZapper("browse");
           return true;
         }
         if (isTvMax() && dx) {
@@ -8972,7 +8990,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=197").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=198").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
