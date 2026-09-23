@@ -2418,44 +2418,44 @@
       right: 0;
       bottom: 0;
       z-index: 2147483000;
-      padding: 28px 28px 32px;
-      background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 38%, rgba(0, 0, 0, 0.92) 100%);
+      padding: 32px 48px 40px;
+      background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 28%, rgba(0, 0, 0, 0.92) 100%);
       pointer-events: auto;
     }
-    html.tv.tv-max .tv-zapper-row {
-      display: flex;
-      flex-wrap: nowrap;
-      align-items: flex-end;
-      gap: 12px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
+    html.tv.tv-max .tv-zapper-row,
+    html.tv.tv-max .tv-zapper-gate {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: end;
+      gap: 28px;
+      direction: ltr;
     }
-    html.tv.tv-max .tv-zapper-row::-webkit-scrollbar { display: none; }
-    html.tv.tv-max .tv-zapper .chip.chip-logo {
-      flex: 0 0 92px;
-      width: 92px;
-      height: auto;
-      min-height: 92px;
-      padding: 10px 8px 8px;
+    html.tv.tv-max .tv-gate {
+      border: 0;
+      color: inherit;
+      font: inherit;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      border-radius: 16px;
+      gap: 8px;
       background: #151d2b;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
     }
-    html.tv.tv-max .tv-zapper .chip.chip-logo img {
-      width: 52px;
-      height: 52px;
-      flex: 0 0 52px;
+    html.tv.tv-max .tv-gate-logo {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    html.tv.tv-max .tv-gate-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
     }
     html.tv.tv-max .tv-zapper-name {
       display: block;
       width: 100%;
-      font-size: 12px;
+      direction: rtl;
       font-weight: 800;
       line-height: 1.2;
       text-align: center;
@@ -2463,15 +2463,47 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    html.tv.tv-max .tv-zapper .chip.chip-logo.active {
-      outline: 2px solid var(--accent);
+    html.tv.tv-max .tv-gate-side {
+      width: min(160px, 18vw);
+      padding: 12px 14px 14px;
+      border-radius: 18px;
+      opacity: 0.7;
+      justify-self: center;
+    }
+    html.tv.tv-max .tv-gate-left { justify-self: end; }
+    html.tv.tv-max .tv-gate-right { justify-self: start; }
+    html.tv.tv-max .tv-gate-side .tv-gate-logo {
+      width: 56px;
+      height: 56px;
+    }
+    html.tv.tv-max .tv-gate-side .tv-zapper-name { font-size: 14px; }
+    html.tv.tv-max .tv-gate-main {
+      width: min(280px, 32vw);
+      padding: 18px 22px 16px;
+      border-radius: 24px;
       background: #1d283a;
-    }
-    html.tv.tv-max .tv-zapper .chip.chip-logo:focus {
       outline: 3px solid #fff;
-      outline-offset: 3px;
-      background: #243044;
+      outline-offset: 4px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
     }
+    html.tv.tv-max .tv-gate-main .tv-gate-logo {
+      width: 108px;
+      height: 108px;
+    }
+    html.tv.tv-max .tv-gate-main .tv-zapper-name { font-size: 24px; }
+    html.tv.tv-max .tv-gate-prog {
+      display: block;
+      width: 100%;
+      direction: rtl;
+      color: #93a0b3;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    html.tv.tv-max .tv-gate[hidden] { display: none !important; }
     #bootSplash {
       position: fixed;
       inset: 0;
@@ -6918,6 +6950,7 @@
     const tvZapper = document.getElementById("tvZapper");
     const tvZapperRow = document.getElementById("tvZapperRow");
     let tvZapperTimer = 0;
+    let tvZapperIndex = 0;
 
     function isTvZapperOpen() {
       return Boolean(tvZapper && tvZapper.classList.contains("is-open"));
@@ -6942,47 +6975,105 @@
       return list;
     }
 
-    function paintTvZapper() {
-      if (!tvZapperRow) return [];
-      tvZapperRow.replaceChildren();
-      const chips = [];
-      for (const channel of tvZapperChannels()) {
-        const btn = makeRecentChip(channel);
-        const name = document.createElement("span");
-        name.className = "tv-zapper-name";
-        name.textContent = channel.name;
-        btn.append(name);
-        chips.push(btn);
-        tvZapperRow.append(btn);
-      }
-      return chips;
+    function tvZapStep(dir) {
+      const rtl = getComputedStyle(document.documentElement).direction === "rtl";
+      return rtl ? -dir : dir;
     }
 
-    function showTvZapper() {
-      if (!isTv || !tvZapper) return;
+    function tvZapperIndexOf(id) {
+      const i = tvZapperChannels().findIndex((item) => item.id === id);
+      return i < 0 ? 0 : i;
+    }
+
+    function makeTvGate(channel, kind) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `tv-gate tv-gate-${kind}`;
+      btn.dataset.id = channel.id;
+      const logo = document.createElement("div");
+      logo.className = "tv-gate-logo";
+      paintLogo(logo, channel, true);
+      const name = document.createElement("span");
+      name.className = "tv-zapper-name";
+      name.textContent = channel.name;
+      btn.append(logo, name);
+      if (kind === "main") {
+        const title = nowTitle(channel.id);
+        if (title) {
+          const prog = document.createElement("span");
+          prog.className = "tv-gate-prog";
+          prog.textContent = title;
+          btn.append(prog);
+        }
+      }
+      bindTap(btn, () => {
+        const picked = CHANNELS.find((item) => item.id === channel.id) || channel;
+        tvZapperIndex = tvZapperIndexOf(picked.id);
+        if (picked.id !== current?.id) playChannel(picked);
+        paintTvZapper();
+        armTvZapperTimer();
+      });
+      return btn;
+    }
+
+    function paintTvZapper() {
+      if (!tvZapperRow) return [];
+      const pool = tvZapperChannels();
+      if (!pool.length) {
+        tvZapperRow.replaceChildren();
+        return [];
+      }
+      if (tvZapperIndex < 0 || tvZapperIndex >= pool.length) {
+        tvZapperIndex = tvZapperIndexOf(current?.id);
+      }
+      const left = pool[(tvZapperIndex + tvZapStep(-1) + pool.length * 10) % pool.length];
+      const main = pool[tvZapperIndex];
+      const right = pool[(tvZapperIndex + tvZapStep(1) + pool.length * 10) % pool.length];
+      const leftBtn = makeTvGate(left, "side left");
+      const mainBtn = makeTvGate(main, "main");
+      const rightBtn = makeTvGate(right, "side right");
+      if (left.id === main.id) leftBtn.hidden = true;
+      if (right.id === main.id) rightBtn.hidden = true;
+      tvZapperRow.replaceChildren(leftBtn, mainBtn, rightBtn);
+      return [leftBtn, mainBtn, rightBtn];
+    }
+
+    function openTvZapper() {
+      if (!isTv || !tvZapper) return false;
       if (!isTvMax()) {
-        if (!current || stage.hidden) return;
+        if (!current || stage.hidden) return false;
         setTvMax(true);
       }
-      if (!isTvMax()) return;
+      if (!isTvMax()) return false;
       if (tvZapper.parentElement !== document.body) document.body.append(tvZapper);
+      tvZapperIndex = tvZapperIndexOf(current?.id);
       const chips = paintTvZapper();
-      if (!chips.length) return;
+      if (!chips.length) return false;
       tvZapper.hidden = false;
       tvZapper.classList.add("is-open");
-      const currentChip = chips.find((el) => el.dataset.id === current?.id) || chips[0];
-      focusTvNode(currentChip);
+      const main = tvZapperRow.querySelector(".tv-gate-main") || chips[0];
+      focusTvNode(main);
       armTvZapperTimer();
       return true;
     }
 
+    function showTvZapper() {
+      return openTvZapper();
+    }
+
     function moveTvZapper(dx) {
-      if (!isTvZapperOpen()) return;
-      const chips = [...tvZapperRow.querySelectorAll(".chip")];
-      if (!chips.length) return;
-      const active = chips.includes(document.activeElement) ? document.activeElement : (chips.find((el) => el.classList.contains("active")) || chips[0]);
-      const next = moveInRow(chips, active, dx) || active;
-      focusTvNode(next);
+      const pool = tvZapperChannels();
+      if (!pool.length) return;
+      if (!isTvZapperOpen()) {
+        tvZapperIndex = tvZapperIndexOf(current?.id);
+        openTvZapper();
+      }
+      tvZapperIndex = (tvZapperIndex + tvZapStep(dx) + pool.length * 10) % pool.length;
+      const next = pool[tvZapperIndex];
+      paintTvZapper();
+      const main = tvZapperRow.querySelector(".tv-gate-main");
+      if (main) focusTvNode(main);
+      if (next && next.id !== current?.id) playChannel(next);
       armTvZapperTimer();
     }
 
@@ -7001,13 +7092,7 @@
     }
 
     function zapTvChannel(dir) {
-      const pool = tvZapperChannels();
-      if (!pool.length) return;
-      const idx = pool.findIndex((item) => item.id === current?.id);
-      const rtl = getComputedStyle(document.documentElement).direction === "rtl";
-      const step = rtl ? -dir : dir;
-      const next = pool[(idx < 0 ? 0 : idx + step + pool.length * 10) % pool.length];
-      if (next && next.id !== current?.id) playChannel(next);
+      moveTvZapper(dir);
     }
 
     function goHome() {
@@ -8197,9 +8282,9 @@
         try { video.blur(); } catch {}
         try { theater.blur(); } catch {}
         if (isTvZapperOpen()) {
-          const chip = tvZapperRow.querySelector(".chip:focus")
-            || tvZapperRow.querySelector(".chip.active")
-            || tvZapperRow.querySelector(".chip");
+          const chip = tvZapperRow.querySelector(".tv-gate-main")
+            || tvZapperRow.querySelector(".tv-gate:focus")
+            || tvZapperRow.querySelector(".tv-gate");
           if (chip) focusTvNode(chip);
         }
         return;
@@ -8221,7 +8306,7 @@
         ? document.activeElement
         : (tvFocus && tvFocus.dataset?.id ? tvFocus : null);
       if (!el?.dataset?.id) return false;
-      if (!el.classList.contains("chip") && !el.classList.contains("card")) return false;
+      if (!el.classList.contains("chip") && !el.classList.contains("card") && !el.classList.contains("tv-gate")) return false;
       const picked = CHANNELS.find((item) => item.id === el.dataset.id);
       if (!picked) return false;
       openChannel(picked);
@@ -8525,7 +8610,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=194").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=195").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
@@ -8537,7 +8622,7 @@
     }
   </script>
   <nav class="tv-zapper" id="tvZapper" hidden aria-label="ערוצים">
-    <div class="tv-zapper-row" id="tvZapperRow"></div>
+    <div class="tv-zapper-gate" id="tvZapperRow"></div>
   </nav>
 </body>
 </html>
