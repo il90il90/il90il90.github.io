@@ -612,15 +612,75 @@
       padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 32px;
     }
     #gate[hidden] { display: none !important; }
+    .gate-stack {
+      width: min(420px, 100%);
+      display: grid;
+      gap: 12px;
+    }
     .login {
       position: relative;
-      width: min(420px, 100%);
+      width: 100%;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 20px;
       padding: 28px 22px 22px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     }
+    .login-sales {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+    }
+    .login-sales h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
+    }
+    .login-sales p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .login-sales-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 0 0 14px;
+    }
+    .login-sales-pills span {
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: #1a2434;
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .login-sales-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      min-height: 48px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: #229ed9;
+      color: #fff !important;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 15px;
+    }
+    .login-sales-btn svg { width: 22px; height: 22px; flex: 0 0 auto; }
+    .login-sales-btn small {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+    .login-sales-btn span { text-align: right; line-height: 1.25; }
     .login-busy {
       position: absolute;
       inset: 0;
@@ -673,8 +733,9 @@
     html:not(.tv) #gate .license-tile { display: none !important; }
     html:not(.tv) #gate #loginLead,
     html:not(.tv) #gate #loginType { display: block !important; }
+    html:not(.tv) #gate .gate-stack { width: min(400px, 100%); }
     html:not(.tv) #gate .login {
-      width: min(400px, 100%);
+      width: 100%;
       padding: 24px 20px 20px;
     }
     html:not(.tv) #gate .phone-login-row {
@@ -2406,13 +2467,24 @@
     }
     html.tv .chips::-webkit-scrollbar, html.tv .cats::-webkit-scrollbar { display: none; }
     html.tv #gate { padding: 24px; }
-    html.tv .login {
+    html.tv .gate-stack {
       width: min(640px, 86vw);
       max-height: 94dvh;
       overflow: auto;
+    }
+    html.tv .login {
+      width: 100%;
       padding: 28px 32px 24px;
       text-align: center;
     }
+    html.tv .login-sales {
+      text-align: center;
+      padding: 16px 20px 14px;
+    }
+    html.tv .login-sales h3 { font-size: 20px; }
+    html.tv .login-sales p { font-size: 16px; }
+    html.tv .login-sales-pills { justify-content: center; }
+    html.tv .login-sales-btn { min-height: 52px; font-size: 18px; }
     html.tv .login-head { justify-content: center; margin-bottom: 18px; }
     html.tv .login h2 { font-size: 28px; }
     html.tv .login p { font-size: 18px; }
@@ -2949,6 +3021,7 @@
     })();
   </script>
   <div id="gate">
+    <div class="gate-stack">
     <form class="login" id="loginForm">
       <div class="login-head">
         <img class="login-mark" src="/favicon.png?v=6" alt="" />
@@ -3000,6 +3073,21 @@
         <span id="installGateLabel">התקנת האפליקציה</span>
       </button>
     </form>
+    <aside class="login-sales" aria-label="יצירת קשר">
+      <h3>אין רישיון עדיין?</h3>
+      <p>שידור חי בישראל: חדשות, ספורט, ילדים, סרטים ועוד — בטלפון, במחשב ובטלוויזיה. כתבו בטלגרם ונחבר אתכם.</p>
+      <div class="login-sales-pills" aria-hidden="true">
+        <span>ערוצי ישראל</span>
+        <span>ספורט חי</span>
+        <span>ילדים וסרטים</span>
+        <span>מסך + טלפון</span>
+      </div>
+      <a class="login-sales-btn" href="https://t.me/IsraelCohen90" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.8 4.2c.3-.9-.5-1.6-1.4-1.3L2.7 9.1c-.9.3-.9 1.6.1 1.8l4.7 1.4 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.6 3.4c.7.5 1.7.1 1.9-.7l3.8-14.3zM9.6 13.3l-.3 3.3 1.3-2.4 7.2-6.5-8.2 5.6z"/></svg>
+        <span>יצירת קשר בטלגרם<small dir="ltr">@IsraelCohen90</small></span>
+      </a>
+    </aside>
+    </div>
   </div>
   <div id="app" hidden>
   <header class="top">
@@ -9898,7 +9986,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=224").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=225").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
