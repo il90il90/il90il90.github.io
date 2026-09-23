@@ -608,7 +608,7 @@
     #gate {
       min-height: 100dvh;
       display: grid;
-      place-items: center;
+      place-items: start center;
       padding: calc(24px + env(safe-area-inset-top, 0px)) 16px 32px;
     }
     #gate[hidden] { display: none !important; }
@@ -627,21 +627,65 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
     }
     .login-sales {
+      position: relative;
+      overflow: hidden;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 20px;
-      padding: 18px 18px 16px;
+      padding: 20px 18px 16px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
     }
-    .login-sales h3 {
-      margin: 0 0 6px;
-      font-size: 17px;
+    .login-sales::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 3px;
+      background: linear-gradient(90deg, #229ed9, #d4b06a);
     }
-    .login-sales p {
+    .login-sales-kicker {
+      margin: 0 0 4px;
+      color: #8eb4ff;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+    .login-sales h3 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      line-height: 1.25;
+    }
+    .login-sales-lead {
       margin: 0 0 14px;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.55;
+    }
+    .login-sales-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 0 0 14px;
+    }
+    .login-sales-stat {
+      background: #101826;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+    .login-sales-stat strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1.1;
+      color: #d4b06a;
+      font-weight: 800;
+    }
+    .login-sales-stat small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
     }
     .login-sales-pills {
       display: flex;
@@ -650,6 +694,9 @@
       margin: 0 0 14px;
     }
     .login-sales-pills span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 5px 9px;
       border-radius: 999px;
       background: #1a2434;
@@ -657,6 +704,10 @@
       color: var(--text);
       font-size: 12px;
       font-weight: 700;
+    }
+    .login-sales-pills b {
+      color: #d4b06a;
+      font-weight: 800;
     }
     .login-sales-btn {
       display: flex;
@@ -681,6 +732,61 @@
       opacity: 0.9;
     }
     .login-sales-btn span { text-align: right; line-height: 1.25; }
+    .login-sales-list {
+      margin: 16px 0 0;
+      padding-top: 4px;
+    }
+    .login-sales-list-title {
+      margin: 0 0 4px;
+      font-size: 15px;
+    }
+    .login-sales-list-sub {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .sales-folder {
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+    .sales-folder header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .sales-folder h4 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .sales-folder header b {
+      flex: 0 0 auto;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #101826;
+      border: 1px solid var(--line);
+      color: #d4b06a;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .sales-folder-names {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .sales-folder-names span {
+      padding: 5px 8px;
+      border-radius: 8px;
+      background: #101826;
+      border: 1px solid var(--line);
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .login-sales-cta-bottom { margin-top: 14px; }
     .login-busy {
       position: absolute;
       inset: 0;
@@ -762,6 +868,22 @@
     }
     html:not(.tv) #gate .login-btns button {
       height: 48px;
+    }
+    @media (min-width: 900px) {
+      html:not(.tv) #gate {
+        place-items: start center;
+        padding-top: calc(28px + env(safe-area-inset-top, 0px));
+      }
+      html:not(.tv) #gate .gate-stack {
+        width: min(880px, 94vw);
+        grid-template-columns: 400px minmax(0, 1fr);
+        align-items: start;
+      }
+      html:not(.tv) #gate .login { position: sticky; top: 24px; }
+      html:not(.tv) #gate .login-sales {
+        max-height: calc(100dvh - 48px);
+        overflow: auto;
+      }
     }
     .login-qr-icon {
       flex: 0 0 36px;
@@ -2466,7 +2588,7 @@
       scrollbar-width: none;
     }
     html.tv .chips::-webkit-scrollbar, html.tv .cats::-webkit-scrollbar { display: none; }
-    html.tv #gate { padding: 24px; }
+    html.tv #gate { place-items: center; padding: 24px; }
     html.tv .gate-stack {
       width: min(640px, 86vw);
       max-height: 94dvh;
@@ -2481,10 +2603,12 @@
       text-align: center;
       padding: 16px 20px 14px;
     }
-    html.tv .login-sales h3 { font-size: 20px; }
-    html.tv .login-sales p { font-size: 16px; }
+    html.tv .login-sales h3 { font-size: 22px; }
+    html.tv .login-sales-lead { font-size: 16px; }
     html.tv .login-sales-pills { justify-content: center; }
     html.tv .login-sales-btn { min-height: 52px; font-size: 18px; }
+    html.tv .login-sales-list,
+    html.tv .login-sales-cta-bottom { display: none !important; }
     html.tv .login-head { justify-content: center; margin-bottom: 18px; }
     html.tv .login h2 { font-size: 28px; }
     html.tv .login p { font-size: 18px; }
@@ -3073,18 +3197,28 @@
         <span id="installGateLabel">התקנת האפליקציה</span>
       </button>
     </form>
-    <aside class="login-sales" aria-label="יצירת קשר">
-      <h3>אין רישיון עדיין?</h3>
-      <p>שידור חי בישראל: חדשות, ספורט, ילדים, סרטים ועוד — בטלפון, במחשב ובטלוויזיה. כתבו בטלגרם ונחבר אתכם.</p>
-      <div class="login-sales-pills" aria-hidden="true">
-        <span>ערוצי ישראל</span>
-        <span>ספורט חי</span>
-        <span>ילדים וסרטים</span>
-        <span>מסך + טלפון</span>
+    <aside class="login-sales" aria-label="מה יש באפליקציה">
+      <p class="login-sales-kicker">Israel TV</p>
+      <h3>כל הטלוויזיה במסך אחד</h3>
+      <p class="login-sales-lead">שידור חי מכל הערוצים בישראל — חדשות, ספורט, ילדים, סרטים, סדרות ועוד. בטלפון, במחשב ובטלוויזיה. בלי רישיון עדיין? כתבו בטלגרם ונחבר אתכם.</p>
+      <div class="login-sales-stats" aria-label="סיכום הערוצים">
+        <div class="login-sales-stat"><strong id="salesTotal">—</strong><small>ערוצים</small></div>
+        <div class="login-sales-stat"><strong id="salesFolders">—</strong><small>קטגוריות</small></div>
+        <div class="login-sales-stat"><strong>3</strong><small>מסכים</small></div>
       </div>
+      <div class="login-sales-pills" id="salesCats" aria-label="קטגוריות"></div>
       <a class="login-sales-btn" href="https://t.me/IsraelCohen90" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.8 4.2c.3-.9-.5-1.6-1.4-1.3L2.7 9.1c-.9.3-.9 1.6.1 1.8l4.7 1.4 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.6 3.4c.7.5 1.7.1 1.9-.7l3.8-14.3zM9.6 13.3l-.3 3.3 1.3-2.4 7.2-6.5-8.2 5.6z"/></svg>
         <span>יצירת קשר בטלגרם<small dir="ltr">@IsraelCohen90</small></span>
+      </a>
+      <div class="login-sales-list" id="salesList">
+        <h4 class="login-sales-list-title">כל הערוצים</h4>
+        <p class="login-sales-list-sub">הרשימה המלאה לפי קטגוריה, כולל הכמות בכל תיקיה</p>
+        <div id="salesFoldersList"></div>
+      </div>
+      <a class="login-sales-btn login-sales-cta-bottom" href="https://t.me/IsraelCohen90" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21.8 4.2c.3-.9-.5-1.6-1.4-1.3L2.7 9.1c-.9.3-.9 1.6.1 1.8l4.7 1.4 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.6 3.4c.7.5 1.7.1 1.9-.7l3.8-14.3zM9.6 13.3l-.3 3.3 1.3-2.4 7.2-6.5-8.2 5.6z"/></svg>
+        <span>רוצים להתחיל? כתבו בטלגרם<small dir="ltr">@IsraelCohen90</small></span>
       </a>
     </aside>
     </div>
@@ -3620,6 +3754,43 @@
 
     const CATEGORY_LABELS = { ...BASE_LABELS };
     let CHANNELS = [];
+
+    function renderLoginSales() {
+      const totalEl = document.getElementById("salesTotal");
+      const foldersEl = document.getElementById("salesFolders");
+      const catsEl = document.getElementById("salesCats");
+      const listEl = document.getElementById("salesFoldersList");
+      if (!totalEl || !catsEl || !listEl) return;
+      const groups = Object.entries(BASE_LABELS).map(([id, label]) => ({
+        id,
+        label: String(label || "").replace(/^\S+\s/, (chunk) => /[\u{1F300}-\u{1FAFF}]/u.test(chunk) ? "" : chunk),
+        raw: label,
+        items: [],
+      }));
+      const byId = new Map(groups.map((group) => [group.id, group]));
+      for (const channel of BASE_CHANNELS) {
+        const group = byId.get(channel.category);
+        if (group) group.items.push(channel.name);
+      }
+      const filled = groups.filter((group) => group.items.length);
+      totalEl.textContent = String(BASE_CHANNELS.length);
+      if (foldersEl) foldersEl.textContent = String(filled.length);
+      const esc = (value) => String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+      catsEl.innerHTML = filled.map((group) => (
+        `<span>${esc(group.label)}<b>${group.items.length}</b></span>`
+      )).join("");
+      listEl.innerHTML = filled.map((group) => (
+        `<section class="sales-folder">` +
+          `<header><h4>${esc(group.raw)}</h4><b>${group.items.length}</b></header>` +
+          `<div class="sales-folder-names">${group.items.map((name) => `<span>${esc(name)}</span>`).join("")}</div>` +
+        `</section>`
+      )).join("");
+    }
+    renderLoginSales();
 
     const CATEGORY_ICONS = {
       all: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
@@ -9986,7 +10157,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=226").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=227").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
