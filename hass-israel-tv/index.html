@@ -2504,6 +2504,55 @@
       text-overflow: ellipsis;
     }
     html.tv.tv-max .tv-gate[hidden] { display: none !important; }
+    html.tv.tv-max .tv-zapper.level-2 .tv-zapper-gate,
+    html.tv.tv-max .tv-zapper.level-3 .tv-zapper-gate {
+      display: grid;
+      direction: rtl;
+      align-items: start;
+      justify-items: stretch;
+    }
+    html.tv.tv-max .tv-zapper.level-2 .tv-zapper-gate {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+    }
+    html.tv.tv-max .tv-zapper.level-3 .tv-zapper-gate {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 8px;
+    }
+    html.tv.tv-max .tv-zapper.level-2 .tv-gate,
+    html.tv.tv-max .tv-zapper.level-3 .tv-gate {
+      width: auto;
+      justify-self: stretch;
+      opacity: 0.78;
+      outline: none;
+      box-shadow: none;
+    }
+    html.tv.tv-max .tv-zapper.level-2 .tv-gate {
+      padding: 10px 8px 8px;
+      border-radius: 16px;
+    }
+    html.tv.tv-max .tv-zapper.level-3 .tv-gate {
+      padding: 7px 6px 6px;
+      border-radius: 12px;
+    }
+    html.tv.tv-max .tv-zapper.level-2 .tv-gate-logo {
+      width: 52px;
+      height: 52px;
+    }
+    html.tv.tv-max .tv-zapper.level-3 .tv-gate-logo {
+      width: 36px;
+      height: 36px;
+    }
+    html.tv.tv-max .tv-zapper.level-2 .tv-zapper-name { font-size: 13px; }
+    html.tv.tv-max .tv-zapper.level-3 .tv-zapper-name { font-size: 11px; }
+    html.tv.tv-max .tv-zapper.level-2 .tv-gate-prog,
+    html.tv.tv-max .tv-zapper.level-3 .tv-gate-prog { display: none; }
+    html.tv.tv-max .tv-zapper .tv-gate.is-focus {
+      opacity: 1;
+      background: #243044;
+      outline: 3px solid #fff;
+      outline-offset: 2px;
+    }
     #bootSplash {
       position: fixed;
       inset: 0;
@@ -6951,6 +7000,7 @@
     const tvZapperRow = document.getElementById("tvZapperRow");
     let tvZapperTimer = 0;
     let tvZapperIndex = 0;
+    let tvZapperLevel = 0;
 
     function isTvZapperOpen() {
       return Boolean(tvZapper && tvZapper.classList.contains("is-open"));
@@ -6959,9 +7009,10 @@
     function hideTvZapper() {
       window.clearTimeout(tvZapperTimer);
       tvZapperTimer = 0;
+      tvZapperLevel = 0;
       if (!tvZapper) return;
       tvZapper.hidden = true;
-      tvZapper.classList.remove("is-open");
+      tvZapper.classList.remove("is-open", "level-1", "level-2", "level-3");
     }
 
     function armTvZapperTimer() {
@@ -6985,10 +7036,10 @@
       return i < 0 ? 0 : i;
     }
 
-    function makeTvGate(channel, kind) {
+    function makeTvGate(channel, kind, focused = false) {
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = `tv-gate tv-gate-${kind}`;
+      btn.className = `tv-gate tv-gate-${kind}${focused ? " is-focus" : ""}`;
       btn.dataset.id = channel.id;
       const logo = document.createElement("div");
       logo.className = "tv-gate-logo";
@@ -7011,14 +7062,36 @@
         tvZapperIndex = tvZapperIndexOf(picked.id);
         if (picked.id !== current?.id) playChannel(picked);
         paintTvZapper();
+        focusTvZapperCell();
         armTvZapperTimer();
       });
       return btn;
     }
 
+    function tvZapperCols() {
+      if (tvZapperLevel <= 1) return 3;
+      if (tvZapperLevel === 2) return 6;
+      return 8;
+    }
+
+    function tvZapperRowsVis() {
+      if (tvZapperLevel <= 1) return 1;
+      if (tvZapperLevel === 2) return 2;
+      return 4;
+    }
+
+    function focusTvZapperCell() {
+      const el = tvZapperRow?.querySelector(".tv-gate.is-focus")
+        || tvZapperRow?.querySelector(".tv-gate-main")
+        || tvZapperRow?.querySelector(".tv-gate");
+      if (el) focusTvNode(el);
+    }
+
     function paintTvZapper() {
-      if (!tvZapperRow) return [];
+      if (!tvZapperRow || !tvZapper) return [];
       const pool = tvZapperChannels();
+      tvZapper.classList.remove("level-1", "level-2", "level-3");
+      if (tvZapperLevel >= 1) tvZapper.classList.add(`level-${tvZapperLevel}`);
       if (!pool.length) {
         tvZapperRow.replaceChildren();
         return [];
@@ -7026,16 +7099,33 @@
       if (tvZapperIndex < 0 || tvZapperIndex >= pool.length) {
         tvZapperIndex = tvZapperIndexOf(current?.id);
       }
-      const left = pool[(tvZapperIndex + tvZapStep(-1) + pool.length * 10) % pool.length];
-      const main = pool[tvZapperIndex];
-      const right = pool[(tvZapperIndex + tvZapStep(1) + pool.length * 10) % pool.length];
-      const leftBtn = makeTvGate(left, "side left");
-      const mainBtn = makeTvGate(main, "main");
-      const rightBtn = makeTvGate(right, "side right");
-      if (left.id === main.id) leftBtn.hidden = true;
-      if (right.id === main.id) rightBtn.hidden = true;
-      tvZapperRow.replaceChildren(leftBtn, mainBtn, rightBtn);
-      return [leftBtn, mainBtn, rightBtn];
+      if (tvZapperLevel <= 1) {
+        const left = pool[(tvZapperIndex + tvZapStep(-1) + pool.length * 10) % pool.length];
+        const main = pool[tvZapperIndex];
+        const right = pool[(tvZapperIndex + tvZapStep(1) + pool.length * 10) % pool.length];
+        const leftBtn = makeTvGate(left, "side left");
+        const mainBtn = makeTvGate(main, "main", true);
+        const rightBtn = makeTvGate(right, "side right");
+        if (left.id === main.id) leftBtn.hidden = true;
+        if (right.id === main.id) rightBtn.hidden = true;
+        tvZapperRow.replaceChildren(leftBtn, mainBtn, rightBtn);
+        return [leftBtn, mainBtn, rightBtn];
+      }
+      const cols = tvZapperCols();
+      const rowsVis = tvZapperRowsVis();
+      const row = Math.floor(tvZapperIndex / cols);
+      const maxRow = Math.floor((pool.length - 1) / cols);
+      let startRow = Math.max(0, row - (rowsVis - 1));
+      if (row >= startRow + rowsVis) startRow = row - rowsVis + 1;
+      startRow = Math.max(0, Math.min(startRow, Math.max(0, maxRow - rowsVis + 1)));
+      const buttons = [];
+      const from = startRow * cols;
+      const to = Math.min(pool.length, (startRow + rowsVis) * cols);
+      for (let i = from; i < to; i++) {
+        buttons.push(makeTvGate(pool[i], "cell", i === tvZapperIndex));
+      }
+      tvZapperRow.replaceChildren(...buttons);
+      return buttons;
     }
 
     function openTvZapper() {
@@ -7046,13 +7136,13 @@
       }
       if (!isTvMax()) return false;
       if (tvZapper.parentElement !== document.body) document.body.append(tvZapper);
+      if (tvZapperLevel < 1) tvZapperLevel = 1;
       tvZapperIndex = tvZapperIndexOf(current?.id);
       const chips = paintTvZapper();
       if (!chips.length) return false;
       tvZapper.hidden = false;
       tvZapper.classList.add("is-open");
-      const main = tvZapperRow.querySelector(".tv-gate-main") || chips[0];
-      focusTvNode(main);
+      focusTvZapperCell();
       armTvZapperTimer();
       return true;
     }
@@ -7061,20 +7151,90 @@
       return openTvZapper();
     }
 
+    function playTvZapperFocus() {
+      const pool = tvZapperChannels();
+      const next = pool[tvZapperIndex];
+      if (next && next.id !== current?.id) playChannel(next);
+    }
+
     function moveTvZapper(dx) {
       const pool = tvZapperChannels();
       if (!pool.length) return;
-      if (!isTvZapperOpen()) {
-        tvZapperIndex = tvZapperIndexOf(current?.id);
-        openTvZapper();
+      if (!isTvZapperOpen() || tvZapperLevel <= 1) {
+        if (!isTvZapperOpen()) {
+          tvZapperLevel = 1;
+          tvZapperIndex = tvZapperIndexOf(current?.id);
+          openTvZapper();
+        }
+        tvZapperIndex = (tvZapperIndex + tvZapStep(dx) + pool.length * 10) % pool.length;
+        paintTvZapper();
+        focusTvZapperCell();
+        playTvZapperFocus();
+        armTvZapperTimer();
+        return;
       }
-      tvZapperIndex = (tvZapperIndex + tvZapStep(dx) + pool.length * 10) % pool.length;
-      const next = pool[tvZapperIndex];
+      const cols = tvZapperCols();
+      const col = tvZapperIndex % cols;
+      const row = Math.floor(tvZapperIndex / cols);
+      const nextCol = col + tvZapStep(dx);
+      if (nextCol < 0 || nextCol >= cols) return;
+      const next = row * cols + nextCol;
+      if (next < 0 || next >= pool.length) return;
+      tvZapperIndex = next;
       paintTvZapper();
-      const main = tvZapperRow.querySelector(".tv-gate-main");
-      if (main) focusTvNode(main);
-      if (next && next.id !== current?.id) playChannel(next);
+      focusTvZapperCell();
       armTvZapperTimer();
+    }
+
+    function nudgeTvZapperDown() {
+      if (!isTvZapperOpen()) {
+        tvZapperLevel = 1;
+        openTvZapper();
+        return;
+      }
+      const pool = tvZapperChannels();
+      if (tvZapperLevel === 1) {
+        tvZapperLevel = 2;
+        paintTvZapper();
+        focusTvZapperCell();
+        armTvZapperTimer();
+        return;
+      }
+      const cols = tvZapperCols();
+      if (tvZapperIndex + cols < pool.length) {
+        tvZapperIndex += cols;
+        if (tvZapperLevel === 2) tvZapperLevel = 3;
+        paintTvZapper();
+        focusTvZapperCell();
+        armTvZapperTimer();
+        return;
+      }
+      if (tvZapperLevel === 2) {
+        tvZapperLevel = 3;
+        paintTvZapper();
+        focusTvZapperCell();
+        armTvZapperTimer();
+      }
+    }
+
+    function nudgeTvZapperUp() {
+      if (!isTvZapperOpen()) return;
+      if (tvZapperLevel >= 2) {
+        const cols = tvZapperCols();
+        if (tvZapperIndex >= cols) {
+          tvZapperIndex -= cols;
+          paintTvZapper();
+          focusTvZapperCell();
+          armTvZapperTimer();
+          return;
+        }
+        tvZapperLevel = tvZapperLevel === 3 ? 2 : 1;
+        paintTvZapper();
+        focusTvZapperCell();
+        armTvZapperTimer();
+        return;
+      }
+      hideTvZapper();
     }
 
     function setTvMax(on) {
@@ -8282,8 +8442,8 @@
         try { video.blur(); } catch {}
         try { theater.blur(); } catch {}
         if (isTvZapperOpen()) {
-          const chip = tvZapperRow.querySelector(".tv-gate-main")
-            || tvZapperRow.querySelector(".tv-gate:focus")
+          const chip = tvZapperRow.querySelector(".tv-gate.is-focus")
+            || tvZapperRow.querySelector(".tv-gate-main")
             || tvZapperRow.querySelector(".tv-gate");
           if (chip) focusTvNode(chip);
         }
@@ -8382,11 +8542,12 @@
       if (isTvZapperOpen() || isTvMax() || (isTv && current && !stage.hidden && dy > 0 && !catalogFocus && !document.querySelector("dialog[open]"))) {
         if (isTvZapperOpen()) {
           if (dx) moveTvZapper(dx);
-          else if (dy < 0) hideTvZapper();
-          else if (dy > 0) armTvZapperTimer();
+          else if (dy < 0) nudgeTvZapperUp();
+          else if (dy > 0) nudgeTvZapperDown();
           return true;
         }
         if (dy > 0) {
+          tvZapperLevel = 1;
           showTvZapper();
           return true;
         }
@@ -8610,7 +8771,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=195").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=196").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
