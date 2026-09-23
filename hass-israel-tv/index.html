@@ -2394,15 +2394,16 @@
     }
     html.tv video, html.tv .theater { pointer-events: none; }
     .tv-zapper { display: none !important; }
-    html.tv.tv-max .tv-zapper:not([hidden]) {
+    html.tv.tv-max .tv-zapper.is-open {
       display: block !important;
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
-      z-index: 80;
+      z-index: 2147483000;
       padding: 28px 28px 32px;
       background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 38%, rgba(0, 0, 0, 0.92) 100%);
+      pointer-events: auto;
     }
     html.tv.tv-max .tv-zapper-row {
       display: flex;
@@ -2642,9 +2643,6 @@
         <a class="camera-open" id="cameraOpen" hidden>פתח מצלמה</a>
       </div>
     </section>
-    <nav class="tv-zapper" id="tvZapper" hidden aria-label="ערוצים">
-      <div class="tv-zapper-row" id="tvZapperRow"></div>
-    </nav>
 
     <div class="now">
       <img class="now-logo" id="nowLogo" alt="" hidden />
@@ -6881,13 +6879,15 @@
     let tvZapperTimer = 0;
 
     function isTvZapperOpen() {
-      return isTvMax() && tvZapper && !tvZapper.hidden;
+      return Boolean(tvZapper && tvZapper.classList.contains("is-open"));
     }
 
     function hideTvZapper() {
       window.clearTimeout(tvZapperTimer);
       tvZapperTimer = 0;
-      if (tvZapper) tvZapper.hidden = true;
+      if (!tvZapper) return;
+      tvZapper.hidden = true;
+      tvZapper.classList.remove("is-open");
     }
 
     function armTvZapperTimer() {
@@ -6926,13 +6926,21 @@
     }
 
     function showTvZapper() {
-      if (!isTv || !isTvMax() || !tvZapper) return;
+      if (!isTv || !tvZapper) return;
+      if (!isTvMax()) {
+        if (!current || stage.hidden) return;
+        setTvMax(true);
+      }
+      if (!isTvMax()) return;
+      if (tvZapper.parentElement !== document.body) document.body.append(tvZapper);
       const chips = paintTvZapper();
       if (!chips.length) return;
       tvZapper.hidden = false;
+      tvZapper.classList.add("is-open");
       const currentChip = chips.find((el) => el.dataset.id === current?.id) || chips[0];
       focusTvNode(currentChip);
       armTvZapperTimer();
+      return true;
     }
 
     function moveTvZapper(dx) {
@@ -8246,19 +8254,23 @@
     }
 
     function moveTvFocus(dx, dy) {
-      if (isTvMax()) {
+      const catalogFocus = document.activeElement && document.activeElement.closest("#recent, #grid, #cats, header.top");
+      if (isTvZapperOpen() || isTvMax() || (isTv && current && !stage.hidden && dy > 0 && !catalogFocus && !document.querySelector("dialog[open]"))) {
         if (isTvZapperOpen()) {
           if (dx) moveTvZapper(dx);
           else if (dy < 0) hideTvZapper();
           else if (dy > 0) armTvZapperTimer();
-          return;
+          return true;
         }
         if (dy > 0) {
           showTvZapper();
-          return;
+          return true;
         }
-        if (dx) zapTvChannel(dx > 0 ? 1 : -1);
-        return;
+        if (isTvMax() && dx) {
+          zapTvChannel(dx > 0 ? 1 : -1);
+          return true;
+        }
+        if (isTvMax()) return true;
       }
       const dialog = document.querySelector("dialog[open]");
       if (dialog) {
@@ -8389,60 +8401,79 @@
         }
         if (el.closest("#recent, #grid, #cats, header.top, #tvZapper")) tvFocus = el;
       });
+      let lastTvKeyAt = 0;
+      let lastTvKeyName = "";
+      function tvKeyName(event) {
+        const key = String(event.key || "");
+        const code = String(event.code || "");
+        const n = Number(event.keyCode || event.which || 0);
+        if (key === "ArrowDown" || key === "Down" || code === "ArrowDown" || n === 40 || n === 20) return "down";
+        if (key === "ArrowUp" || key === "Up" || code === "ArrowUp" || n === 38 || n === 19) return "up";
+        if (key === "ArrowLeft" || key === "Left" || code === "ArrowLeft" || n === 37 || n === 21) return "left";
+        if (key === "ArrowRight" || key === "Right" || code === "ArrowRight" || n === 39 || n === 22) return "right";
+        if (key === "Enter" || key === " " || key === "Spacebar" || key === "NumpadEnter" || key === "Select"
+          || code === "Enter" || code === "NumpadEnter" || code === "Space" || n === 13 || n === 23 || n === 66) return "enter";
+        if (key === "Escape" || key === "BrowserBack" || n === 27 || n === 4) return "back";
+        if (key === "MediaPlayPause" || key === "MediaPlay" || key === "MediaPause") return key === "MediaPlay" ? "play" : key === "MediaPause" ? "pause" : "playpause";
+        if (key === "MediaStop") return "stop";
+        return "";
+      }
+      function handleTvKey(name) {
+        if (!name) return false;
+        const now = Date.now();
+        if (name === lastTvKeyName && now - lastTvKeyAt < 90) return true;
+        lastTvKeyName = name;
+        lastTvKeyAt = now;
+        if (name === "down") return moveTvFocus(0, 1) || true;
+        if (name === "up") return moveTvFocus(0, -1) || true;
+        if (name === "left") return moveTvFocus(-1, 0) || true;
+        if (name === "right") return moveTvFocus(1, 0) || true;
+        if (name === "enter") {
+          if (isTvZapperOpen() && activateFocusedChannel()) {
+            hideTvZapper();
+            return true;
+          }
+          if (isTvMax()) {
+            tvTogglePlay();
+            return true;
+          }
+          if (activateFocusedChannel()) return true;
+          const el = document.activeElement;
+          if (el && el !== video && el !== theater && typeof el.click === "function") el.click();
+          return true;
+        }
+        if (name === "back") return tvBack();
+        if (name === "play") {
+          video.play().catch(() => {});
+          return true;
+        }
+        if (name === "pause") {
+          video.pause();
+          return true;
+        }
+        if (name === "playpause") {
+          tvTogglePlay();
+          return true;
+        }
+        if (name === "stop") {
+          goHome();
+          focusTvDefault();
+          return true;
+        }
+        return false;
+      }
+      window.__tvKey = handleTvKey;
+      window.__showTvZapper = showTvZapper;
       window.addEventListener("keydown", (event) => {
         const typing = event.target instanceof HTMLInputElement
           || event.target instanceof HTMLTextAreaElement
           || event.target instanceof HTMLSelectElement;
-        if (isTvMax() && (event.key === "Enter" || event.key === " " || event.key === "NumpadEnter" || event.key === "Select")) {
-          if (typing) return;
-          event.preventDefault();
-          event.stopPropagation();
-          if (isTvZapperOpen() && activateFocusedChannel()) {
-            hideTvZapper();
-            return;
-          }
-          tvTogglePlay();
-          return;
-        }
-        if (event.key === "ArrowLeft") {
-          if (typing) return;
-          event.preventDefault();
-          event.stopPropagation();
-          moveTvFocus(-1, 0);
-        } else if (event.key === "ArrowRight") {
-          if (typing) return;
-          event.preventDefault();
-          event.stopPropagation();
-          moveTvFocus(1, 0);
-        } else if (event.key === "ArrowUp") {
-          if (typing) return;
-          event.preventDefault();
-          event.stopPropagation();
-          moveTvFocus(0, -1);
-        } else if (event.key === "ArrowDown") {
-          if (typing) return;
-          event.preventDefault();
-          event.stopPropagation();
-          moveTvFocus(0, 1);
-        } else if (event.key === "Enter" || event.key === " " || event.key === "NumpadEnter" || event.key === "Select") {
-          if (typing) return;
-          event.preventDefault();
-          event.stopPropagation();
-          if (activateFocusedChannel()) return;
-          const el = document.activeElement;
-          if (el && el !== video && el !== theater && typeof el.click === "function") el.click();
-        } else if (event.key === "Escape" || event.key === "BrowserBack") {
-          if (tvBack()) event.preventDefault();
-        } else if (event.key === "MediaPlayPause" || event.key === "MediaPlay" || event.key === "MediaPause") {
-          event.preventDefault();
-          if (event.key === "MediaPlay") video.play().catch(() => {});
-          else if (event.key === "MediaPause") video.pause();
-          else tvTogglePlay();
-        } else if (event.key === "MediaStop") {
-          event.preventDefault();
-          goHome();
-          focusTvDefault();
-        }
+        const name = tvKeyName(event);
+        if (!name) return;
+        if (typing && name !== "back") return;
+        event.preventDefault();
+        event.stopPropagation();
+        handleTvKey(name);
       }, true);
       if (document.documentElement.dataset.session === "1") {
         requestAnimationFrame(() => focusTvDefault());
@@ -8455,7 +8486,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=190").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=191").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
@@ -8466,5 +8497,8 @@
       });
     }
   </script>
+  <nav class="tv-zapper" id="tvZapper" hidden aria-label="ערוצים">
+    <div class="tv-zapper-row" id="tvZapperRow"></div>
+  </nav>
 </body>
 </html>
