@@ -1331,11 +1331,12 @@
     #keysDlg .key-stepper button:disabled { opacity: 0.4; }
     .key-fields {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 86px;
+      grid-template-columns: minmax(0, 1fr);
       gap: 8px;
       align-items: stretch;
     }
-    .key-fields .key-expiry { grid-column: 1 / -1; }
+    .key-fields .key-expiry,
+    .key-fields .key-save { grid-column: 1 / -1; }
     #deviceDlg {
       width: min(620px, calc(100% - 12px));
       max-height: min(92vh, 860px);
@@ -3865,7 +3866,6 @@
         if (next === slots) return;
         slots = next;
         syncSlots();
-        runKeyAction(key, "devices", null, slots);
       };
       minus.addEventListener("click", () => changeSlots(-1));
       plus.addEventListener("click", () => changeSlots(1));
@@ -3892,7 +3892,7 @@
         }
         runKeyAction(key, "update", null, slots, nextDate);
       });
-      fields.append(slotsField, save, expiryField);
+      fields.append(slotsField, expiryField, save);
       const actions = document.createElement("div");
       actions.className = "key-actions";
       const banned = key.status === "banned";
@@ -9324,7 +9324,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=203").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=204").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
