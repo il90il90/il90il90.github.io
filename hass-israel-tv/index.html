@@ -5028,7 +5028,7 @@
         startScreenPairing(true);
         return;
       }
-      pairPollTimer = window.setTimeout(() => pollPairStatus(pairId, 0), 2000);
+      pairPollTimer = window.setTimeout(() => pollPairStatus(pairId, 0), 5000);
     }
 
     async function applyPairedSession(data) {
@@ -5759,7 +5759,6 @@
       return Boolean(
         document.getElementById("licenseViewDlg")?.open
         || document.getElementById("devicesDlg")?.open
-        || document.getElementById("keysDlg")?.open
       );
     }
 
@@ -5829,7 +5828,6 @@
     function refreshOpenDeviceViews() {
       if (document.getElementById("licenseViewDlg")?.open) paintDevicesBox({ silent: true });
       if (document.getElementById("devicesDlg")?.open) refreshDevicesDialog({ silent: true });
-      if (document.getElementById("keysDlg")?.open) loadAdminKeys({ silent: true });
     }
 
     function startDevicesLiveRefresh() {
@@ -5840,13 +5838,13 @@
           return;
         }
         refreshOpenDeviceViews();
-      }, 2000);
+      }, 15000);
     }
 
     function watchDevicesAfterPair() {
       startDevicesLiveRefresh();
       refreshOpenDeviceViews();
-      for (const ms of [500, 1500, 3000, 5000]) {
+      for (const ms of [1000, 4000, 10000]) {
         window.setTimeout(() => {
           if (devicesViewsOpen()) refreshOpenDeviceViews();
         }, ms);
@@ -7188,7 +7186,7 @@
     function startNowPlayingClock() {
       if (nowPlayingTimer) return;
       void loadNowPlaying(true);
-      nowPlayingTimer = window.setInterval(() => void loadNowPlaying(true), 3 * 60 * 1000);
+      nowPlayingTimer = window.setInterval(() => void loadNowPlaying(true), 5 * 60 * 1000);
     }
 
     function makeRecentChip(channel) {
@@ -8697,7 +8695,7 @@
       keysLiveTimer = window.setInterval(() => {
         if (document.getElementById("keysDlg")?.open) loadAdminKeys({ silent: true });
         else window.clearInterval(keysLiveTimer);
-      }, 3000);
+      }, 20000);
     }
     document.getElementById("keysBtn").addEventListener("click", () => {
       if (readSession()?.role !== "admin") return;
@@ -9583,7 +9581,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=213").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=214").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
