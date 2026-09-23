@@ -2393,6 +2393,67 @@
       background: var(--card-hover);
     }
     html.tv video, html.tv .theater { pointer-events: none; }
+    .tv-zapper { display: none !important; }
+    html.tv.tv-max .tv-zapper:not([hidden]) {
+      display: block !important;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 80;
+      padding: 28px 28px 32px;
+      background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.72) 38%, rgba(0, 0, 0, 0.92) 100%);
+    }
+    html.tv.tv-max .tv-zapper-row {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: flex-end;
+      gap: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    html.tv.tv-max .tv-zapper-row::-webkit-scrollbar { display: none; }
+    html.tv.tv-max .tv-zapper .chip.chip-logo {
+      flex: 0 0 92px;
+      width: 92px;
+      height: auto;
+      min-height: 92px;
+      padding: 10px 8px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      border-radius: 16px;
+      background: #151d2b;
+    }
+    html.tv.tv-max .tv-zapper .chip.chip-logo img {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 52px;
+    }
+    html.tv.tv-max .tv-zapper-name {
+      display: block;
+      width: 100%;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.2;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    html.tv.tv-max .tv-zapper .chip.chip-logo.active {
+      outline: 2px solid var(--accent);
+      background: #1d283a;
+    }
+    html.tv.tv-max .tv-zapper .chip.chip-logo:focus {
+      outline: 3px solid #fff;
+      outline-offset: 3px;
+      background: #243044;
+    }
     #bootSplash {
       position: fixed;
       inset: 0;
@@ -2581,6 +2642,9 @@
         <a class="camera-open" id="cameraOpen" hidden>פתח מצלמה</a>
       </div>
     </section>
+    <nav class="tv-zapper" id="tvZapper" hidden aria-label="ערוצים">
+      <div class="tv-zapper-row" id="tvZapperRow"></div>
+    </nav>
 
     <div class="now">
       <img class="now-logo" id="nowLogo" alt="" hidden />
@@ -6812,8 +6876,78 @@
       return document.documentElement.classList.contains("tv-max");
     }
 
+    const tvZapper = document.getElementById("tvZapper");
+    const tvZapperRow = document.getElementById("tvZapperRow");
+    let tvZapperTimer = 0;
+
+    function isTvZapperOpen() {
+      return isTvMax() && tvZapper && !tvZapper.hidden;
+    }
+
+    function hideTvZapper() {
+      window.clearTimeout(tvZapperTimer);
+      tvZapperTimer = 0;
+      if (tvZapper) tvZapper.hidden = true;
+    }
+
+    function armTvZapperTimer() {
+      window.clearTimeout(tvZapperTimer);
+      tvZapperTimer = window.setTimeout(() => hideTvZapper(), 5000);
+    }
+
+    function tvZapperChannels() {
+      const seen = new Set();
+      const out = [];
+      const recents = loadRecent()
+        .map((id) => CHANNELS.find((item) => item.id === id))
+        .filter(Boolean);
+      for (const channel of [...recents, ...visibleChannels(), current].filter(Boolean)) {
+        if (seen.has(channel.id)) continue;
+        seen.add(channel.id);
+        out.push(channel);
+      }
+      return out;
+    }
+
+    function paintTvZapper() {
+      if (!tvZapperRow) return [];
+      tvZapperRow.replaceChildren();
+      const chips = [];
+      for (const channel of tvZapperChannels()) {
+        const btn = makeRecentChip(channel);
+        const name = document.createElement("span");
+        name.className = "tv-zapper-name";
+        name.textContent = channel.name;
+        btn.append(name);
+        chips.push(btn);
+        tvZapperRow.append(btn);
+      }
+      return chips;
+    }
+
+    function showTvZapper() {
+      if (!isTv || !isTvMax() || !tvZapper) return;
+      const chips = paintTvZapper();
+      if (!chips.length) return;
+      tvZapper.hidden = false;
+      const currentChip = chips.find((el) => el.dataset.id === current?.id) || chips[0];
+      focusTvNode(currentChip);
+      armTvZapperTimer();
+    }
+
+    function moveTvZapper(dx) {
+      if (!isTvZapperOpen()) return;
+      const chips = [...tvZapperRow.querySelectorAll(".chip")];
+      if (!chips.length) return;
+      const active = chips.includes(document.activeElement) ? document.activeElement : (chips.find((el) => el.classList.contains("active")) || chips[0]);
+      const next = moveInRow(chips, active, dx) || active;
+      focusTvNode(next);
+      armTvZapperTimer();
+    }
+
     function setTvMax(on) {
       if (!isTv || !on || !current || stage.hidden) {
+        hideTvZapper();
         document.documentElement.classList.remove("tv-max");
         syncNativeRtspRect();
         return;
@@ -8015,6 +8149,12 @@
       if (isTvMax()) {
         try { video.blur(); } catch {}
         try { theater.blur(); } catch {}
+        if (isTvZapperOpen()) {
+          const chip = tvZapperRow.querySelector(".chip:focus")
+            || tvZapperRow.querySelector(".chip.active")
+            || tvZapperRow.querySelector(".chip");
+          if (chip) focusTvNode(chip);
+        }
         return;
       }
       try { video.blur(); } catch {}
@@ -8107,6 +8247,16 @@
 
     function moveTvFocus(dx, dy) {
       if (isTvMax()) {
+        if (isTvZapperOpen()) {
+          if (dx) moveTvZapper(dx);
+          else if (dy < 0) hideTvZapper();
+          else if (dy > 0) armTvZapperTimer();
+          return;
+        }
+        if (dy > 0) {
+          showTvZapper();
+          return;
+        }
         if (dx) zapTvChannel(dx > 0 ? 1 : -1);
         return;
       }
@@ -8184,6 +8334,10 @@
         closeTvSearch();
         return true;
       }
+      if (isTvZapperOpen()) {
+        hideTvZapper();
+        return true;
+      }
       if (isTvMax()) {
         setTvMax(false);
         requestAnimationFrame(() => focusTvDefault());
@@ -8233,7 +8387,7 @@
           holdTvFocus();
           return;
         }
-        if (el.closest("#recent, #grid, #cats, header.top")) tvFocus = el;
+        if (el.closest("#recent, #grid, #cats, header.top, #tvZapper")) tvFocus = el;
       });
       window.addEventListener("keydown", (event) => {
         const typing = event.target instanceof HTMLInputElement
@@ -8243,6 +8397,10 @@
           if (typing) return;
           event.preventDefault();
           event.stopPropagation();
+          if (isTvZapperOpen() && activateFocusedChannel()) {
+            hideTvZapper();
+            return;
+          }
           tvTogglePlay();
           return;
         }
@@ -8297,7 +8455,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=189").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=190").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
