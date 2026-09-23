@@ -9,14 +9,14 @@
   <meta name="google" content="notranslate" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Israel TV" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167.png" />
   <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152.png" />
   <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon-120.png" />
   <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
-  <link rel="manifest" href="/manifest.webmanifest?v=8" />
+  <link rel="manifest" href="/manifest.webmanifest?v=9" />
   <link rel="icon" href="/favicon.png?v=6" />
   <style>
     #bootSplash {
@@ -3344,11 +3344,11 @@
       </li>
       <li>
         <span class="ios-step">2</span>
-        <span>בחרו <b>התקן אפליקציה</b> או <b>הוספה למסך הבית</b></span>
+        <span>בחרו <b>התקן אפליקציה</b> — לא «הוספה למסך הבית» ולא סימנייה. אחרת יישאר סרגל הכתובת למעלה.</span>
       </li>
       <li>
         <span class="ios-step">3</span>
-        <span>לחצו <b>התקן</b> — האייקון יופיע במסך הבית</span>
+        <span>לחצו <b>התקן</b>. אם כבר יש אייקון עם סרגל למעלה — מחקו אותו והתקינו שוב.</span>
       </li>
     </ol>
     <div class="row">
@@ -9388,8 +9388,8 @@
         if (lead) {
           lead.hidden = false;
           lead.textContent = canPrompt
-            ? "באנדרואיד מתקינים את האפליקציה מכרום. זה לא סימנייה של אייפון ולא אפליקציית הטלוויזיה."
-            : "באנדרואיד מוסיפים למסך הבית מתפריט הכרום. זה לא סימנייה של אייפון ולא אפליקציית הטלוויזיה.";
+            ? "מתקינים מכרום כאפליקציה, בלי סרגל כתובת למעלה. לא סימנייה ולא אפליקציית הטלוויזיה."
+            : "בכרום בחרו «התקן אפליקציה» — לא הוספה למסך הבית. אחרת יישאר סרגל הכתובת.";
         }
         if (yes) {
           yes.hidden = !canPrompt;
@@ -9986,7 +9986,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=225").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=226").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
