@@ -6486,6 +6486,19 @@
       }, 400);
     }
 
+    async function flushProfilePush() {
+      window.clearTimeout(profilePushTimer);
+      profilePushTimer = 0;
+      return pushProfile();
+    }
+
+    function customFingerprint(list) {
+      return (Array.isArray(list) ? list : [])
+        .map((item) => `${item.id}:${item.url}:${item.name}:${item.folder || ""}`)
+        .sort()
+        .join("|");
+    }
+
     async function pullProfile() {
       const session = readSession();
       if (!session || (session.role !== "admin" && !session.license)) return;
@@ -6502,12 +6515,13 @@
         const localRev = getCustomRev();
         const local = loadCustomChannels();
         const remoteList = Array.isArray(remote.custom) ? remote.custom : [];
-        if (remoteRev > localRev && remoteList.length) {
+        const localKnown = localRev > 0 || local.length > 0;
+        if (!localKnown && remoteList.length) {
           saveCustomChannels(remoteList, { silent: true, rev: remoteRev });
-        } else if (local.length) {
-          await pushProfile();
-        } else if (remoteList.length) {
+        } else if (remoteRev > localRev) {
           saveCustomChannels(remoteList, { silent: true, rev: remoteRev });
+        } else if (customFingerprint(local) !== customFingerprint(remoteList)) {
+          await flushProfilePush();
         }
         rebuildCatalog();
         render();
@@ -7017,6 +7031,7 @@
       render();
       paintCustomList();
       showToast("הערוץ נמחק");
+      void flushProfilePush();
     }
 
     function openClearCustomDlg() {
@@ -7039,6 +7054,7 @@
       render();
       paintCustomList();
       showToast("כל הערוצים נמחקו");
+      void flushProfilePush();
     }
 
     function paintCustomList() {
@@ -9825,7 +9841,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=216").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=217").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
