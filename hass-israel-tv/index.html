@@ -824,10 +824,10 @@
     .device-item button:disabled { opacity: 0.55; cursor: default; }
     .device-empty { margin: 0; color: var(--muted); font-size: 13px; }
     #keysDlg {
-      --key-h: 40px;
-      width: min(560px, calc(100% - 12px));
-      max-height: min(92vh, 820px);
-      padding: 16px 14px 12px;
+      --key-h: 42px;
+      width: min(620px, calc(100% - 12px));
+      max-height: min(92vh, 860px);
+      padding: 18px 16px 14px;
     }
     #keysDlg h3 {
       display: flex;
@@ -1145,16 +1145,17 @@
       .stats-hours .col b { visibility: hidden; }
       .stats-hours .col:nth-child(3n+1) b { visibility: visible; }
     }
-    .keys-list { display: grid; gap: 8px; }
+    .keys-list { display: grid; gap: 10px; }
     .key-card {
       display: grid;
       gap: 0;
       padding: 0;
-      background: var(--bg-soft);
-      border: 1px solid var(--line);
-      border-radius: 14px;
+      background: linear-gradient(180deg, #121a28 0%, #0d141f 100%);
+      border: 1px solid #223047;
+      border-radius: 18px;
       min-width: 0;
       overflow: hidden;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
     }
     .key-card-head {
       display: flex;
@@ -1243,35 +1244,38 @@
       border-radius: 50%;
       background: currentColor;
     }
-    .key-status.active, .key-status.unused { background: rgba(69, 212, 131, 0.14); color: #7de3a8; }
+    .key-status.live.on, .key-status.active, .key-status.unused { background: rgba(69, 212, 131, 0.14); color: #7de3a8; }
+    .key-status.live.off { background: #243044; color: #93a0b3; }
     .key-status.paused { background: rgba(245, 196, 81, 0.14); color: #f5c451; }
     .key-status.banned, .key-status.expired { background: rgba(255, 77, 77, 0.12); color: #ff9d9d; }
     .key-token {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) var(--key-h);
+      grid-template-columns: var(--key-h) minmax(0, 1fr) var(--key-h);
       align-items: stretch;
       min-width: 0;
       height: var(--key-h);
       background: #0b1220;
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
     }
     .key-token code {
+      grid-column: 2;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       direction: ltr;
-      text-align: left;
+      text-align: center;
       font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
       font-size: 12px;
       line-height: var(--key-h);
-      padding: 0 10px;
+      padding: 0 8px;
       background: transparent;
       border: 0;
     }
     #keysDlg .key-token button {
+      grid-column: 3;
       width: var(--key-h);
       height: var(--key-h);
       padding: 0;
@@ -1284,11 +1288,13 @@
     .key-token button svg { width: 16px; height: 16px; display: block; }
     .key-card .devices-list { gap: 6px; }
     .key-card .device-item {
-      height: var(--key-h);
+      height: 48px;
       padding: 0 8px 0 10px;
       background: #0b1220;
-      border-radius: 10px;
+      border-radius: 12px;
+      cursor: pointer;
     }
+    .key-card .device-item:hover { background: #141d2c; }
     .key-card .device-item strong { font-size: 13px; }
     .key-card .device-item small { margin: 0; font-size: 11px; }
     #keysDlg .key-card .device-item button {
@@ -1299,11 +1305,59 @@
       color: #ff9d9d;
       font-size: 12px;
     }
+    .key-stepper {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) 36px;
+      align-items: center;
+      gap: 4px;
+    }
+    .key-stepper strong {
+      display: block;
+      text-align: center;
+      font-size: 16px;
+      font-weight: 800;
+    }
+    #keysDlg .key-stepper button {
+      width: 36px;
+      height: 28px;
+      padding: 0;
+      border-radius: 8px;
+      background: #243044;
+      color: inherit;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    #keysDlg .key-stepper button:disabled { opacity: 0.4; }
     .key-fields {
       display: grid;
-      grid-template-columns: 86px minmax(0, 1fr) 86px;
+      grid-template-columns: 132px minmax(0, 1fr) 86px;
       gap: 8px;
       align-items: stretch;
+    }
+    #deviceDlg {
+      width: min(620px, calc(100% - 12px));
+      max-height: min(92vh, 860px);
+    }
+    .device-dossier { display: grid; gap: 12px; }
+    .device-dossier-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .device-dossier-head h3 { margin: 0; font-size: 20px; }
+    .device-dossier-head small { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .device-kind {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #1a2436;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
     }
     .key-field {
       display: flex;
@@ -2965,6 +3019,12 @@
       <button type="button" class="ghost" id="keysClose">סגור</button>
     </div>
   </dialog>
+  <dialog class="sheet" id="deviceDlg">
+    <div class="device-dossier" id="deviceDossier"></div>
+    <div class="row">
+      <button type="button" class="ghost" id="deviceClose">סגור</button>
+    </div>
+  </dialog>
   <dialog class="sheet" id="statsDlg">
     <h3>שימוש באפליקציה<span class="keys-meta" id="statsMeta">טוען…</span></h3>
     <div class="stats-summary" id="statsSummary"></div>
@@ -3682,6 +3742,8 @@
       renderAdminKeys();
     }
 
+    let openDeviceView = null;
+
     function fillAdminKeyDetails(detail, key) {
       const token = document.createElement("div");
       token.className = "key-token";
@@ -3701,20 +3763,26 @@
       const devices = document.createElement("div");
       devices.className = "devices-list";
       for (const device of people) {
+        const kind = deviceKind(device.name);
         const row = document.createElement("div");
         row.className = "device-item";
+        row.title = "פירוט המכשיר";
         const dot = document.createElement("span");
         dot.className = `device-dot${device.online ? " online" : ""}`;
         const metaBox = document.createElement("div");
         const who = document.createElement("strong");
-        who.textContent = device.name || "מכשיר";
+        who.textContent = `${device.name || "מכשיר"} · ${deviceKindLabel(kind)}`;
         const when = document.createElement("small");
         when.textContent = `${device.online ? "מחובר" : "לא מחובר"} · ${formatLastSeen(device.last_seen)}`;
         metaBox.append(who, when);
         const kick = document.createElement("button");
         kick.type = "button";
         kick.textContent = "נתק";
-        kick.addEventListener("click", () => runKeyAction(key, "kick", device));
+        kick.addEventListener("click", (event) => {
+          event.stopPropagation();
+          runKeyAction(key, "kick", device);
+        });
+        row.addEventListener("click", () => openDeviceDossier(key, device));
         row.append(dot, metaBox, kick);
         devices.append(row);
       }
@@ -3724,12 +3792,36 @@
       slotsField.className = "key-field";
       const slotsLabel = document.createElement("label");
       slotsLabel.textContent = "מכשירים";
-      const slotsInput = document.createElement("input");
-      slotsInput.type = "number";
-      slotsInput.min = "1";
-      slotsInput.max = "100";
-      slotsInput.value = String(Math.max(1, Number(key.max_devices) || 1));
-      slotsField.append(slotsLabel, slotsInput);
+      const stepper = document.createElement("div");
+      stepper.className = "key-stepper";
+      const minus = document.createElement("button");
+      minus.type = "button";
+      minus.textContent = "−";
+      minus.setAttribute("aria-label", "פחות מכשירים");
+      const slotsValue = document.createElement("strong");
+      let slots = Math.max(1, Number(key.max_devices) || 1);
+      slotsValue.textContent = String(slots);
+      const plus = document.createElement("button");
+      plus.type = "button";
+      plus.textContent = "+";
+      plus.setAttribute("aria-label", "עוד מכשירים");
+      const syncSlots = () => {
+        slotsValue.textContent = String(slots);
+        minus.disabled = slots <= 1;
+        plus.disabled = slots >= 100;
+      };
+      const changeSlots = (delta) => {
+        const next = Math.min(100, Math.max(1, slots + delta));
+        if (next === slots) return;
+        slots = next;
+        syncSlots();
+        runKeyAction(key, "devices", null, slots);
+      };
+      minus.addEventListener("click", () => changeSlots(-1));
+      plus.addEventListener("click", () => changeSlots(1));
+      syncSlots();
+      stepper.append(minus, slotsValue, plus);
+      slotsField.append(slotsLabel, stepper);
       const expiryField = document.createElement("div");
       expiryField.className = "key-field";
       const expiryLabel = document.createElement("label");
@@ -3743,14 +3835,12 @@
       save.className = "key-save";
       save.textContent = "עדכן";
       save.addEventListener("click", () => {
-        const nextSlots = Math.min(100, Math.max(1, Number(slotsInput.value) || 1));
         const nextDate = israelEndOfDayIso(expiryInput.value);
-        slotsInput.value = String(nextSlots);
         if (!nextDate) {
           showToast("בחרו תאריך תפוגה");
           return;
         }
-        runKeyAction(key, "update", null, nextSlots, nextDate);
+        runKeyAction(key, "update", null, slots, nextDate);
       });
       fields.append(slotsField, expiryField, save);
       const actions = document.createElement("div");
@@ -3782,6 +3872,108 @@
       detail.append(token);
       if (people.length) detail.append(devices);
       detail.append(fields, actions);
+    }
+
+    function paintDeviceDossier() {
+      const box = document.getElementById("deviceDossier");
+      if (!box || !openDeviceView) return;
+      const key = adminKeysCache.find((item) => item.license_key === openDeviceView.license_key);
+      const device = (key?.devices || []).find((item) => item.hwid === openDeviceView.hwid) || openDeviceView.device;
+      if (!key || !device) {
+        box.replaceChildren();
+        const empty = document.createElement("p");
+        empty.textContent = "המכשיר כבר לא ברשימה";
+        box.append(empty);
+        return;
+      }
+      openDeviceView.device = device;
+      const kind = deviceKind(device.name);
+      const channels = Array.isArray(device.channels) && device.channels.length
+        ? device.channels
+        : (Array.isArray(key.channels) ? key.channels : []);
+      const events = Array.isArray(device.timeline) ? device.timeline : [];
+      box.replaceChildren();
+      const head = document.createElement("div");
+      head.className = "device-dossier-head";
+      const title = document.createElement("div");
+      const name = document.createElement("h3");
+      name.textContent = device.name || "מכשיר";
+      const sub = document.createElement("small");
+      sub.textContent = `${deviceKindLabel(kind)} · ${device.online ? "מחובר עכשיו" : "לא מחובר"} · ${formatLastSeen(device.last_seen)}`;
+      title.append(name, sub);
+      const live = document.createElement("span");
+      live.className = `key-status live ${device.online ? "on" : "off"}`;
+      live.textContent = device.online ? "מחובר" : "לא מחובר";
+      head.append(title, live);
+      box.append(head);
+      const meta = document.createElement("div");
+      meta.className = "stats-meta";
+      meta.innerHTML = `
+        <span>${deviceKindLabel(kind)}</span>
+        <span>${userMinutes(device)} דקות במכשיר</span>
+        <span>${userMinutes(device, "today")} דקות היום</span>
+        <span>${userMinutes(device, "week")} דקות השבוע</span>
+        <span>${channels.length} ערוצים</span>
+        <span>${key.note || "בלי שם"}</span>`;
+      box.append(meta);
+      appendUsageCharts(box, device, `${key.license_key}:${device.hwid}`, `שימוש ב${device.name || "מכשיר"} · לחצו על יום`, paintDeviceDossier);
+      const channelTitle = document.createElement("div");
+      channelTitle.className = "stats-section-title";
+      channelTitle.textContent = channels.length ? `ערוצים במכשיר · ${channels.length}` : "ערוצים במכשיר";
+      box.append(channelTitle);
+      if (channels.length) {
+        const maxMin = Math.max(1, ...channels.map((item) => Number(item.minutes) || 0));
+        const listBox = document.createElement("div");
+        listBox.className = "stats-channels";
+        for (const row of channels) {
+          const line = document.createElement("div");
+          line.className = "stats-ch";
+          const left = document.createElement("strong");
+          left.textContent = channelLabel(row.id, row.name);
+          const right = document.createElement("small");
+          right.textContent = `${row.minutes || 0} דקות${row.opens ? ` · ${row.opens} פתיחות` : ""}${row.last ? ` · ${formatLastSeen(row.last)}` : ""}`;
+          const bar = document.createElement("div");
+          bar.className = "stats-ch-bar";
+          const fill = document.createElement("i");
+          fill.style.width = `${Math.max(6, Math.round(((Number(row.minutes) || 0) / maxMin) * 100))}%`;
+          bar.append(fill);
+          line.append(left, right, bar);
+          listBox.append(line);
+        }
+        box.append(listBox);
+      } else {
+        const empty = document.createElement("small");
+        empty.style.color = "var(--muted)";
+        empty.textContent = "עדיין אין צפייה לפי ערוץ במכשיר הזה.";
+        box.append(empty);
+      }
+      const logTitle = document.createElement("div");
+      logTitle.className = "stats-section-title";
+      logTitle.textContent = events.length ? `יומן פעולות · ${events.length}` : "יומן פעולות";
+      box.append(logTitle);
+      if (events.length) {
+        const log = document.createElement("div");
+        log.className = "stats-log";
+        for (const item of events) {
+          const row = document.createElement("div");
+          row.className = "stats-log-row";
+          const when = document.createElement("time");
+          when.textContent = formatClock(item.t);
+          const body = document.createElement("div");
+          const main = document.createElement("div");
+          main.textContent = timelineLine(item, key.devices);
+          body.append(main);
+          row.append(when, body);
+          log.append(row);
+        }
+        box.append(log);
+      }
+    }
+
+    function openDeviceDossier(key, device) {
+      openDeviceView = { license_key: key.license_key, hwid: device.hwid, device };
+      paintDeviceDossier();
+      openSheet(document.getElementById("deviceDlg"));
     }
 
     function renderAdminKeys() {
@@ -3824,13 +4016,23 @@
           live.className = "on";
           live.textContent = online === 1 ? "מחובר עכשיו" : `${online} מחוברים`;
           pills.append(live);
+        } else if (key.status === "active" || key.status === "unused") {
+          const idle = document.createElement("span");
+          idle.textContent = "לא מחובר";
+          pills.append(idle);
         }
         title.append(name, pills);
         const side = document.createElement("div");
         side.className = "key-card-side";
         const badge = document.createElement("span");
-        badge.className = `key-status ${key.status || ""}`;
-        badge.textContent = keyStatusLabel(key.status);
+        const liveOn = Boolean(key.online || online);
+        if (key.status === "banned" || key.status === "paused" || key.status === "expired") {
+          badge.className = `key-status ${key.status}`;
+          badge.textContent = keyStatusLabel(key.status);
+        } else {
+          badge.className = `key-status live ${liveOn ? "on" : "off"}`;
+          badge.textContent = liveOn ? "מחובר" : "לא מחובר";
+        }
         const chevron = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         chevron.setAttribute("class", "key-chevron");
         chevron.setAttribute("viewBox", "0 0 24 24");
@@ -3866,6 +4068,7 @@
       }
       adminKeysCache = Array.isArray(res.data.keys) ? res.data.keys : [];
       renderAdminKeys();
+      if (document.getElementById("deviceDlg")?.open) paintDeviceDossier();
     }
 
     let adminStatsCache = { summary: {}, users: [] };
@@ -3929,7 +4132,7 @@
       });
     }
 
-    function appendUsageCharts(parent, source, pickKey, hint) {
+    function appendUsageCharts(parent, source, pickKey, hint, onChange) {
       const byMinutes = source.hours_unit === "minutes";
       const days = Array.isArray(source.days) ? source.days : [];
       const picked = statsDayPick[pickKey] || "";
@@ -3970,7 +4173,8 @@
       fillStatsCols(dayBars, dayItems, "day", picked, (day) => {
         if (statsDayPick[pickKey] === day) delete statsDayPick[pickKey];
         else statsDayPick[pickKey] = day;
-        renderAdminStats();
+        if (typeof onChange === "function") onChange();
+        else renderAdminStats();
       });
       dayChart.append(dayLabel, dayBars);
       const hourChart = document.createElement("div");
@@ -3990,7 +4194,8 @@
         back.textContent = "כל הימים";
         back.addEventListener("click", () => {
           delete statsDayPick[pickKey];
-          renderAdminStats();
+          if (typeof onChange === "function") onChange();
+          else renderAdminStats();
         });
         hourSide.append(back);
       }
@@ -5177,6 +5382,29 @@
       return session;
     }
 
+    function leaveLiveSession() {
+      const session = readSessionRaw();
+      if (!session?.license || session.role !== "user") return;
+      const payload = JSON.stringify({
+        action: "heartbeat",
+        leave: true,
+        session_id: session.sessionId || "",
+        license_key: session.license,
+        hwid: deviceHwid(),
+        device_name: deviceLabel(),
+      });
+      try {
+        navigator.sendBeacon(PWF_CHECK_URL, new Blob([payload], { type: "application/json" }));
+      } catch {
+        fetch(PWF_CHECK_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          keepalive: true,
+        }).catch(() => {});
+      }
+    }
+
     function endLiveSession(session) {
       stopLiveSession();
       if (!session?.sessionId) return;
@@ -5194,6 +5422,20 @@
         }).catch(() => {});
       } catch {}
     }
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopLiveSession();
+        leaveLiveSession();
+        return;
+      }
+      const session = readSessionRaw();
+      if (session?.role === "user" && session.license && !appLocked) startLiveSession(session);
+    });
+    window.addEventListener("pagehide", () => {
+      stopLiveSession();
+      leaveLiveSession();
+    });
 
     async function verifyLicense(code) {
       const parts = String(code || "").trim().split(".");
@@ -5234,11 +5476,26 @@
     }
 
     function formatLastSeen(stamp) {
-      const diff = Date.now() - (Number(stamp) || 0);
-      if (diff < 5 * 60 * 1000) return "פעיל עכשיו";
+      const value = Number(stamp) || 0;
+      if (!value) return "עדיין לא נראה";
+      const diff = Date.now() - value;
+      if (diff < 45 * 1000) return "מחובר עכשיו";
       if (diff < 3600 * 1000) return `לפני ${Math.max(1, Math.round(diff / 60000))} דקות`;
       if (diff < 86400 * 1000) return `לפני ${Math.round(diff / 3600000)} שעות`;
       return `לפני ${Math.round(diff / 86400000)} ימים`;
+    }
+
+    function deviceKind(name) {
+      const text = String(name || "");
+      if (/TV|Streamer|AndroidTV|BRAVIA|SHIELD|AFT|MIBOX|SmartTV|GoogleTV/i.test(text)) return "tv";
+      if (/iPhone|iPad|iOS/i.test(text)) return "ios";
+      return "phone";
+    }
+
+    function deviceKindLabel(kind) {
+      if (kind === "tv") return "טלוויזיה";
+      if (kind === "ios") return "אייפון";
+      return "טלפון";
     }
 
     function formatClock(stamp) {
@@ -8099,11 +8356,20 @@
       resetLicenseForm();
       openSheet(document.getElementById("licenseDlg"));
     });
+    let keysLiveTimer = 0;
+    function startKeysLiveRefresh() {
+      window.clearInterval(keysLiveTimer);
+      keysLiveTimer = window.setInterval(() => {
+        if (document.getElementById("keysDlg")?.open) loadAdminKeys();
+        else window.clearInterval(keysLiveTimer);
+      }, 12000);
+    }
     document.getElementById("keysBtn").addEventListener("click", () => {
       if (readSession()?.role !== "admin") return;
       const dlg = document.getElementById("keysDlg");
       if (!dlg.open) openSheet(dlg);
       loadAdminKeys();
+      startKeysLiveRefresh();
     });
     document.getElementById("statsBtn").addEventListener("click", () => {
       if (readSession()?.role !== "admin") return;
@@ -8146,6 +8412,17 @@
     });
     document.getElementById("keysClose").addEventListener("click", () => {
       document.getElementById("keysDlg").close();
+      window.clearInterval(keysLiveTimer);
+    });
+    document.getElementById("deviceClose").addEventListener("click", () => {
+      document.getElementById("deviceDlg").close();
+      openDeviceView = null;
+    });
+    document.getElementById("deviceDlg").addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) {
+        event.currentTarget.close();
+        openDeviceView = null;
+      }
     });
     document.getElementById("keysRefresh").addEventListener("click", () => loadAdminKeys());
     document.getElementById("keysOpenAll").addEventListener("click", () => {
@@ -8161,7 +8438,10 @@
     });
     document.getElementById("keysSearch").addEventListener("input", () => renderAdminKeys());
     document.getElementById("keysDlg").addEventListener("click", (event) => {
-      if (event.target === event.currentTarget) event.currentTarget.close();
+      if (event.target === event.currentTarget) {
+        event.currentTarget.close();
+        window.clearInterval(keysLiveTimer);
+      }
     });
     document.getElementById("licenseDlg").addEventListener("click", (event) => {
       if (event.target === event.currentTarget) event.currentTarget.close();
@@ -8968,7 +9248,7 @@
     }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js?v=200").then((reg) => reg.update()).catch(() => {});
+      navigator.serviceWorker.register("./sw.js?v=201").then((reg) => reg.update()).catch(() => {});
       let refreshing = false;
       navigator.serviceWorker.addEventListener("controllerchange", () => {
         if (refreshing) return;
