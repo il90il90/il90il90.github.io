@@ -1,89 +1,11 @@
 <!doctype html>
-<html lang="he" dir="rtl">
+<html lang="he">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SeretGram · התקנה על הטלוויזיה</title>
-<meta name="description" content="התקנת סרט גרם על Google TV או Android TV ישירות מהטלפון, דרך ה-Wi-Fi.">
-<meta property="og:title" content="SeretGram · התקנה על הטלוויזיה">
-<meta property="og:description" content="בלי חנות ובלי כבלים: הטלפון מתקין את סרט גרם על הטלוויזיה דרך ה-Wi-Fi.">
-<meta property="og:image" content="poster.jpg">
-<style>
-@font-face { font-family: Heb; src: url(NotoSansHebrew-Regular.ttf); font-weight: 400; font-display: swap; }
-@font-face { font-family: Heb; src: url(NotoSansHebrew-Bold.ttf); font-weight: 700; font-display: swap; }
-:root { --bg:#0A0C10; --surface:#12151C; --elev:#181C25; --line:#262C38; --accent:#2E7DFF; --focus:#6BA5FF; --text:#fff; --muted:#9AA4B2; }
-* { box-sizing: border-box; }
-body { margin: 0; background: radial-gradient(900px 500px at 80% -10%, rgba(46,125,255,.16), transparent 60%), var(--bg); color: var(--text); font: 400 17px/1.6 Heb, system-ui, sans-serif; }
-main { max-width: 820px; margin: 0 auto; padding: 32px 16px 64px; }
-.brand { font: 700 22px system-ui, sans-serif; direction: ltr; text-align: right; }
-.brand b { color: var(--accent); }
-h1 { font-size: clamp(28px, 6vw, 40px); line-height: 1.2; margin: 18px 0 8px; }
-.lead { color: var(--muted); font-size: 19px; margin: 0 0 24px; }
-video { width: 100%; border-radius: 18px; border: 1px solid var(--line); background: #000; display: block; }
-h2 { font-size: 24px; margin: 40px 0 14px; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px; }
-ol.steps { list-style: none; margin: 0; padding: 0; counter-reset: s; display: grid; gap: 16px; }
-ol.steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 14px; }
-ol.steps li::before { content: counter(s); width: 36px; height: 36px; border-radius: 50%; background: var(--accent); display: grid; place-items: center; font-weight: 700; }
-ol.steps h3 { margin: 4px 0 2px; font-size: 18px; }
-ol.steps p { margin: 0; color: var(--muted); }
-.path { direction: rtl; }
-.en { direction: ltr; unicode-bidi: isolate; font-family: system-ui, sans-serif; background: var(--elev); border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; font-size: 15px; color: #e8eaed; white-space: nowrap; }
-details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-top: 10px; }
-summary { cursor: pointer; font-weight: 700; }
-details p { color: var(--muted); margin: 8px 0 0; }
-.btn { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700; padding: 12px 22px; border-radius: 14px; margin-top: 8px; }
-.note { color: var(--muted); font-size: 15px; }
-footer { margin-top: 48px; color: var(--muted); font-size: 14px; text-align: center; }
-</style>
+<link rel="canonical" href="https://touchless.tools/seretgram-tv.html">
+<meta http-equiv="refresh" content="0; url=https://touchless.tools/seretgram-tv.html">
+<script>location.replace("https://touchless.tools/seretgram-tv.html" + location.search);</script>
 </head>
-<body>
-<main>
-  <div class="brand">Seret<b>Gram</b></div>
-  <h1>התקנה על הטלוויזיה, ישירות מהטלפון</h1>
-  <p class="lead">בלי חנות ובלי כבלים: הטלפון שולח את סרט גרם לטלוויזיה דרך ה-Wi-Fi ומתקין אותו. דקה אחת, ופעם אחת בלבד.</p>
-
-  <video controls playsinline preload="metadata" poster="poster.jpg">
-    <source src="install-tv.mp4" type="video/mp4">
-  </video>
-
-  <h2>פעם אחת, בטלוויזיה</h2>
-  <div class="card">
-    <ol class="steps">
-      <li><div><h3>הפעלת אפשרויות מפתחים</h3>
-        <p class="path">הגדרות ← מערכת ← מידע ← לחצו שבע פעמים על <span class="en">Android TV OS build</span>. תופיע הודעה שאתם מפתחים.</p></div></li>
-      <li><div><h3>הפעלת ניפוי באגים אלחוטי</h3>
-        <p class="path">הגדרות ← מערכת ← אפשרויות מפתחים <span class="en">Developer options</span> ← ניפוי באגים אלחוטי <span class="en">Wireless debugging</span> ← הפעלה.</p></div></li>
-      <li><div><h3>הצגת קוד הצימוד</h3>
-        <p class="path">בתוך ניפוי באגים אלחוטי בחרו <span class="en">Pair device with pairing code</span>. יופיעו שש ספרות. השאירו את החלון פתוח.</p></div></li>
-    </ol>
-  </div>
-
-  <h2>בטלפון</h2>
-  <div class="card">
-    <ol class="steps" start="4" style="counter-reset: s 3">
-      <li><div><h3>פתחו את המסך בסרט גרם</h3>
-        <p>סרט גרם ← הגדרות ← כללי ← <b>התקנה על הטלוויזיה</b>. הטלפון מוצא את הטלוויזיה ברשת לבד.</p></div></li>
-      <li><div><h3>הקלידו את הקוד ולחצו "התקנה בטלוויזיה"</h3>
-        <p>הטלפון מצמד, מתחבר, שולח את סרט גרם, מוודא שההתקנה הצליחה ופותח אותו בטלוויזיה.</p></div></li>
-    </ol>
-  </div>
-  <p class="note">הטלפון והטלוויזיה צריכים להיות באותה רשת Wi-Fi. נדרש אנדרואיד 12 ומעלה בטלפון, ו-Google TV או Android TV 11 ומעלה בטלוויזיה.</p>
-
-  <h2>שאלות</h2>
-  <details><summary>איך מעדכנים את הטלוויזיה בהמשך?</summary>
-    <p>עדכנו את סרט גרם בטלפון, הפעילו שוב בטלוויזיה את ניפוי הבאגים האלחוטי וחזרו למסך "התקנה על הטלוויזיה". הטלפון כבר מוכר לטלוויזיה, כך שבדרך כלל לא צריך קוד שוב. סרט גרם גם מתעדכן בטלוויזיה בעצמו.</p></details>
-  <details><summary>האם בטוח להשאיר את ניפוי הבאגים האלחוטי פועל?</summary>
-    <p>עדיף לכבות אותו אחרי ההתקנה. רק מכשיר שצומד בקוד שמוצג על המסך יכול להתחבר, אבל אין סיבה להשאיר אותו פועל כשלא צריך.</p></details>
-  <details><summary>"הקוד לא תאם"</summary>
-    <p>בכל פתיחה של חלון הצימוד מופיע קוד חדש. סגרו ופתחו שוב את <span class="en">Pair device with pairing code</span> והקלידו את הקוד החדש.</p></details>
-  <details><summary>"בטלוויזיה מותקנת גרסה אחרת של סרט גרם"</summary>
-    <p>הגרסה שבטלוויזיה נחתמה אחרת (למשל גרסת בדיקה). הסירו את סרט גרם מהטלוויזיה ונסו שוב.</p></details>
-  <details><summary>לא מוצא את "Wireless debugging"?</summary>
-    <p>בטלוויזיות עם Android TV 10 ומטה אין ניפוי באגים אלחוטי. אפשר להתקין ידנית: הורידו את הקובץ מדף הגרסאות בעזרת אפליקציה כמו Downloader.</p>
-    <a class="btn" href="https://github.com/il90il90/SeretGram-releases/releases/latest">דף הגרסאות</a></details>
-
-  <footer><span class="brand" style="font-size:16px">Seret<b>Gram</b></span></footer>
-</main>
-</body>
+<body><p><a href="https://touchless.tools/seretgram-tv.html">touchless.tools/seretgram-tv.html</a></p></body>
 </html>
